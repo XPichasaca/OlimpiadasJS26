@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Campeonato 2026</title>
+</head>
+
+<body>
+
+    <h1>Campeonato 2026</h1>
+
+    <p id="estado">Comprobando conexión...</p>
+
+    <script type="module">
+        import { supabase } from './js/supabase.js';
+
+        async function comprobarConexion() {
+            const { data, error } = await supabase
+                .from('campeonato')
+                .select('id, nombre')
+                .limit(1);
+
+            if (error) {
+                document.getElementById('estado').textContent =
+                    '❌ Error: ' + error.message;
+
+                console.error(error);
+                return;
+            }
+
+            document.getElementById('estado').textContent =
+                '✅ Conexión con Supabase correcta';
+
+            console.log('Datos:', data);
+        }
+
+        comprobarConexion();
+    </script>
+
+</body>
+</html>

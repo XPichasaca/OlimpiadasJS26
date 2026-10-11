@@ -1,0 +1,938 @@
+```html
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Revisión de nóminas | Campeonato 2026</title>
+
+  <style>
+    :root {
+      --verde: #123d2b;
+      --verde2: #206343;
+      --verde3: #e9f4ed;
+      --dorado: #d8ad42;
+      --fondo: #f3f6f4;
+      --blanco: #fff;
+      --texto: #24332b;
+      --gris: #69766f;
+      --borde: #dce5df;
+      --rojo: #b42318;
+      --naranja: #a65d03;
+      --sombra: 0 8px 28px rgba(18,61,43,.09);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: var(--fondo);
+      color: var(--texto);
+      font-family: Inter, "Segoe UI", Arial, sans-serif;
+      font-size: 14px;
+    }
+
+    button, input, select, textarea { font: inherit; }
+
+    button {
+      border: 0;
+      cursor: pointer;
+      transition: .18s ease;
+    }
+
+    button:disabled {
+      opacity: .55;
+      cursor: not-allowed;
+    }
+
+    .encabezado {
+      background: linear-gradient(120deg, var(--verde), #1d6342);
+      color: white;
+      border-bottom: 4px solid var(--dorado);
+      padding: 18px 24px;
+    }
+
+    .encabezado-interior {
+      max-width: 1500px;
+      margin: auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 18px;
+    }
+
+    .marca {
+      display: flex;
+      align-items: center;
+      gap: 13px;
+    }
+
+    .marca-logo {
+      width: 50px;
+      height: 50px;
+      border-radius: 12px;
+      background: rgba(255,255,255,.12);
+      border: 1px solid rgba(255,255,255,.28);
+      display: grid;
+      place-items: center;
+      color: var(--dorado);
+      font-size: 25px;
+      font-weight: 900;
+    }
+
+    .marca h1 {
+      margin: 0;
+      font-size: 20px;
+      letter-spacing: .2px;
+    }
+
+    .marca p {
+      margin: 5px 0 0;
+      color: #dce9e1;
+      font-size: 12px;
+    }
+
+    .usuario-cabecera {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .usuario-nombre { font-weight: 700; }
+
+    .btn {
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+      gap: 7px;
+      border-radius: 8px;
+      padding: 9px 13px;
+      font-weight: 700;
+    }
+
+    .btn-verde { background: var(--verde2); color: white; }
+    .btn-verde:hover { background: var(--verde); }
+    .btn-dorado { background: var(--dorado); color: #2c281b; }
+    .btn-dorado:hover { background: #e8bf58; }
+    .btn-claro { background: #eef3ef; color: var(--verde); }
+    .btn-claro:hover { background: #dfeae2; }
+    .btn-rojo { background: #fae8e6; color: var(--rojo); }
+    .btn-blanco { background: white; color: var(--verde); }
+    .btn-pequeno { padding: 6px 10px; font-size: 12px; }
+
+    main {
+      max-width: 1500px;
+      margin: 24px auto;
+      padding: 0 20px;
+    }
+
+    .titulo-seccion {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      margin-bottom: 18px;
+      flex-wrap: wrap;
+    }
+
+    .titulo-seccion h2 {
+      margin: 0;
+      color: var(--verde);
+      font-size: 23px;
+    }
+
+    .titulo-seccion p {
+      color: var(--gris);
+      margin: 6px 0 0;
+    }
+
+    .estadisticas {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0,1fr));
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+
+    .estadistica {
+      background: white;
+      border: 1px solid var(--borde);
+      border-radius: 12px;
+      padding: 16px;
+      box-shadow: 0 3px 12px rgba(0,0,0,.025);
+    }
+
+    .estadistica span {
+      display: block;
+      color: var(--gris);
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .45px;
+    }
+
+    .estadistica strong {
+      display: block;
+      color: var(--verde);
+      font-size: 28px;
+      margin-top: 8px;
+    }
+
+    .panel {
+      background: white;
+      border: 1px solid var(--borde);
+      border-radius: 13px;
+      box-shadow: var(--sombra);
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+
+    .panel-cabecera {
+      padding: 15px 18px;
+      border-bottom: 1px solid var(--borde);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .panel-cabecera h3 {
+      margin: 0;
+      color: var(--verde);
+      font-size: 16px;
+    }
+
+    .filtros {
+      display: grid;
+      grid-template-columns: minmax(180px,1.2fr) minmax(160px,.8fr) minmax(200px,1.2fr) auto;
+      gap: 10px;
+      padding: 15px 18px;
+      border-bottom: 1px solid var(--borde);
+    }
+
+    .campo {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      min-width: 0;
+    }
+
+    .campo label {
+      color: var(--gris);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .campo input, .campo select, .campo textarea {
+      width: 100%;
+      min-width: 0;
+      border: 1px solid #cfdad2;
+      background: white;
+      color: var(--texto);
+      border-radius: 8px;
+      padding: 10px 11px;
+      outline: none;
+    }
+
+    .campo input:focus, .campo select:focus, .campo textarea:focus {
+      border-color: var(--verde2);
+      box-shadow: 0 0 0 3px rgba(32,99,67,.10);
+    }
+
+    .tabla-contenedor { overflow-x: auto; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 850px;
+    }
+
+    th, td {
+      padding: 12px 14px;
+      text-align: left;
+      border-bottom: 1px solid #edf1ee;
+      vertical-align: middle;
+    }
+
+    th {
+      background: #f6f9f7;
+      color: var(--verde);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .45px;
+    }
+
+    tbody tr:hover { background: #fbfdfb; }
+
+    .equipo-celda {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 180px;
+    }
+
+    .logo-equipo {
+      width: 42px;
+      height: 42px;
+      object-fit: contain;
+      background: #f3f6f4;
+      border: 1px solid var(--borde);
+      border-radius: 9px;
+      padding: 3px;
+      flex-shrink: 0;
+    }
+
+    .equipo-celda strong { display: block; }
+    .equipo-celda small { color: var(--gris); display: block; margin-top: 4px; }
+
+    .estado {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 9px;
+      border-radius: 30px;
+      font-size: 11px;
+      font-weight: 800;
+      white-space: nowrap;
+      background: #edf1ee;
+      color: #526057;
+    }
+
+    .estado-pendiente, .estado-en-revision {
+      color: var(--naranja);
+      background: #fff3d9;
+    }
+
+    .estado-aprobada, .estado-aprobado, .estado-habilitado {
+      color: #17653c;
+      background: #e0f4e6;
+    }
+
+    .estado-observada, .estado-rechazada, .estado-inactivo {
+      color: var(--rojo);
+      background: #fae8e6;
+    }
+
+    .mensaje {
+      margin: 0 18px 14px;
+      padding: 11px 13px;
+      border-radius: 8px;
+      display: none;
+      line-height: 1.45;
+    }
+
+    .mensaje.visible { display: block; }
+    .mensaje.ok { background: #e4f5e9; color: #17653c; }
+    .mensaje.error { background: #fae8e6; color: #9c2119; }
+    .mensaje.info { background: #e8f1fa; color: #214f7b; }
+
+    .resultado-pie {
+      padding: 12px 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      color: var(--gris);
+      font-size: 12px;
+    }
+
+    .sin-resultados {
+      padding: 38px 15px;
+      text-align: center;
+      color: var(--gris);
+    }
+
+    .sin-resultados strong {
+      display: block;
+      color: var(--verde);
+      font-size: 16px;
+      margin-bottom: 7px;
+    }
+
+    /* Ventana de revisión */
+    .modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      background: rgba(9,26,17,.68);
+      padding: 18px;
+      overflow-y: auto;
+    }
+
+    .modal.abierto {
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+    }
+
+    .modal-contenido {
+      width: min(1250px, 100%);
+      background: var(--fondo);
+      border-radius: 15px;
+      overflow: hidden;
+      box-shadow: 0 20px 70px rgba(0,0,0,.28);
+      margin: auto;
+    }
+
+    .modal-cabecera {
+      background: var(--verde);
+      color: white;
+      border-bottom: 4px solid var(--dorado);
+      padding: 17px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .modal-cabecera h2 {
+      margin: 0;
+      font-size: 19px;
+    }
+
+    .modal-cabecera p {
+      margin: 5px 0 0;
+      color: #dce9e1;
+      font-size: 12px;
+    }
+
+    .cerrar-modal {
+      color: white;
+      background: rgba(255,255,255,.13);
+      border-radius: 8px;
+      width: 37px;
+      height: 37px;
+      font-size: 23px;
+      flex-shrink: 0;
+    }
+
+    .modal-cuerpo { padding: 18px; }
+
+    .resumen-equipo {
+      background: white;
+      border: 1px solid var(--borde);
+      border-radius: 11px;
+      padding: 14px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 15px;
+    }
+
+    .resumen-equipo img {
+      width: 66px;
+      height: 66px;
+      object-fit: contain;
+      border-radius: 10px;
+      background: #f2f5f3;
+      border: 1px solid var(--borde);
+      padding: 4px;
+    }
+
+    .resumen-equipo h3 {
+      color: var(--verde);
+      margin: 0 0 6px;
+      font-size: 18px;
+    }
+
+    .resumen-equipo p {
+      color: var(--gris);
+      margin: 4px 0;
+      font-size: 12px;
+    }
+
+    .documentos {
+      display: grid;
+      grid-template-columns: repeat(2,minmax(0,1fr));
+      gap: 10px;
+      margin-bottom: 17px;
+    }
+
+    .documento-box {
+      background: white;
+      border: 1px solid var(--borde);
+      border-radius: 9px;
+      padding: 12px;
+      min-width: 0;
+    }
+
+    .documento-box strong {
+      display: block;
+      color: var(--verde);
+      margin-bottom: 8px;
+    }
+
+    .documento-box a {
+      color: var(--verde2);
+      font-weight: 700;
+      text-decoration: none;
+    }
+
+    .documento-box a:hover { text-decoration: underline; }
+
+    .seccion-jugadores {
+      background: white;
+      border: 1px solid var(--borde);
+      border-radius: 11px;
+      overflow: hidden;
+    }
+
+    .seccion-jugadores-cabecera {
+      padding: 13px 15px;
+      border-bottom: 1px solid var(--borde);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .seccion-jugadores-cabecera h3 {
+      color: var(--verde);
+      margin: 0;
+      font-size: 15px;
+    }
+
+    .nota-pequena {
+      font-size: 11px;
+      color: var(--gris);
+      line-height: 1.5;
+    }
+
+    .jugadores-lista {
+      display: grid;
+      gap: 0;
+    }
+
+    /* Cada jugador usa dos filas compactas */
+    .jugador-fila {
+      display: grid;
+      grid-template-columns: 66px minmax(0,1fr);
+      gap: 12px;
+      padding: 12px;
+      border-bottom: 1px solid #e9efeb;
+      background: white;
+    }
+
+    .jugador-fila:last-child { border-bottom: 0; }
+
+    .jugador-foto-mini {
+      width: 66px;
+      height: 78px;
+      border: 1px solid var(--borde);
+      border-radius: 8px;
+      background: #f1f5f2;
+      overflow: hidden;
+      align-self: start;
+    }
+
+    .jugador-foto-mini img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .jugador-contenido { min-width: 0; }
+
+    .jugador-linea-superior {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      min-height: 34px;
+    }
+
+    .jugador-identidad-mini {
+      flex: 1 1 230px;
+      min-width: 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .jugador-identidad-mini strong {
+      color: var(--verde);
+      font-size: 14px;
+    }
+
+    .camiseta {
+      background: var(--verde);
+      color: white;
+      border-radius: 6px;
+      padding: 5px 8px;
+      font-size: 11px;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    .cedula-mini {
+      color: var(--gris);
+      font-size: 12px;
+    }
+
+    .check-habilitacion {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 8px;
+      border: 1px solid var(--borde);
+      border-radius: 7px;
+      color: var(--verde);
+      background: #f8fbf9;
+      font-size: 11px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .check-habilitacion input {
+      width: 16px;
+      height: 16px;
+      accent-color: var(--verde2);
+      cursor: pointer;
+    }
+
+    .jugador-resumen-datos {
+      display: grid;
+      grid-template-columns: repeat(6,minmax(0,1fr));
+      gap: 7px;
+      margin-top: 9px;
+    }
+
+    .dato-mini {
+      min-width: 0;
+      background: #f5f8f6;
+      border: 1px solid #e8eee9;
+      border-radius: 6px;
+      padding: 6px 8px;
+    }
+
+    .dato-mini span {
+      display: block;
+      font-size: 9px;
+      color: var(--gris);
+      text-transform: uppercase;
+      letter-spacing: .35px;
+      font-weight: 800;
+      margin-bottom: 4px;
+    }
+
+    .dato-mini strong {
+      display: block;
+      color: #263a2e;
+      font-size: 11px;
+      line-height: 1.35;
+      overflow-wrap: anywhere;
+      font-weight: 700;
+    }
+
+    .jugador-detalle {
+      margin-top: 10px;
+      border: 1px solid #d7e5da;
+      background: #f7fbf8;
+      border-radius: 9px;
+      padding: 13px;
+    }
+
+    .jugador-detalle[hidden] { display: none; }
+
+    .jugador-detalle h4 {
+      margin: 0 0 10px;
+      color: var(--verde);
+      font-size: 13px;
+    }
+
+    .detalle-grid {
+      display: grid;
+      grid-template-columns: repeat(3,minmax(0,1fr));
+      gap: 8px;
+    }
+
+    .detalle-dato {
+      padding: 8px;
+      background: white;
+      border: 1px solid var(--borde);
+      border-radius: 7px;
+      min-width: 0;
+    }
+
+    .detalle-dato span {
+      display: block;
+      color: var(--gris);
+      font-size: 10px;
+      font-weight: 800;
+      margin-bottom: 4px;
+    }
+
+    .detalle-dato strong {
+      overflow-wrap: anywhere;
+      line-height: 1.4;
+    }
+
+    .documento-jugador {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 12px;
+    }
+
+    .documento-jugador img {
+      width: 180px;
+      max-width: 100%;
+      max-height: 220px;
+      object-fit: contain;
+      border: 1px solid var(--borde);
+      border-radius: 8px;
+      background: white;
+    }
+
+    .documento-imagen {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+      font-size: 11px;
+      color: var(--gris);
+    }
+
+    .decision-panel {
+      margin-top: 17px;
+      padding: 15px;
+      border: 1px solid var(--borde);
+      border-radius: 11px;
+      background: white;
+    }
+
+    .decision-panel h3 {
+      color: var(--verde);
+      margin: 0 0 12px;
+      font-size: 15px;
+    }
+
+    .decision-acciones {
+      display: flex;
+      justify-content: flex-end;
+      flex-wrap: wrap;
+      gap: 9px;
+      margin-top: 12px;
+    }
+
+    .decision-ayuda {
+      margin-top: 9px;
+      color: var(--gris);
+      font-size: 11px;
+      line-height: 1.5;
+    }
+
+    footer {
+      text-align: center;
+      padding: 20px;
+      color: var(--gris);
+      font-size: 12px;
+    }
+
+    .pantalla-carga {
+      position: fixed;
+      inset: 0;
+      z-index: 2000;
+      background: rgba(243,246,244,.94);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      color: var(--verde);
+      font-weight: 800;
+    }
+
+    .pantalla-carga.oculto { display: none; }
+
+    .rueda {
+      width: 38px;
+      height: 38px;
+      border: 4px solid #dce9e0;
+      border-top-color: var(--verde2);
+      border-radius: 50%;
+      animation: girar .8s linear infinite;
+    }
+
+    @keyframes girar { to { transform: rotate(360deg); } }
+
+    @media (max-width: 1000px) {
+      .jugador-resumen-datos { grid-template-columns: repeat(3,minmax(0,1fr)); }
+      .filtros { grid-template-columns: repeat(2,minmax(0,1fr)); }
+      .estadisticas { grid-template-columns: repeat(2,minmax(0,1fr)); }
+    }
+
+    @media (max-width: 600px) {
+      main { padding: 0 10px; margin: 16px auto; }
+      .encabezado { padding: 14px 12px; }
+      .encabezado-interior { align-items: flex-start; }
+      .marca h1 { font-size: 16px; }
+      .marca p { font-size: 11px; }
+      .marca-logo { width: 40px; height: 40px; }
+      .usuario-cabecera { justify-content: flex-end; }
+      .usuario-nombre { display: none; }
+      .titulo-seccion h2 { font-size: 20px; }
+      .filtros { grid-template-columns: 1fr; padding: 12px; }
+      .estadisticas { gap: 8px; }
+      .estadistica { padding: 12px; }
+      .estadistica strong { font-size: 24px; }
+      .modal { padding: 5px; }
+      .modal-cuerpo { padding: 9px; }
+      .modal-cabecera { padding: 13px; }
+      .modal-cabecera h2 { font-size: 16px; }
+      .documentos { grid-template-columns: 1fr; }
+      .jugador-fila { grid-template-columns: 48px minmax(0,1fr); gap: 8px; padding: 9px 7px; }
+      .jugador-foto-mini { width: 48px; height: 60px; }
+      .jugador-resumen-datos { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 5px; }
+      .jugador-linea-superior { gap: 6px; }
+      .jugador-identidad-mini { flex-basis: 100%; }
+      .detalle-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
+      .resultado-pie { align-items: flex-start; flex-direction: column; }
+    }
+  </style>
+</head>
+
+<body>
+  <div id="pantallaCarga" class="pantalla-carga">
+    <div class="rueda"></div>
+    <span id="textoCarga">Verificando acceso...</span>
+  </div>
+
+  <header class="encabezado">
+    <div class="encabezado-interior">
+      <div class="marca">
+        <div class="marca-logo">C</div>
+        <div>
+          <h1>Campeonato 2026</h1>
+          <p>Administración · Revisión de nóminas</p>
+        </div>
+      </div>
+
+      <div class="usuario-cabecera">
+        <span id="usuarioNombre" class="usuario-nombre">Usuario</span>
+        <button id="btnVolver" class="btn btn-blanco">← Panel</button>
+        <button id="btnSalir" class="btn btn-claro">Cerrar sesión</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="titulo-seccion">
+      <div>
+        <h2>Revisión de nóminas</h2>
+        <p>Consulte los equipos inscritos, revise jugadores y registre la decisión de la comisión.</p>
+      </div>
+      <button id="btnActualizar" class="btn btn-verde">↻ Actualizar</button>
+    </section>
+
+    <section class="estadisticas">
+      <article class="estadistica">
+        <span>Inscripciones</span>
+        <strong id="totalInscripciones">0</strong>
+      </article>
+      <article class="estadistica">
+        <span>Jugadores registrados</span>
+        <strong id="totalJugadores">0</strong>
+      </article>
+      <article class="estadistica">
+        <span>Pendientes</span>
+        <strong id="totalPendientes">0</strong>
+      </article>
+      <article class="estadistica">
+        <span>Aprobadas</span>
+        <strong id="totalAprobadas">0</strong>
+      </article>
+    </section>
+
+    <section class="panel">
+      <div class="panel-cabecera">
+        <h3>Inscripciones de equipos</h3>
+        <span class="nota-pequena">Seleccione una inscripción para revisar su nómina.</span>
+      </div>
+
+      <div class="filtros">
+        <div class="campo">
+          <label for="filtroEquipo">Equipo</label>
+          <select id="filtroEquipo">
+            <option value="">Todos los equipos</option>
+          </select>
+        </div>
+
+        <div class="campo">
+          <label for="filtroEstado">Estado de inscripción</label>
+          <select id="filtroEstado">
+            <option value="">Todos los estados</option>
+            <option value="PENDIENTE">Pendiente</option>
+            <option value="EN REVISION">En revisión</option>
+            <option value="OBSERVADA">Observada</option>
+            <option value="APROBADA">Aprobada</option>
+            <option value="RECHAZADA">Rechazada</option>
+          </select>
+        </div>
+
+        <div class="campo">
+          <label for="buscarJugador">Buscar</label>
+          <input id="buscarJugador" type="search" placeholder="Equipo, capitán o jugador...">
+        </div>
+
+        <div class="campo">
+          <label>&nbsp;</label>
+          <button id="btnLimpiar" class="btn btn-claro">Limpiar filtros</button>
+        </div>
+      </div>
+
+      <div id="mensaje" class="mensaje" role="status"></div>
+
+      <div class="tabla-contenedor">
+        <table id="tablaNominas">
+          <thead>
+            <tr>
+              <th>Equipo</th>
+              <th>Competencia</th>
+              <th>Capitán</th>
+              <th>Jugadores</th>
+              <th>Inscripción</th>
+              <th>Fecha</th>
+              <th>Acción</th>
+            </tr>
+          </thead>
+          <tbody id="tablaNomina"></tbody>
+        </table>
+      </div>
+
+      <div id="sinResultados" class="sin-resultados" hidden>
+        <strong>No hay inscripciones para mostrar</strong>
+        Pruebe cambiando los filtros o actualizando los datos.
+      </div>
+
+      <div class="resultado-pie">
+        <span id="contadorResultados">0 inscripciones</span>
+        <span>Comuna Quilloac · Campeonato 2026</span>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    Comuna Quilloac | Desarrollado por Xavier Pichasaca © 2025
+  </footer>
+
+  <div id="modalNomina" class="modal" role="dialog" aria-modal="true" aria-labelledby="tituloModal">
+    <div class="modal-contenido">
+      <div class="modal-cabecera">
+        <div>
+          <h2 id="tituloModal">Revisión de nómina</h2>
+          <p>Revise la documentación y los datos de cada jugador.</p>
+        </div>
+        <button id="cerrarModal" class="cerrar-modal" aria-label="Cerrar ventana">×</button>
+      </div>
+      <div id="detalleNomina" class="modal-cuerpo"></div>
+    </div>
+  </div>
+
+  <script type="module" src="../js/nomina.js"></script>
+</body>
+</html>
+```

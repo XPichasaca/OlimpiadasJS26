@@ -1,0 +1,878 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#063b2b">
+  <title>Capitán | Campeonato 2026</title>
+
+  <style>
+    :root {
+      --verde: #063b2b;
+      --verde2: #08754b;
+      --verde3: #e8f5ed;
+      --dorado: #e7c45d;
+      --fondo: #f1f5f2;
+      --blanco: #fff;
+      --texto: #18352a;
+      --gris: #708078;
+      --borde: #dce7df;
+      --rojo: #dc3545;
+      --sombra: 0 5px 20px rgba(5, 50, 33, .07);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: var(--fondo);
+      color: var(--texto);
+      font-family: Inter, "Segoe UI", Arial, sans-serif;
+      font-size: 13px;
+    }
+
+    button, input, select { font: inherit; }
+    button { cursor: pointer; }
+    button:disabled { opacity: .6; cursor: not-allowed; }
+
+    .barra-superior {
+      color: white;
+      background:
+        radial-gradient(ellipse at 80% 0%, rgba(32,135,83,.35), transparent 40%),
+        linear-gradient(110deg, #03291f, #075239);
+      border-bottom: 3px solid var(--dorado);
+    }
+
+    .barra-contenido {
+      max-width: 1440px;
+      min-height: 72px;
+      margin: auto;
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 15px;
+    }
+
+    .marca { display: flex; align-items: center; gap: 12px; }
+
+    .marca-logo {
+      width: 46px;
+      height: 46px;
+      border: 1px solid rgba(255,255,255,.3);
+      border-radius: 12px;
+      display: grid;
+      place-items: center;
+      background: rgba(255,255,255,.09);
+      font-size: 25px;
+    }
+
+    .marca h1 { font-size: 19px; margin: 0 0 4px; }
+    .marca p { color: #c9ded2; font-size: 11px; margin: 0; }
+
+    .usuario-barra { display: flex; align-items: center; gap: 12px; }
+    .usuario-info { text-align: right; }
+    .usuario-info small { display: block; color: #c9ded2; margin-bottom: 3px; }
+    .usuario-info strong { font-size: 13px; }
+
+    .btn-salir {
+      padding: 9px 12px;
+      border: 1px solid rgba(255,255,255,.3);
+      background: transparent;
+      color: white;
+      border-radius: 8px;
+    }
+    .btn-salir:hover { background: rgba(255,255,255,.1); }
+
+    .contenedor { max-width: 1440px; margin: auto; padding: 20px 24px 28px; }
+
+    .bienvenida {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 15px;
+    }
+
+    .bienvenida h2 { margin: 0 0 5px; font-size: 22px; color: var(--verde); }
+    .bienvenida p { margin: 0; color: var(--gris); line-height: 1.5; }
+
+    .etiqueta-rol {
+      background: #fff4d4;
+      color: #785a0a;
+      border: 1px solid #efdda3;
+      border-radius: 30px;
+      padding: 8px 12px;
+      font-size: 11px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    /* Equipo y estadísticas */
+    .equipo-card {
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      padding: 19px 22px;
+      margin-bottom: 15px;
+      color: white;
+      border-radius: 14px;
+      background:
+        radial-gradient(ellipse at 95% 0%, rgba(35,143,85,.45), transparent 45%),
+        linear-gradient(110deg, #052c21, #12633f);
+      box-shadow: var(--sombra);
+    }
+
+    .escudo {
+      flex: 0 0 75px;
+      width: 75px;
+      height: 75px;
+      overflow: hidden;
+      display: grid;
+      place-items: center;
+      border: 2px solid var(--dorado);
+      border-radius: 15px;
+      background: rgba(255,255,255,.1);
+      font-size: 38px;
+    }
+
+    .escudo img { width: 100%; height: 100%; object-fit: contain; }
+
+    .equipo-datos { flex: 1; min-width: 0; }
+    .equipo-datos .sobretitulo {
+      color: var(--dorado);
+      font-size: 10px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 1.3px;
+    }
+
+    .equipo-datos h2 { margin: 6px 0 10px; font-size: 23px; overflow-wrap: anywhere; }
+    .equipo-detalles { display: flex; flex-wrap: wrap; gap: 8px 20px; color: #e0eee5; font-size: 12px; }
+
+    .estadisticas {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .estadistica {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 13px 15px;
+      background: white;
+      border: 1px solid var(--borde);
+      border-radius: 11px;
+      box-shadow: var(--sombra);
+      min-width: 0;
+    }
+
+    .estadistica .icono {
+      flex: 0 0 39px;
+      width: 39px;
+      height: 39px;
+      display: grid;
+      place-items: center;
+      border-radius: 10px;
+      background: var(--verde3);
+      font-size: 21px;
+    }
+
+    .estadistica p { color: var(--gris); font-size: 11px; margin: 0 0 4px; }
+    .estadistica strong { color: var(--verde); font-size: 24px; }
+
+    /* Tarjetas */
+    .tarjeta {
+      min-width: 0;
+      margin-bottom: 16px;
+      padding: 18px;
+      background: white;
+      border: 1px solid var(--borde);
+      border-radius: 13px;
+      box-shadow: var(--sombra);
+    }
+
+    .encabezado-tarjeta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 15px;
+    }
+
+    .titulo-grupo { display: flex; align-items: flex-start; gap: 10px; }
+
+    .titulo-icono {
+      width: 35px;
+      height: 35px;
+      flex: 0 0 35px;
+      display: grid;
+      place-items: center;
+      border-radius: 9px;
+      background: var(--verde3);
+      font-size: 18px;
+    }
+
+    .encabezado-tarjeta h2 { color: var(--verde); font-size: 17px; margin: 0 0 4px; }
+    .encabezado-tarjeta p { color: var(--gris); font-size: 11px; line-height: 1.5; margin: 0; }
+
+    .btn-principal {
+      padding: 10px 14px;
+      border: 0;
+      border-radius: 8px;
+      background: var(--verde2);
+      color: white;
+      font-weight: 750;
+    }
+    .btn-principal:hover { background: var(--verde); }
+
+    .btn-secundario {
+      padding: 9px 13px;
+      border: 1px solid var(--borde);
+      border-radius: 8px;
+      background: #f6f8f6;
+      color: var(--texto);
+    }
+
+    /* Formulario compacto de tres columnas */
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr .9fr 1.05fr;
+      gap: 12px;
+      align-items: stretch;
+    }
+
+    .grupo-formulario {
+      min-width: 0;
+      padding: 13px;
+      border: 1px solid var(--borde);
+      border-radius: 10px;
+      background: #fcfdfc;
+    }
+
+    .grupo-formulario h3 {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      color: var(--verde);
+      font-size: 12px;
+      margin: 0 0 12px;
+    }
+
+    .campos-dos {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .campo { min-width: 0; margin-bottom: 11px; }
+    .campo:last-child { margin-bottom: 0; }
+
+    .campo label {
+      display: block;
+      margin-bottom: 5px;
+      color: #3a5043;
+      font-size: 11px;
+      font-weight: 750;
+    }
+
+    .campo input, .campo select {
+      width: 100%;
+      min-width: 0;
+      height: 36px;
+      padding: 8px 9px;
+      border: 1px solid #d7e2da;
+      border-radius: 7px;
+      outline: none;
+      background: white;
+      color: var(--texto);
+      font-size: 12px;
+    }
+
+    .campo input:focus, .campo select:focus, .buscador:focus {
+      border-color: var(--verde2);
+      box-shadow: 0 0 0 2px rgba(8,117,75,.1);
+    }
+
+    .campo input[type="file"] {
+      height: auto;
+      padding: 7px;
+      font-size: 10px;
+    }
+
+    .campo small { display: block; margin-top: 5px; color: var(--gris); font-size: 10px; line-height: 1.4; }
+
+    .especial-linea {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      margin-top: 12px;
+      font-size: 11px;
+      line-height: 1.5;
+    }
+
+    .especial-linea input { margin-top: 2px; accent-color: var(--verde2); }
+
+    /* Vistas previas */
+    .archivo-bloque { margin-bottom: 13px; }
+    .archivo-bloque:last-child { margin-bottom: 0; }
+
+    .archivo-bloque > label {
+      display: block;
+      margin-bottom: 6px;
+      color: #3a5043;
+      font-size: 11px;
+      font-weight: 750;
+    }
+
+    .archivo-fila {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 76px;
+      gap: 8px;
+      align-items: stretch;
+    }
+
+    .archivo-selector {
+      display: flex;
+      min-width: 0;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      min-height: 87px;
+      padding: 9px;
+      text-align: center;
+      border: 1px dashed #b8cfc0;
+      border-radius: 8px;
+      background: #f7fbf8;
+    }
+
+    .archivo-selector input { width: 100%; max-width: 100%; font-size: 10px; }
+    .archivo-selector small { color: var(--gris); font-size: 9px; }
+
+    .vista-previa {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      min-width: 0;
+      min-height: 87px;
+      padding: 5px;
+      border: 1px solid var(--borde);
+      border-radius: 8px;
+      background: white;
+      text-align: center;
+    }
+
+    .vista-previa img {
+      display: block;
+      max-width: 100%;
+      width: 64px;
+      height: 72px;
+      object-fit: cover;
+      border-radius: 6px;
+    }
+
+    .vista-previa a { color: var(--verde2); font-size: 10px; font-weight: 700; overflow-wrap: anywhere; }
+    .vista-previa span { color: #89958d; font-size: 10px; line-height: 1.4; }
+
+    .form-acciones {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      margin-top: 13px;
+    }
+
+    /* Documentos del equipo */
+    .documentos-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+
+    .documento-item {
+      display: grid;
+      grid-template-columns: 42px minmax(0, 1fr);
+      gap: 11px;
+      padding: 13px;
+      border: 1px solid var(--borde);
+      border-radius: 10px;
+      background: #fbfdfb;
+      min-width: 0;
+    }
+
+    .documento-icono {
+      width: 40px;
+      height: 40px;
+      display: grid;
+      place-items: center;
+      background: var(--verde3);
+      border-radius: 10px;
+      font-size: 20px;
+    }
+
+    .documento-contenido { min-width: 0; }
+    .documento-item h3 { margin: 2px 0 5px; font-size: 12px; color: var(--verde); }
+    .documento-item p { margin: 0 0 9px; font-size: 10px; line-height: 1.5; color: var(--gris); }
+    .documento-item input[type="file"] { width: 100%; max-width: 100%; margin-bottom: 8px; font-size: 10px; }
+    .documento-item button { border: 0; border-radius: 7px; background: var(--verde2); color: white; padding: 8px 10px; font-size: 11px; font-weight: 750; }
+    .documento-estado { display: block; margin-top: 8px; color: var(--gris); font-size: 10px; overflow-wrap: anywhere; }
+    .documento-estado a { color: var(--verde2); font-weight: 700; }
+
+    .aviso {
+      margin-top: 12px;
+      padding: 10px 12px;
+      border: 1px solid #f0dfb2;
+      border-radius: 8px;
+      background: #fff9e9;
+      color: #785b14;
+      font-size: 11px;
+      line-height: 1.5;
+    }
+
+    /* Tabla */
+    .herramientas { display: flex; justify-content: flex-end; margin-bottom: 12px; }
+
+    .buscador {
+      width: 100%;
+      max-width: 330px;
+      padding: 10px 12px;
+      border: 1px solid var(--borde);
+      border-radius: 8px;
+      outline: none;
+      background: white;
+    }
+
+    .tabla-contenedor { width: 100%; overflow-x: auto; border: 1px solid var(--borde); border-radius: 9px; }
+    table { width: 100%; min-width: 760px; border-collapse: collapse; }
+    thead { background: #edf5ef; }
+
+    th {
+      padding: 11px;
+      text-align: left;
+      color: #53665a;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: .3px;
+      white-space: nowrap;
+    }
+
+    td { padding: 10px 11px; border-top: 1px solid #edf1ee; font-size: 11px; vertical-align: middle; }
+    tbody tr:hover { background: #f8fbf9; }
+    .acciones-tabla { white-space: nowrap; }
+
+    .btn-editar, .btn-eliminar {
+      padding: 7px 9px;
+      margin-right: 3px;
+      border: 0;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 750;
+    }
+    .btn-editar { color: #17623c; background: #e7f5eb; }
+    .btn-eliminar { color: #b42318; background: #fff0ef; }
+
+    .vacio { padding: 25px 12px; text-align: center; color: var(--gris); }
+    .vacio-icono { margin-bottom: 8px; font-size: 30px; }
+    .vacio h3 { margin: 0 0 6px; color: var(--verde); font-size: 15px; }
+    .vacio p { margin: 0; font-size: 11px; line-height: 1.5; }
+
+    .mensaje { display: none; padding: 10px 12px; border-radius: 8px; margin-top: 12px; font-size: 12px; line-height: 1.5; overflow-wrap: anywhere; }
+    .mensaje.ok { display: block; color: #17603b; background: #e8f7ed; border: 1px solid #c3e8ce; }
+    .mensaje.error { display: block; color: #9f1c16; background: #fff0ef; border: 1px solid #f5ceca; }
+
+    /* Modal */
+    .modal {
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 14px;
+      overflow-y: auto;
+      background: rgba(3, 30, 21, .7);
+      backdrop-filter: blur(4px);
+    }
+
+    .modal-contenido {
+      width: 100%;
+      max-width: 1000px;
+      max-height: calc(100vh - 28px);
+      overflow-y: auto;
+      background: white;
+      border-radius: 13px;
+      box-shadow: 0 25px 70px rgba(0,0,0,.25);
+    }
+
+    .modal-encabezado {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 18px;
+      color: white;
+      background: linear-gradient(100deg, #052d21, #106441);
+      border-bottom: 3px solid var(--dorado);
+    }
+
+    .modal-encabezado h2 { margin: 0; font-size: 17px; }
+    .btn-cerrar { color: white; background: transparent; border: 0; font-size: 26px; line-height: 1; }
+    .modal-cuerpo { padding: 16px; }
+    .modal-pie { display: flex; justify-content: flex-end; gap: 9px; margin-top: 13px; }
+
+    #pantallaCarga {
+      position: fixed;
+      inset: 0;
+      z-index: 2000;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+      text-align: center;
+      color: white;
+      background: var(--verde);
+    }
+
+    .carga-box {
+      width: 100%;
+      max-width: 400px;
+      padding: 26px;
+      border: 1px solid rgba(255,255,255,.15);
+      border-radius: 15px;
+      background: rgba(255,255,255,.07);
+    }
+
+    .carga-icono { margin-bottom: 12px; font-size: 42px; }
+    .carga-box h2 { margin: 0 0 8px; }
+    .carga-box p { color: #d9e8dd; font-size: 12px; line-height: 1.6; }
+    .spinner { width: 30px; height: 30px; margin: 18px auto 0; border: 3px solid rgba(255,255,255,.25); border-top-color: var(--dorado); border-radius: 50%; animation: girar .8s linear infinite; }
+    @keyframes girar { to { transform: rotate(360deg); } }
+
+    footer { padding: 17px; color: var(--gris); text-align: center; font-size: 11px; line-height: 1.7; }
+    footer strong { color: var(--verde); }
+
+    @media (max-width: 900px) {
+      .form-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .grupo-archivos { grid-column: 1 / -1; }
+      .grupo-archivos .archivos-dos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+    }
+
+    @media (max-width: 620px) {
+      .barra-contenido { padding: 12px; }
+      .marca h1 { font-size: 15px; }
+      .marca p { font-size: 9px; }
+      .marca-logo { width: 38px; height: 38px; font-size: 21px; }
+      .usuario-info { display: none; }
+      .contenedor { padding: 15px 10px 22px; }
+      .bienvenida { align-items: flex-start; }
+      .bienvenida h2 { font-size: 20px; }
+      .bienvenida p { font-size: 11px; }
+      .equipo-card { gap: 11px; padding: 14px; }
+      .escudo { flex-basis: 56px; width: 56px; height: 56px; font-size: 28px; }
+      .equipo-datos h2 { font-size: 18px; }
+      .equipo-detalles { flex-direction: column; gap: 5px; font-size: 10px; }
+      .estadisticas { gap: 6px; }
+      .estadistica { flex-direction: column; align-items: flex-start; gap: 7px; padding: 10px; }
+      .estadistica .icono { width: 30px; height: 30px; flex-basis: 30px; font-size: 16px; }
+      .estadistica p { font-size: 10px; }
+      .estadistica strong { font-size: 21px; }
+      .tarjeta { padding: 12px; }
+      .encabezado-tarjeta { align-items: flex-start; }
+      .encabezado-tarjeta h2 { font-size: 15px; }
+      .encabezado-tarjeta p { font-size: 10px; }
+      .btn-principal { padding: 9px 10px; font-size: 11px; }
+      .form-grid { grid-template-columns: 1fr; }
+      .grupo-archivos { grid-column: auto; }
+      .grupo-archivos .archivos-dos { display: block; }
+      .documentos-grid { grid-template-columns: 1fr; }
+      .form-acciones { flex-wrap: wrap; }
+      .herramientas { justify-content: stretch; }
+      .buscador { max-width: none; }
+      .modal { padding: 7px; }
+      .modal-contenido { max-height: calc(100vh - 14px); }
+      .modal-cuerpo { padding: 12px; }
+    }
+
+    @media (max-width: 380px) {
+      .campos-dos { grid-template-columns: 1fr; }
+      .bienvenida { flex-direction: column; }
+      .etiqueta-rol { white-space: normal; }
+      .archivo-fila { grid-template-columns: minmax(0, 1fr) 65px; }
+    }
+  </style>
+</head>
+
+<body>
+
+  <div id="pantallaCarga">
+    <div class="carga-box">
+      <div class="carga-icono">⚽</div>
+      <h2>Campeonato 2026</h2>
+      <p>Comprobando acceso al módulo del capitán...</p>
+      <div class="spinner"></div>
+    </div>
+  </div>
+
+  <header class="barra-superior">
+    <div class="barra-contenido">
+      <div class="marca">
+        <div class="marca-logo">⚽</div>
+        <div>
+          <h1>Campeonato 2026</h1>
+          <p>COMUNIDAD JUAN SOLANO · SISTEMA MULTIDISCIPLINA</p>
+        </div>
+      </div>
+
+      <div class="usuario-barra">
+        <div class="usuario-info">
+          <small>Sesión iniciada como</small>
+          <strong id="usuarioNombre">Capitán</strong>
+        </div>
+        <button type="button" class="btn-salir" id="btnSalir">↪ Cerrar sesión</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="contenedor">
+
+    <section class="bienvenida">
+      <div>
+        <h2>Mi equipo ⚽</h2>
+        <p>Gestiona la nómina y la documentación de tu equipo.</p>
+      </div>
+      <span class="etiqueta-rol">⚽ ACCESO CAPITÁN</span>
+    </section>
+
+    <section class="equipo-card">
+      <div class="escudo" id="escudoEquipo" aria-label="Escudo del equipo">🛡️</div>
+      <div class="equipo-datos">
+        <div class="sobretitulo">Mi equipo · Campeonato 2026</div>
+        <h2 id="nombreEquipo">Cargando equipo...</h2>
+        <div class="equipo-detalles">
+          <span>👤 Capitán: <strong id="nombreCapitan">Cargando...</strong></span>
+          <span>☎ Contacto: <strong id="contactoEquipo">No registrado</strong></span>
+        </div>
+      </div>
+    </section>
+
+    <section class="estadisticas">
+      <article class="estadistica">
+        <div class="icono">👥</div>
+        <div><p>Jugadores en nómina</p><strong id="totalJugadores">0</strong></div>
+      </article>
+      <article class="estadistica">
+        <div class="icono">✓</div>
+        <div><p>Jugadores activos</p><strong id="totalActivos">0</strong></div>
+      </article>
+      <article class="estadistica">
+        <div class="icono">📋</div>
+        <div><p>Total registrados</p><strong id="totalNomina">0</strong></div>
+      </article>
+    </section>
+
+    <!-- Registro: conserva los IDs que utiliza el JavaScript actual -->
+    <section class="tarjeta">
+      <div class="encabezado-tarjeta">
+        <div class="titulo-grupo">
+          <div class="titulo-icono">👤</div>
+          <div>
+            <h2>Registro de jugador</h2>
+            <p>Completa los datos para agregar o actualizar un jugador.</p>
+          </div>
+        </div>
+        <button type="button" class="btn-principal" id="btnNuevoJugador">＋ Nuevo jugador</button>
+      </div>
+
+      <div class="aviso" style="margin-top:0; margin-bottom:14px">
+        El formulario de registro se abre al pulsar <strong>Nuevo jugador</strong> o <strong>Editar</strong> en la nómina.
+      </div>
+
+      <div class="herramientas">
+        <input type="search" class="buscador" id="buscar" placeholder="Buscar jugador, cédula o camiseta..." aria-label="Buscar jugadores">
+      </div>
+
+      <div class="tabla-contenedor">
+        <table>
+          <thead>
+            <tr>
+              <th>Jugador</th>
+              <th>Número</th>
+              <th>Posición</th>
+              <th>Fecha nacimiento</th>
+              <th>Origen</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="tablaJugadores"></tbody>
+        </table>
+      </div>
+
+      <div id="vacio" class="vacio">
+        <div class="vacio-icono">⚽</div>
+        <h3>No hay jugadores registrados</h3>
+        <p>Agrega al primer jugador para comenzar la nómina de tu equipo.</p>
+      </div>
+
+      <div id="mensaje" class="mensaje" role="status"></div>
+    </section>
+
+    <!-- Documentos: permanecen debajo del registro -->
+    <section class="tarjeta">
+      <div class="encabezado-tarjeta">
+        <div class="titulo-grupo">
+          <div class="titulo-icono">📁</div>
+          <div>
+            <h2>Documentos del equipo</h2>
+            <p>Sube o reemplaza los documentos requeridos para la inscripción.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="documentos-grid">
+        <article class="documento-item">
+          <div class="documento-icono">📄</div>
+          <div class="documento-contenido">
+            <h3>Aval del equipo</h3>
+            <p>PDF o imagen · Máximo 10 MB.</p>
+            <input type="file" id="archivoAval" accept="image/jpeg,image/png,image/webp,application/pdf">
+            <button type="button" id="btnSubirAval">Subir aval</button>
+            <span class="documento-estado" id="estadoAval">Sin cargar</span>
+          </div>
+        </article>
+
+        <article class="documento-item">
+          <div class="documento-icono">📝</div>
+          <div class="documento-contenido">
+            <h3>Documento de inscripción</h3>
+            <p>PDF o imagen · Máximo 10 MB.</p>
+            <input type="file" id="archivoInscripcion" accept="image/jpeg,image/png,image/webp,application/pdf">
+            <button type="button" id="btnSubirInscripcion">Subir inscripción</button>
+            <span class="documento-estado" id="estadoInscripcion">Sin cargar</span>
+          </div>
+        </article>
+      </div>
+
+      <div class="aviso">
+        <strong>Importante:</strong> verifica que los documentos sean legibles y conserva los originales.
+      </div>
+      <div id="mensajeDocumentos" class="mensaje" role="status"></div>
+    </section>
+
+    <!-- Modal compacto de registro/edición -->
+    <div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="tituloModal">
+      <div class="modal-contenido">
+        <div class="modal-encabezado">
+          <h2 id="tituloModal">Nuevo jugador</h2>
+          <button type="button" class="btn-cerrar" id="btnCerrar" aria-label="Cerrar formulario">×</button>
+        </div>
+
+        <div class="modal-cuerpo">
+          <form id="formJugador">
+            <input type="hidden" id="jugadorId" name="jugadorId">
+
+            <div class="form-grid">
+              <section class="grupo-formulario">
+                <h3>👤 Datos personales</h3>
+                <div class="campos-dos">
+                  <div class="campo">
+                    <label for="nombres">Nombres *</label>
+                    <input type="text" id="nombres" name="nombres" maxlength="100" autocomplete="given-name" required>
+                  </div>
+                  <div class="campo">
+                    <label for="apellidos">Apellidos *</label>
+                    <input type="text" id="apellidos" name="apellidos" maxlength="100" autocomplete="family-name" required>
+                  </div>
+                  <div class="campo">
+                    <label for="numeroCedula">Cédula *</label>
+                    <input type="text" id="numeroCedula" name="numeroCedula" maxlength="20" inputmode="numeric" autocomplete="off" required>
+                  </div>
+                  <div class="campo">
+                    <label for="fechaNacimiento">Nacimiento</label>
+                    <input type="date" id="fechaNacimiento" name="fechaNacimiento">
+                  </div>
+                </div>
+                <div class="campo" style="margin-top:11px">
+                  <label for="origen">Origen</label>
+                  <select id="origen" name="origen">
+                    <option value="">Seleccione...</option>
+                    <option value="Nacimiento">Nacimiento</option>
+                    <option value="Matrimonial">Matrimonial</option>
+                    <option value="Familiar">Familiar</option>
+                    <option value="Residencia">Residencia</option>
+                  </select>
+                </div>
+              </section>
+
+              <section class="grupo-formulario">
+                <h3>⚽ Datos en la nómina</h3>
+                <div class="campo">
+                  <label for="numero">Número de camiseta</label>
+                  <input type="number" id="numero" name="numero" min="0" step="1" placeholder="Ej. 10">
+                </div>
+                <div class="campo">
+                  <label for="posicion">Posición</label>
+                  <input type="text" id="posicion" name="posicion" maxlength="60" placeholder="Defensa, delantero...">
+                </div>
+                <label class="especial-linea" for="esEspecial">
+                  <input type="checkbox" id="esEspecial" name="esEspecial">
+                  <span><strong>Jugador de categoría especial</strong><br>Marca esta casilla si corresponde según el reglamento.</span>
+                </label>
+                <small>La categoría especial debe validarse de acuerdo con la competencia.</small>
+              </section>
+
+              <section class="grupo-formulario grupo-archivos">
+                <h3>📷 Fotografía y documento</h3>
+                <div class="archivos-dos">
+                  <div class="archivo-bloque">
+                    <label for="fotoJugador">Fotografía del jugador</label>
+                    <div class="archivo-fila">
+                      <div class="archivo-selector">
+                        <input type="file" id="fotoJugador" name="fotoJugador" accept="image/jpeg,image/png,image/webp">
+                        <small>JPG, PNG o WEBP · Máx. 10 MB</small>
+                      </div>
+                      <div class="vista-previa" id="vistaFotoJugador">
+                        <span>Sin foto</span>
+                      </div>
+                    </div>
+                    <small>Al editar, la foto actual se conserva si no eliges otra.</small>
+                  </div>
+
+                  <div class="archivo-bloque">
+                    <label for="cedulaArchivo">Cédula del jugador</label>
+                    <div class="archivo-fila">
+                      <div class="archivo-selector">
+                        <input type="file" id="cedulaArchivo" name="cedulaArchivo" accept="image/jpeg,image/png,image/webp,application/pdf">
+                        <small>Imagen o PDF · Máx. 10 MB</small>
+                      </div>
+                      <div class="vista-previa" id="vistaCedulaJugador">
+                        <span>Sin documento</span>
+                      </div>
+                    </div>
+                    <small>Al editar, el documento actual se conserva si no eliges otro.</small>
+                  </div>
+                </div>
+              </section>
+            </div>
+
+            <div id="mensajeFormulario" class="mensaje" role="status"></div>
+            <div class="modal-pie">
+              <button type="button" class="btn-secundario" id="btnCancelar">Cancelar</button>
+              <button type="submit" class="btn-principal" id="btnGuardar">Guardar jugador</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <footer>
+    <strong>⚽ Campeonato 2026</strong><br>
+    Comuna Quilloac | Desarrollado por Xavier Pichasaca © 2026
+  </footer>
+
+  <script type="module" src="../js/jugadores-capitan.js"></script>
+</body>
+</html>

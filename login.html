@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Acceso | Campeonato 2026</title>
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            min-height: 100vh;
+            font-family: Arial, Helvetica, sans-serif;
+            background:
+                linear-gradient(
+                    135deg,
+                    #034d2c 0%,
+                    #087442 50%,
+                    #012d1a 100%
+                );
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+
+        /* =========================================
+           FONDO DECORATIVO
+        ========================================= */
+
+        body::before {
+            content: "";
+            position: absolute;
+            width: 500px;
+            height: 500px;
+            border-radius: 50%;
+            border: 80px solid rgba(255,255,255,.035);
+            top: -220px;
+            right: -150px;
+        }
+
+        body::after {
+            content: "";
+            position: absolute;
+            width: 400px;
+            height: 400px;
+            border-radius: 50%;
+            border: 60px solid rgba(201,162,39,.07);
+            bottom: -200px;
+            left: -150px;
+        }
+
+
+        /* =========================================
+           CONTENEDOR
+        ========================================= */
+
+        .login-container {
+            width: 100%;
+            max-width: 980px;
+            min-height: 590px;
+            background: white;
+            border-radius: 24px;
+            overflow: hidden;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            box-shadow:
+                0 25px 70px rgba(0,0,0,.28);
+            position: relative;
+            z-index: 2;
+        }
+
+
+        /* =========================================
+           PANEL IZQUIERDO
+        ========================================= */
+
+        .panel-info {
+            background:
+                linear-gradient(
+                    145deg,
+                    #075c35,
+                    #043d25
+                );
+            color: white;
+            padding: 55px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .panel-info::after {
+            content: "";
+            position: absolute;
+            width: 350px;
+            height: 350px;
+            border: 50px solid rgba(255,255,255,.04);
+            border-radius: 50%;
+            right: -190px;
+            bottom: -180px;
+        }
+
+
+        /* =========================================
+           LOGO / ICONO
+        ========================================= */
+
+        .logo {
+            width: 78px;
+            height: 78px;
+            border-radius: 20px;
+            background: #c9a227;
+            color: #073d27;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 38px;
+            margin-bottom: 25px;
+            box-shadow: 0 8px 20px rgba(0,0,0,.18);
+        }
+
+
+        .panel-info h1 {
+            font-size: 34px;
+            line-height: 1.1;
+            margin-bottom: 15px;
+        }
+
+        .panel-info .subtitulo {
+            font-size: 17px;
+            line-height: 1.6;
+            color: rgba(255,255,255,.82);
+            max-width: 390px;
+        }
+
+
+        .linea-dorada {
+            width: 65px;
+            height: 4px;
+            background: #c9a227;
+            margin: 25px 0;
+            border-radius: 10px;
+        }
+
+
+        .info-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-top: 13px;
+            color: rgba(255,255,255,.85);
+            font-size: 14px;
+        }
+
+        .info-item span:first-child {
+            font-size: 20px;
+        }
+
+
+        /* =========================================
+           PANEL LOGIN
+        ========================================= */
+
+        .panel-login {
+            padding: 55px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+
+        .encabezado {
+            margin-bottom: 30px;
+        }
+
+        .encabezado .mini-titulo {
+            color: #075c35;
+            font-size: 13px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-bottom: 8px;
+        }
+
+        .encabezado h2 {
+            font-size: 30px;
+            color: #17201b;
+            margin-bottom: 8px;
+        }
+
+        .encabezado p {
+            color: #777;
+            font-size: 14px;
+        }
+
+
+        /* =========================================
+           FORMULARIO
+        ========================================= */
+
+        .campo {
+            margin-bottom: 20px;
+        }
+
+        .campo label {
+            display: block;
+            font-size: 14px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .input-contenedor {
+            position: relative;
+        }
+
+        .input-icono {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 18px;
+            color: #777;
+            pointer-events: none;
+        }
+
+        .campo input {
+            width: 100%;
+            height: 50px;
+            border: 1px solid #d9d9d9;
+            border-radius: 10px;
+            padding: 0 15px 0 45px;
+            font-size: 15px;
+            outline: none;
+            transition: .2s;
+            background: #fafafa;
+        }
+
+        .campo input:focus {
+            border-color: #075c35;
+            background: white;
+            box-shadow:
+                0 0 0 3px rgba(7,92,53,.10);
+        }
+
+
+        /* =========================================
+           BOTÓN
+        ========================================= */
+
+        .btn-login {
+            width: 100%;
+            height: 52px;
+            border: none;
+            border-radius: 10px;
+            background:
+                linear-gradient(
+                    135deg,
+                    #075c35,
+                    #087442
+                );
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: .2s;
+            margin-top: 5px;
+        }
+
+        .btn-login:hover {
+            transform: translateY(-1px);
+            box-shadow:
+                0 8px 18px rgba(7,92,53,.22);
+        }
+
+        .btn-login:disabled {
+            opacity: .65;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+
+        /* =========================================
+           MENSAJE
+        ========================================= */
+
+        #mensaje {
+            min-height: 22px;
+            margin-top: 18px;
+            text-align: center;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .mensaje-error {
+            color: #c62828;
+        }
+
+        .mensaje-exito {
+            color: #087442;
+        }
+
+
+        /* =========================================
+           PIE
+        ========================================= */
+
+        .pie {
+            text-align: center;
+            margin-top: 30px;
+            color: #999;
+            font-size: 11px;
+            line-height: 1.5;
+        }
+
+
+        /* =========================================
+           RESPONSIVE
+        ========================================= */
+
+        @media (max-width: 800px) {
+
+            .login-container {
+                grid-template-columns: 1fr;
+                max-width: 500px;
+                min-height: auto;
+            }
+
+            .panel-info {
+                padding: 35px;
+            }
+
+            .panel-info h1 {
+                font-size: 27px;
+            }
+
+            .panel-login {
+                padding: 35px;
+            }
+
+            .info-item {
+                display: none;
+            }
+
+        }
+
+
+        @media (max-width: 450px) {
+
+            body {
+                padding: 12px;
+            }
+
+            .login-container {
+                border-radius: 18px;
+            }
+
+            .panel-info,
+            .panel-login {
+                padding: 28px 22px;
+            }
+
+            .panel-info h1 {
+                font-size: 24px;
+            }
+
+            .encabezado h2 {
+                font-size: 25px;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+    <div class="login-container">
+
+
+        <!-- ======================================
+             INFORMACIÓN DEL CAMPEONATO
+        ======================================= -->
+
+        <section class="panel-info">
+
+            <div class="logo">
+                🏆
+            </div>
+
+            <h1>
+                Campeonato<br>
+                2026
+            </h1>
+
+            <div class="linea-dorada"></div>
+
+            <p class="subtitulo">
+                Sistema de gestión deportiva para
+                la administración de equipos,
+                jugadores, competencias y partidos.
+            </p>
+
+
+            <div class="info-item">
+                <span>⚽</span>
+                <span>Gestión de equipos y jugadores</span>
+            </div>
+
+            <div class="info-item">
+                <span>🏆</span>
+                <span>Competencias multidisciplinarias</span>
+            </div>
+
+            <div class="info-item">
+                <span>📊</span>
+                <span>Resultados y estadísticas</span>
+            </div>
+
+        </section>
+
+
+
+        <!-- ======================================
+             LOGIN
+        ======================================= -->
+
+        <section class="panel-login">
+
+
+            <div class="encabezado">
+
+                <div class="mini-titulo">
+                    Acceso al sistema
+                </div>
+
+                <h2>
+                    Iniciar sesión
+                </h2>
+
+                <p>
+                    Ingrese sus credenciales para continuar.
+                </p>
+
+            </div>
+
+
+            <form id="formLogin">
+
+
+                <div class="campo">
+
+                    <label for="email">
+                        Correo electrónico
+                    </label>
+
+                    <div class="input-contenedor">
+
+                        <span class="input-icono">
+                            ✉
+                        </span>
+
+                        <input
+                            type="email"
+                            id="email"
+                            placeholder="correo@ejemplo.com"
+                            autocomplete="email"
+                            required
+                        >
+
+                    </div>
+
+                </div>
+
+
+                <div class="campo">
+
+                    <label for="password">
+                        Contraseña
+                    </label>
+
+                    <div class="input-contenedor">
+
+                        <span class="input-icono">
+                            🔒
+                        </span>
+
+                        <input
+                            type="password"
+                            id="password"
+                            placeholder="Ingrese su contraseña"
+                            autocomplete="current-password"
+                            required
+                        >
+
+                    </div>
+
+                </div>
+
+
+                <button
+                    type="submit"
+                    id="btnLogin"
+                    class="btn-login"
+                >
+                    Ingresar al sistema
+                </button>
+
+
+                <p id="mensaje"></p>
+
+
+            </form>
+
+
+            <div class="pie">
+
+                Comuna Quilloac<br>
+
+                Campeonato 2026 · Sistema Administrativo
+
+            </div>
+
+
+        </section>
+
+
+    </div>
+
+
+
+    <script
+        type="module"
+        src="./js/login.js"
+    ></script>
+
+
+</body>
+
+</html>

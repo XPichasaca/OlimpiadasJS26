@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prueba Crear Usuario</title>
+</head>
+
+<body>
+
+<h1>Prueba crear usuario</h1>
+
+<button id="btnCrear">
+    CREAR USUARIO DE PRUEBA
+</button>
+
+<pre id="resultado">Esperando...</pre>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script>
+
+const MI_SUPABASE_URL =
+    "https://phkrlnzwjkhxitzqjgkk.supabase.co";
+
+const MI_SUPABASE_KEY =
+    "sb_publishable_YtE6VSoNjxjJ55gQG4vWDw_Z0pevgjg";
+
+const clientePrueba =
+    window.supabase.createClient(
+        MI_SUPABASE_URL,
+        MI_SUPABASE_KEY
+    );
+
+const resultado =
+    document.getElementById("resultado");
+
+
+document
+    .getElementById("btnCrear")
+    .addEventListener(
+        "click",
+        crearUsuario
+    );
+
+
+async function crearUsuario() {
+
+    resultado.textContent =
+        "Comprobando sesión...";
+
+
+    // 1. Obtener sesión del administrador
+
+    const {
+        data: { session },
+        error
+    } = await clientePrueba.auth.getSession();
+
+
+    if (error) {
+
+        resultado.textContent =
+            "ERROR DE SESIÓN:\n\n" +
+            error.message;
+
+        return;
+    }
+
+
+    if (!session) {
+
+        resultado.textContent =
+            "NO HAY SESIÓN INICIADA.\n\n" +
+            "Inicia sesión como ADMINISTRADOR.";
+
+        return;
+    }
+
+
+    resultado.textContent =
+        "Administrador encontrado:\n\n" +
+        session.user.email +
+        "\n\nCreando usuario...";
+
+
+    // 2. Datos del nuevo usuario
+
+    const datos = {
+
+        nombres: "Juan",
+
+        apellidos: "Prueba",
+
+        email: "juan.prueba2027@ejemplo.com",
+
+        password: "Prueba2026!",
+
+        rol: "CAPITAN"
+
+    };
+
+
+    // 3. Llamar Edge Function
+
+    try {
+
+        const respuesta =
+            await fetch(
+
+                MI_SUPABASE_URL +
+                "/functions/v1/crear-usuario",
+
+                {
+                    method: "POST",
+
+                    headers: {
+
+                        "Authorization":
+                            "Bearer " +
+                            session.access_token,
+
+                        "Content-Type":
+                            "application/json"
+
+                    },
+
+                    body:
+                        JSON.stringify(datos)
+
+                }
+
+            );
+
+
+        const texto =
+            await respuesta.text();
+
+
+        resultado.textContent =
+            "HTTP: " +
+            respuesta.status +
+            "\n\n" +
+            texto;
+
+
+        console.log(
+            "RESPUESTA:",
+            texto
+        );
+
+
+    } catch (error) {
+
+        resultado.textContent =
+            "ERROR:\n\n" +
+            error.message;
+
+    }
+
+}
+
+</script>
+
+</body>
+</html>

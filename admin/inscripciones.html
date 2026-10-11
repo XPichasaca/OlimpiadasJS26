@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Gestión de Inscripciones | Campeonato 2026</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, Helvetica, sans-serif;
+            background: #f4f7f3;
+            color: #26352a;
+        }
+
+        /* =========================
+           HEADER
+        ========================= */
+
+        .header {
+            background: linear-gradient(135deg, #075e2c, #0b7a3b);
+            color: white;
+            padding: 22px 35px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 3px 12px rgba(0,0,0,.15);
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 25px;
+        }
+
+        .header p {
+            margin: 6px 0 0;
+            opacity: .85;
+        }
+
+        .btn-volver {
+            text-decoration: none;
+            color: white;
+            background: rgba(255,255,255,.15);
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-weight: bold;
+        }
+
+        .btn-volver:hover {
+            background: rgba(255,255,255,.25);
+        }
+
+        /* =========================
+           CONTENEDOR
+        ========================= */
+
+        .contenedor {
+            max-width: 1400px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        /* =========================
+           ESTADÍSTICAS
+        ========================= */
+
+        .estadisticas {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 18px;
+            margin-bottom: 25px;
+        }
+
+        .stat {
+            background: white;
+            border-radius: 14px;
+            padding: 20px;
+            box-shadow: 0 3px 12px rgba(0,0,0,.08);
+            border-left: 5px solid #08783a;
+        }
+
+        .stat .numero {
+            font-size: 30px;
+            font-weight: bold;
+            color: #075e2c;
+        }
+
+        .stat .texto {
+            color: #68756c;
+            margin-top: 5px;
+        }
+
+        /* =========================
+           PANEL
+        ========================= */
+
+        .panel {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 3px 14px rgba(0,0,0,.08);
+            overflow: hidden;
+        }
+
+        .panel-header {
+            padding: 20px 22px;
+            border-bottom: 1px solid #e4e9e5;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .panel-header h2 {
+            margin: 0;
+            color: #075e2c;
+        }
+
+        .acciones {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        /* =========================
+           BOTONES
+        ========================= */
+
+        button {
+            font-family: inherit;
+        }
+
+        .btn-principal {
+            border: none;
+            background: linear-gradient(135deg, #08783a, #0a9147);
+            color: white;
+            padding: 11px 18px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .btn-principal:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 10px rgba(0,0,0,.15);
+        }
+
+        .btn-secundario {
+            border: 1px solid #d5ddd7;
+            background: white;
+            color: #425047;
+            padding: 10px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .btn-editar {
+            border: none;
+            background: #e8f1eb;
+            color: #08783a;
+            padding: 7px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-right: 5px;
+        }
+
+        .btn-eliminar {
+            border: none;
+            background: #fdeaea;
+            color: #b42318;
+            padding: 7px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        /* =========================
+           FILTROS
+        ========================= */
+
+        .filtros {
+            padding: 18px 22px;
+            display: flex;
+            gap: 12px;
+            border-bottom: 1px solid #e7ece8;
+            flex-wrap: wrap;
+        }
+
+        .filtros input,
+        .filtros select {
+            padding: 11px 13px;
+            border: 1px solid #d4ddd6;
+            border-radius: 8px;
+            outline: none;
+            min-width: 220px;
+        }
+
+        .filtros input:focus,
+        .filtros select:focus,
+        input:focus,
+        select:focus,
+        textarea:focus {
+            border-color: #08783a;
+            box-shadow: 0 0 0 3px rgba(8,120,58,.08);
+        }
+
+        /* =========================
+           TABLA
+        ========================= */
+
+        .tabla-contenedor {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 900px;
+        }
+
+        th {
+            background: #f1f5f2;
+            color: #4b5c50;
+            text-align: left;
+            padding: 14px;
+            font-size: 13px;
+        }
+
+        td {
+            padding: 14px;
+            border-top: 1px solid #edf0ee;
+            font-size: 14px;
+        }
+
+        tr:hover td {
+            background: #fafcfb;
+        }
+
+        /* =========================
+           ESTADOS
+        ========================= */
+
+        .estado {
+            display: inline-block;
+            padding: 5px 9px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .estado-pendiente {
+            background: #fff4cc;
+            color: #806500;
+        }
+
+        .estado-en_revision {
+            background: #e6f0ff;
+            color: #1859a9;
+        }
+
+        .estado-observada {
+            background: #fff0df;
+            color: #a45100;
+        }
+
+        .estado-aprobada {
+            background: #dff6e7;
+            color: #08783a;
+        }
+
+        .estado-rechazada {
+            background: #fde5e5;
+            color: #b42318;
+        }
+
+        .sin-datos {
+            text-align: center;
+            padding: 50px !important;
+            color: #778179;
+        }
+
+        /* =========================
+           MODAL
+        ========================= */
+
+        .modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,.55);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal-contenido {
+            background: white;
+            width: 100%;
+            max-width: 650px;
+            max-height: 90vh;
+            overflow-y: auto;
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0,0,0,.25);
+        }
+
+        .modal-header {
+            background: linear-gradient(135deg, #075e2c, #0b7a3b);
+            color: white;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h3 {
+            margin: 0;
+        }
+
+        .btn-cerrar {
+            border: none;
+            background: transparent;
+            color: white;
+            font-size: 25px;
+            cursor: pointer;
+        }
+
+        .modal-body {
+            padding: 22px;
+        }
+
+        .campo {
+            margin-bottom: 18px;
+        }
+
+        .campo label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 7px;
+            color: #39463d;
+        }
+
+        .campo input,
+        .campo select,
+        .campo textarea {
+            width: 100%;
+            padding: 11px 12px;
+            border: 1px solid #d3dcd5;
+            border-radius: 8px;
+            font-family: inherit;
+            outline: none;
+        }
+
+        .campo textarea {
+            min-height: 90px;
+            resize: vertical;
+        }
+
+        /* =========================
+           COMPETENCIAS
+        ========================= */
+
+        .competencias {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 8px;
+            max-height: 260px;
+            overflow-y: auto;
+            border: 1px solid #dce4de;
+            padding: 10px;
+            border-radius: 9px;
+        }
+
+        .competencia-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 11px;
+            border-radius: 8px;
+            background: #f7f9f7;
+            cursor: pointer;
+        }
+
+        .competencia-item:hover {
+            background: #edf5ef;
+        }
+
+        .competencia-item input {
+            width: auto;
+            margin-top: 3px;
+        }
+
+        .competencia-info strong {
+            display: block;
+            color: #075e2c;
+        }
+
+        .competencia-info small {
+            color: #707a73;
+        }
+
+        .modal-footer {
+            padding: 18px 22px;
+            border-top: 1px solid #e7ece8;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        .mensaje {
+            margin: 15px 22px;
+            padding: 12px 15px;
+            border-radius: 8px;
+            display: none;
+        }
+
+        .mensaje.ok {
+            display: block;
+            background: #e1f5e8;
+            color: #08783a;
+        }
+
+        .mensaje.error {
+            display: block;
+            background: #fde8e8;
+            color: #b42318;
+        }
+
+        /* =========================
+           RESPONSIVE
+        ========================= */
+
+        @media (max-width: 900px) {
+
+            .estadisticas {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+        }
+
+        @media (max-width: 600px) {
+
+            .estadisticas {
+                grid-template-columns: 1fr;
+            }
+
+            .contenedor {
+                padding: 0 10px;
+            }
+
+            .panel-header {
+                align-items: flex-start;
+            }
+
+            .filtros input,
+            .filtros select {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- HEADER -->
+
+    <header class="header">
+
+        <div>
+            <h1>🏆 Campeonato 2026</h1>
+            <p>Gestión de inscripciones de equipos</p>
+        </div>
+
+        <a href="index.html" class="btn-volver">
+            ← Panel administrativo
+        </a>
+
+    </header>
+
+
+    <!-- CONTENEDOR -->
+
+    <main class="contenedor">
+
+        <!-- ESTADÍSTICAS -->
+
+        <section class="estadisticas">
+
+            <div class="stat">
+                <div class="numero" id="totalInscripciones">0</div>
+                <div class="texto">Total inscripciones</div>
+            </div>
+
+            <div class="stat">
+                <div class="numero" id="totalPendientes">0</div>
+                <div class="texto">Pendientes</div>
+            </div>
+
+            <div class="stat">
+                <div class="numero" id="totalRevision">0</div>
+                <div class="texto">En revisión</div>
+            </div>
+
+            <div class="stat">
+                <div class="numero" id="totalAprobadas">0</div>
+                <div class="texto">Aprobadas</div>
+            </div>
+
+        </section>
+
+
+        <!-- PANEL -->
+
+        <section class="panel">
+
+            <div class="panel-header">
+
+                <div>
+                    <h2>Inscripciones</h2>
+                </div>
+
+                <div class="acciones">
+
+                    <button
+                        id="btnNueva"
+                        class="btn-principal">
+                        ➕ Nueva inscripción
+                    </button>
+
+                </div>
+
+            </div>
+
+
+            <!-- FILTROS -->
+
+            <div class="filtros">
+
+                <input
+                    type="text"
+                    id="buscar"
+                    placeholder="🔎 Buscar equipo, capitán o competencia...">
+
+                <select id="filtroEstado">
+
+                    <option value="">
+                        Todos los estados
+                    </option>
+
+                    <option value="PENDIENTE">
+                        Pendiente
+                    </option>
+
+                    <option value="EN_REVISION">
+                        En revisión
+                    </option>
+
+                    <option value="OBSERVADA">
+                        Observada
+                    </option>
+
+                    <option value="APROBADA">
+                        Aprobada
+                    </option>
+
+                    <option value="RECHAZADA">
+                        Rechazada
+                    </option>
+
+                </select>
+
+            </div>
+
+
+            <div
+                id="mensaje"
+                class="mensaje">
+            </div>
+
+
+            <!-- TABLA -->
+
+            <div class="tabla-contenedor">
+
+                <table>
+
+                    <thead>
+
+                        <tr>
+                            <th>#</th>
+                            <th>Equipo</th>
+                            <th>Competencia</th>
+                            <th>Capitán</th>
+                            <th>Fecha</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+
+                    </thead>
+
+                    <tbody id="tablaInscripciones">
+
+                        <tr>
+                            <td
+                                colspan="7"
+                                class="sin-datos">
+                                Cargando inscripciones...
+                            </td>
+                        </tr>
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </section>
+
+    </main>
+
+
+    <!-- =================================================
+         MODAL CREAR / EDITAR
+    ================================================== -->
+
+    <div
+        id="modal"
+        class="modal">
+
+        <div class="modal-contenido">
+
+            <div class="modal-header">
+
+                <h3 id="tituloModal">
+                    Nueva inscripción
+                </h3>
+
+                <button
+                    id="btnCerrar"
+                    class="btn-cerrar">
+                    ×
+                </button>
+
+            </div>
+
+
+            <div class="modal-body">
+
+                <input
+                    type="hidden"
+                    id="inscripcionId">
+
+
+                <!-- EQUIPO -->
+
+                <div class="campo">
+
+                    <label for="modalEquipo">
+                        Equipo
+                    </label>
+
+                    <select id="modalEquipo">
+
+                        <option value="">
+                            Seleccione un equipo
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <!-- CAPITÁN -->
+
+                <div class="campo">
+
+                    <label for="modalCapitan">
+                        Capitán
+                    </label>
+
+                    <select id="modalCapitan">
+
+                        <option value="">
+                            Seleccione un capitán
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <!-- COMPETENCIAS PARA CREAR -->
+
+                <div
+                    class="campo"
+                    id="contenedorCompetenciasNueva">
+
+                    <label>
+                        Competencias
+                    </label>
+
+                    <div
+                        id="listaCompetencias"
+                        class="competencias">
+
+                        <div class="sin-datos">
+                            Cargando competencias...
+                        </div>
+
+                    </div>
+
+                    <small style="color:#6d786f;">
+                        Puede seleccionar una o varias competencias.
+                    </small>
+
+                </div>
+
+
+                <!-- COMPETENCIA PARA EDITAR -->
+
+                <div
+                    class="campo"
+                    id="contenedorCompetenciaEditar"
+                    style="display:none;">
+
+                    <label for="modalCompetencia">
+                        Competencia
+                    </label>
+
+                    <select id="modalCompetencia">
+
+                        <option value="">
+                            Seleccione una competencia
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <!-- ESTADO -->
+
+                <div class="campo">
+
+                    <label for="modalEstado">
+                        Estado
+                    </label>
+
+                    <select id="modalEstado">
+
+                        <option value="PENDIENTE">
+                            Pendiente
+                        </option>
+
+                        <option value="EN_REVISION">
+                            En revisión
+                        </option>
+
+                        <option value="OBSERVADA">
+                            Observada
+                        </option>
+
+                        <option value="APROBADA">
+                            Aprobada
+                        </option>
+
+                        <option value="RECHAZADA">
+                            Rechazada
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <!-- OBSERVACIÓN -->
+
+                <div class="campo">
+
+                    <label for="modalObservacion">
+                        Observación
+                    </label>
+
+                    <textarea
+                        id="modalObservacion"
+                        placeholder="Observaciones de la inscripción..."></textarea>
+
+                </div>
+
+            </div>
+
+
+            <div class="modal-footer">
+
+                <button
+                    id="btnCancelar"
+                    class="btn-secundario">
+                    Cancelar
+                </button>
+
+                <button
+                    id="btnGuardar"
+                    class="btn-principal">
+                    Guardar inscripción
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- JAVASCRIPT -->
+
+    <script
+        type="module"
+        src="../js/inscripciones.js">
+    </script>
+
+</body>
+
+</html>

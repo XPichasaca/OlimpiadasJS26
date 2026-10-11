@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Equipos - Campeonato 2026</title>
+</head>
+
+<body>
+
+    <h1>Equipos</h1>
+
+    <form id="formEquipo">
+
+        <input
+            type="text"
+            id="nombre"
+            placeholder="Nombre del equipo"
+            required
+        >
+
+        <input
+            type="text"
+            id="representante"
+            placeholder="Representante"
+        >
+
+        <input
+            type="text"
+            id="contacto"
+            placeholder="Contacto"
+        >
+
+        <button type="submit">
+            Guardar equipo
+        </button>
+
+    </form>
+
+    <hr>
+
+    <h2>Equipos registrados</h2>
+
+    <div id="listaEquipos"></div>
+
+    <script type="module" src="./js/equipos.js"></script>
+
+</body>
+</html>

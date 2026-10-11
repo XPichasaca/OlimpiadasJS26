@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Usuarios | Campeonato 2026</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f4f6f5;
+            color: #222;
+        }
+
+        header {
+            background: #075b35;
+            color: white;
+            padding: 20px 30px;
+        }
+
+        header h1 {
+            margin: 0;
+        }
+
+        header p {
+            margin: 5px 0 0;
+        }
+
+        main {
+            max-width: 1200px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 3px 12px rgba(0,0,0,.10);
+        }
+
+        .cabecera {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        h2 {
+            margin: 0;
+            color: #075b35;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 11px 18px;
+            border-radius: 7px;
+            text-decoration: none;
+            font-weight: bold;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-nuevo {
+            background: #075b35;
+            color: white;
+        }
+
+        .btn-nuevo:hover {
+            background: #06482b;
+        }
+
+        .tabla-contenedor {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 750px;
+        }
+
+        th {
+            background: #075b35;
+            color: white;
+            padding: 13px 10px;
+            text-align: left;
+        }
+
+        td {
+            padding: 12px 10px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        tr:hover {
+            background: #f5f8f6;
+        }
+
+        .estado {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: bold;
+        }
+
+        .activo {
+            background: #d9f5e5;
+            color: #075b35;
+        }
+
+        .inactivo {
+            background: #ffe1e1;
+            color: #9b0000;
+        }
+
+        .rol {
+            display: inline-block;
+            background: #eee;
+            padding: 5px 9px;
+            border-radius: 5px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        #mensaje {
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            display: none;
+        }
+
+        .error {
+            display: block !important;
+            background: #ffe1e1;
+            color: #9b0000;
+        }
+
+        .cargando {
+            text-align: center;
+            padding: 30px;
+            color: #666;
+        }
+
+        .vacio {
+            text-align: center;
+            padding: 30px;
+            color: #777;
+        }
+
+        .volver {
+            display: inline-block;
+            margin-top: 20px;
+            color: #075b35;
+            text-decoration: none;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <h1>Campeonato 2026</h1>
+    <p>Administración de usuarios</p>
+</header>
+
+<main>
+
+    <div class="card">
+
+        <div class="cabecera">
+
+            <h2>Usuarios del sistema</h2>
+
+            <a
+                href="usuarios.html"
+                class="btn btn-nuevo"
+            >
+                + CREAR USUARIO
+            </a>
+
+        </div>
+
+        <div id="mensaje"></div>
+
+        <div class="tabla-contenedor">
+
+            <table>
+
+                <thead>
+
+                    <tr>
+                        <th>#</th>
+                        <th>Nombres</th>
+                        <th>Apellidos</th>
+                        <th>Correo</th>
+                        <th>Rol</th>
+                        <th>Estado</th>
+                    </tr>
+
+                </thead>
+
+                <tbody id="tablaUsuarios">
+
+                    <tr>
+                        <td
+                            colspan="6"
+                            class="cargando"
+                        >
+                            Cargando usuarios...
+                        </td>
+                    </tr>
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+        <a
+            href="index.html"
+            class="volver"
+        >
+            ← Volver al panel administrativo
+        </a>
+
+    </div>
+
+</main>
+
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script>
+
+const SUPABASE_URL =
+    "https://phkrlnzwjkhxitzqjgkk.supabase.co";
+
+const SUPABASE_KEY =
+    "sb_publishable_YtE6VSoNjxjJ55gQG4vWDw_Z0pevgjg";
+
+const cliente =
+    window.supabase.createClient(
+        SUPABASE_URL,
+        SUPABASE_KEY
+    );
+
+
+async function cargarUsuarios() {
+
+    const tabla =
+        document.getElementById("tablaUsuarios");
+
+    const mensaje =
+        document.getElementById("mensaje");
+
+    try {
+
+        // ----------------------------------------
+        // COMPROBAR SESIÓN
+        // ----------------------------------------
+
+        const {
+            data: { session },
+            error: sessionError
+        } = await cliente.auth.getSession();
+
+        if (sessionError) {
+            throw new Error(sessionError.message);
+        }
+
+        if (!session) {
+
+            throw new Error(
+                "No existe una sesión activa."
+            );
+
+        }
+
+
+        // ----------------------------------------
+        // CONSULTAR USUARIOS
+        // ----------------------------------------
+
+        const { data, error } =
+            await cliente
+                .from("perfil_usuario")
+                .select(`
+                    id,
+                    nombres,
+                    apellidos,
+                    activo,
+                    created_at,
+                    usuario_rol (
+                        rol (
+                            id,
+                            nombre
+                        )
+                    )
+                `)
+                .order(
+                    "created_at",
+                    {
+                        ascending: false
+                    }
+                );
+
+
+        if (error) {
+
+            console.error(error);
+
+            throw new Error(
+                "No se pudieron consultar los usuarios: " +
+                error.message
+            );
+
+        }
+
+
+        // ----------------------------------------
+        // SI NO HAY USUARIOS
+        // ----------------------------------------
+
+        if (!data || data.length === 0) {
+
+            tabla.innerHTML = `
+                <tr>
+                    <td colspan="6" class="vacio">
+                        No existen usuarios registrados.
+                    </td>
+                </tr>
+            `;
+
+            return;
+        }
+
+
+        // ----------------------------------------
+        // CONSTRUIR TABLA
+        // ----------------------------------------
+
+        tabla.innerHTML = "";
+
+
+        data.forEach((usuario, index) => {
+
+            let roles = "";
+
+            if (
+                usuario.usuario_rol &&
+                usuario.usuario_rol.length > 0
+            ) {
+
+                roles =
+                    usuario.usuario_rol
+                        .map(
+                            item =>
+                                item.rol?.nombre || ""
+                        )
+                        .filter(Boolean)
+                        .join(", ");
+
+            }
+
+
+            if (!roles) {
+                roles = "SIN ROL";
+            }
+
+
+            const estado =
+                usuario.activo
+                    ? `
+                        <span class="estado activo">
+                            ACTIVO
+                        </span>
+                      `
+                    : `
+                        <span class="estado inactivo">
+                            INACTIVO
+                        </span>
+                      `;
+
+
+            const fila =
+                document.createElement("tr");
+
+
+            fila.innerHTML = `
+
+                <td>
+                    ${index + 1}
+                </td>
+
+                <td>
+                    ${escapeHTML(
+                        usuario.nombres || ""
+                    )}
+                </td>
+
+                <td>
+                    ${escapeHTML(
+                        usuario.apellidos || ""
+                    )}
+                </td>
+
+                <td>
+                    <small>
+                        ${usuario.id}
+                    </small>
+                </td>
+
+                <td>
+                    <span class="rol">
+                        ${escapeHTML(roles)}
+                    </span>
+                </td>
+
+                <td>
+                    ${estado}
+                </td>
+
+            `;
+
+            tabla.appendChild(fila);
+
+        });
+
+    }
+    catch (error) {
+
+        console.error(error);
+
+        mensaje.className = "error";
+
+        mensaje.textContent =
+            error.message;
+
+        tabla.innerHTML = `
+            <tr>
+                <td colspan="6" class="vacio">
+                    No se pudieron cargar los usuarios.
+                </td>
+            </tr>
+        `;
+
+    }
+
+}
+
+
+// ----------------------------------------
+// SEGURIDAD PARA TEXTO HTML
+// ----------------------------------------
+
+function escapeHTML(texto) {
+
+    const div =
+        document.createElement("div");
+
+    div.textContent = texto;
+
+    return div.innerHTML;
+
+}
+
+
+// ----------------------------------------
+// INICIAR
+// ----------------------------------------
+
+cargarUsuarios();
+
+</script>
+
+</body>
+</html>

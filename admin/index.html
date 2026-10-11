@@ -1,0 +1,2927 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Configuración | Campeonato 2026</title>
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, Helvetica, sans-serif;
+            background: #f4f7f5;
+            color: #1f2937;
+        }
+
+        .layout {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* =====================================
+           SIDEBAR
+        ===================================== */
+
+        .sidebar {
+            width: 250px;
+            background: #075c35;
+            color: white;
+            padding: 20px 15px;
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            overflow-y: auto;
+        }
+
+        .logo {
+            text-align: center;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(255,255,255,.2);
+            margin-bottom: 20px;
+        }
+
+        .logo h2 {
+            margin: 0;
+            font-size: 21px;
+        }
+
+        .logo small {
+            display: block;
+            margin-top: 5px;
+            opacity: .8;
+        }
+
+        .menu a {
+            display: block;
+            text-decoration: none;
+            color: white;
+            padding: 12px 14px;
+            border-radius: 8px;
+            margin-bottom: 5px;
+            transition: .2s;
+        }
+
+        .menu a:hover {
+            background: rgba(255,255,255,.12);
+        }
+
+        .menu a.activo {
+            background: #c9a227;
+            color: #123;
+            font-weight: bold;
+        }
+
+        .menu-titulo {
+            font-size: 11px;
+            text-transform: uppercase;
+            opacity: .6;
+            margin: 20px 10px 8px;
+        }
+
+        /* =====================================
+           CONTENIDO
+        ===================================== */
+
+        .contenido {
+            margin-left: 250px;
+            width: calc(100% - 250px);
+            min-height: 100vh;
+        }
+
+        .topbar {
+            background: white;
+            padding: 18px 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .topbar h1 {
+            margin: 0;
+            font-size: 23px;
+        }
+
+        .usuario {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .usuario-info {
+            text-align: right;
+        }
+
+        .usuario-nombre {
+            font-weight: bold;
+        }
+
+        .usuario-rol {
+            font-size: 12px;
+            color: #075c35;
+            margin-top: 3px;
+        }
+
+        .btn-salir {
+            border: none;
+            background: #dc3545;
+            color: white;
+            padding: 9px 13px;
+            border-radius: 7px;
+            cursor: pointer;
+        }
+
+        .btn-salir:hover {
+            background: #b02a37;
+        }
+
+        .contenido-principal {
+            padding: 25px;
+        }
+
+        /* =====================================
+           ENCABEZADO
+        ===================================== */
+
+        .encabezado {
+            background: white;
+            padding: 22px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            border-left: 5px solid #c9a227;
+        }
+
+        .encabezado h2 {
+            margin: 0 0 7px;
+            color: #075c35;
+        }
+
+        .encabezado p {
+            margin: 0;
+            color: #666;
+        }
+
+        /* =====================================
+           PESTAÑAS
+        ===================================== */
+
+        .pestanas {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        .pestana {
+            border: none;
+            background: white;
+            padding: 12px 18px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            color: #555;
+            border: 1px solid #ddd;
+        }
+
+        .pestana:hover {
+            border-color: #075c35;
+        }
+
+        .pestana.activa {
+            background: #075c35;
+            color: white;
+            border-color: #075c35;
+        }
+
+        /* =====================================
+           SECCIONES
+        ===================================== */
+
+        .panel {
+            display: none;
+        }
+
+        .panel.activo {
+            display: block;
+        }
+
+        .cabecera-panel {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .cabecera-panel h2 {
+            margin: 0;
+            color: #075c35;
+            font-size: 20px;
+        }
+
+        /* =====================================
+           BOTONES
+        ===================================== */
+
+        .btn {
+            border: none;
+            padding: 10px 15px;
+            border-radius: 7px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .btn-principal {
+            background: #075c35;
+            color: white;
+        }
+
+        .btn-principal:hover {
+            background: #06482b;
+        }
+
+        .btn-secundario {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-editar {
+            background: #c9a227;
+            color: #111;
+        }
+
+        .btn-eliminar {
+            background: #dc3545;
+            color: white;
+        }
+
+        /* =====================================
+           TARJETA
+        ===================================== */
+
+        .tarjeta {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,.06);
+            margin-bottom: 20px;
+        }
+
+        /* =====================================
+           FORMULARIO
+        ===================================== */
+
+        .formulario-contenedor {
+            display: none;
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid #ddd;
+        }
+
+        .formulario-contenedor.mostrar {
+            display: block;
+        }
+
+        .formulario-contenedor h3 {
+            margin-top: 0;
+            color: #075c35;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+
+        .campo {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .campo.completo {
+            grid-column: 1 / -1;
+        }
+
+        .campo label {
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .campo input,
+        .campo select,
+        .campo textarea {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 7px;
+            font-size: 14px;
+            width: 100%;
+        }
+
+        .campo textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+
+        .acciones-formulario {
+            margin-top: 18px;
+            display: flex;
+            gap: 10px;
+        }
+
+        /* =====================================
+           TABLAS
+        ===================================== */
+
+        .tabla-contenedor {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            background: #075c35;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-size: 13px;
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #e5e5e5;
+            font-size: 14px;
+        }
+
+        tr:hover td {
+            background: #f8faf9;
+        }
+
+        .acciones {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .acciones button {
+            border: none;
+            padding: 7px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        /* =====================================
+           ESTADO
+        ===================================== */
+
+        .estado-activo {
+            color: #075c35;
+            font-weight: bold;
+        }
+
+        .estado-inactivo {
+            color: #dc3545;
+            font-weight: bold;
+        }
+
+        /* =====================================
+           MENSAJE
+        ===================================== */
+
+        .mensaje {
+            padding: 12px 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            display: none;
+        }
+
+        .mensaje.exito {
+            display: block;
+            background: #d1e7dd;
+            color: #0f5132;
+        }
+
+        .mensaje.error {
+            display: block;
+            background: #f8d7da;
+            color: #842029;
+        }
+
+        /* =====================================
+           RESPONSIVE
+        ===================================== */
+
+        @media(max-width: 900px) {
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+        }
+
+        @media(max-width: 700px) {
+
+            .sidebar {
+                width: 210px;
+            }
+
+            .contenido {
+                margin-left: 210px;
+                width: calc(100% - 210px);
+            }
+
+            .topbar {
+                align-items: flex-start;
+                gap: 15px;
+                flex-direction: column;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+
+<div class="layout">
+
+
+    <!-- =====================================
+         SIDEBAR
+    ===================================== -->
+
+    <aside class="sidebar">
+
+        <div class="logo">
+
+            <h2>
+                CAMPEONATO 2026
+            </h2>
+
+            <small>
+                Panel Administrativo
+            </small>
+
+        </div>
+
+
+        <nav class="menu">
+
+            <a href="/admin/">
+                🏠 Inicio
+            </a>
+
+
+            <div class="menu-titulo">
+                Inscripciones
+            </div>
+
+            <a href="/admin/equipos.html">
+                ⚽ Equipos
+            </a>
+
+            <a href="/admin/nomina.html">
+                👤 nomina
+            </a>
+
+            <a href="/admin/inscripciones.html">
+                📋 Inscripcion
+            </a>
+
+
+            <div class="menu-titulo">
+                Competición
+            </div>
+
+            <a
+                href="/admin/configuracion.html"
+                class="activo"
+            >
+                ⚙️ Configuración
+            </a>
+
+            <a href="/admin/competencias.html">
+                🏆 Competencias
+            </a>
+
+            <a href="/admin/partidos.html">
+                📅 Partidos
+            </a>
+
+            <a href="/admin/resultados.html">
+                📊 Resultados
+            </a>
+
+
+            <div class="menu-titulo">
+                Administración
+            </div>
+
+            <a href="/admin/usuarios.html">
+                👥 Usuarios
+            </a>
+
+            <a href="/admin/perfiles.html">
+                🔐 Roles y permisos
+            </a>
+
+        </nav>
+
+    </aside>
+
+
+    <!-- =====================================
+         CONTENIDO
+    ===================================== -->
+
+    <main class="contenido">
+
+
+        <!-- TOPBAR -->
+
+        <header class="topbar">
+
+            <h1>
+                Configuración del Campeonato
+            </h1>
+
+
+            <div class="usuario">
+
+                <div class="usuario-info">
+
+                    <div
+                        id="usuarioNombre"
+                        class="usuario-nombre"
+                    >
+                        Cargando...
+                    </div>
+
+                    <div
+                        id="usuarioRol"
+                        class="usuario-rol"
+                    >
+                        Verificando permisos...
+                    </div>
+
+                </div>
+
+
+                <button
+                    id="btnSalir"
+                    class="btn-salir"
+                >
+                    Cerrar sesión
+                </button>
+
+            </div>
+
+        </header>
+
+
+        <!-- CONTENIDO PRINCIPAL -->
+
+        <section class="contenido-principal">
+
+
+            <div class="encabezado">
+
+                <h2>
+                    ⚙️ Configuración de competencias
+                </h2>
+
+                <p>
+                    Administre los campeonatos, disciplinas,
+                    categorías y géneros que estarán disponibles
+                    para crear las competencias.
+                </p>
+
+            </div>
+
+
+            <div
+                id="mensaje"
+                class="mensaje"
+            ></div>
+
+
+            <!-- =====================================
+                 PESTAÑAS
+            ===================================== -->
+
+            <div class="pestanas">
+
+                <button
+                    class="pestana activa"
+                    data-panel="campeonatos"
+                >
+                    🏆 Campeonatos
+                </button>
+
+
+                <button
+                    class="pestana"
+                    data-panel="disciplinas"
+                >
+                    🏅 Disciplinas
+                </button>
+
+
+                <button
+                    class="pestana"
+                    data-panel="categorias"
+                >
+                    📂 Categorías
+                </button>
+
+
+                <button
+                    class="pestana"
+                    data-panel="generos"
+                >
+                    🚻 Géneros
+                </button>
+
+            </div>
+
+
+            <!-- =====================================
+                 CAMPEONATOS
+            ===================================== -->
+
+            <section
+                id="panel-campeonatos"
+                class="panel activo"
+            >
+
+                <div class="cabecera-panel">
+
+                    <h2>
+                        🏆 Campeonatos
+                    </h2>
+
+                    <button
+                        id="btnNuevoCampeonato"
+                        class="btn btn-principal"
+                    >
+                        ➕ Nuevo campeonato
+                    </button>
+
+                </div>
+
+
+                <div
+                    id="formCampeonato"
+                    class="formulario-contenedor"
+                >
+
+                    <h3>
+                        Nuevo campeonato
+                    </h3>
+
+
+                    <form id="formularioCampeonato">
+
+                        <div class="form-grid">
+
+
+                            <div class="campo">
+
+                                <label>
+                                    Nombre
+                                </label>
+
+                                <input
+                                    type="text"
+                                    id="campeonatoNombre"
+                                    placeholder="Ej. Campeonato 2026"
+                                    required
+                                >
+
+                            </div>
+
+
+                            <div class="campo">
+
+                                <label>
+                                    Fecha de inicio
+                                </label>
+
+                                <input
+                                    type="date"
+                                    id="campeonatoFechaInicio"
+                                    required
+                                >
+
+                            </div>
+
+
+                            <div class="campo">
+
+                                <label>
+                                    Estado
+                                </label>
+
+                                <select
+                                    id="campeonatoEstado"
+                                    required
+                                >
+
+                                    <option value="PLANIFICADO">
+                                        PLANIFICADO
+                                    </option>
+
+                                    <option value="INSCRIPCIONES">
+                                        INSCRIPCIONES
+                                    </option>
+
+                                    <option value="EN_CURSO">
+                                        EN CURSO
+                                    </option>
+
+                                    <option value="FINALIZADO">
+                                        FINALIZADO
+                                    </option>
+
+                                </select>
+
+                            </div>
+
+
+                            <div class="campo completo">
+
+                                <label>
+                                    Descripción
+                                </label>
+
+                                <textarea
+                                    id="campeonatoDescripcion"
+                                    placeholder="Descripción del campeonato..."
+                                ></textarea>
+
+                            </div>
+
+
+                        </div>
+
+
+                        <div class="acciones-formulario">
+
+                            <button
+                                type="submit"
+                                class="btn btn-principal"
+                            >
+                                💾 Guardar
+                            </button>
+
+                            <button
+                                type="button"
+                                id="cancelarCampeonato"
+                                class="btn btn-secundario"
+                            >
+                                Cancelar
+                            </button>
+
+                        </div>
+
+                    </form>
+
+                </div>
+
+
+                <div class="tarjeta">
+
+                    <div class="tabla-contenedor">
+
+                        <table>
+
+                            <thead>
+
+                                <tr>
+
+                                    <th>
+                                        Nombre
+                                    </th>
+
+                                    <th>
+                                        Fecha inicio
+                                    </th>
+
+                                    <th>
+                                        Estado
+                                    </th>
+
+                                    <th>
+                                        Acciones
+                                    </th>
+
+                                </tr>
+
+                            </thead>
+
+
+                            <tbody id="tablaCampeonatos">
+
+                                <tr>
+
+                                    <td colspan="4">
+                                        Cargando...
+                                    </td>
+
+                                </tr>
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            <!-- =====================================
+                 DISCIPLINAS
+            ===================================== -->
+
+            <section
+                id="panel-disciplinas"
+                class="panel"
+            >
+
+                <div class="cabecera-panel">
+
+                    <h2>
+                        🏅 Disciplinas
+                    </h2>
+
+                    <button
+                        id="btnNuevaDisciplina"
+                        class="btn btn-principal"
+                    >
+                        ➕ Nueva disciplina
+                    </button>
+
+                </div>
+
+
+                <div
+                    id="formDisciplina"
+                    class="formulario-contenedor"
+                >
+
+                    <h3>
+                        Nueva disciplina
+                    </h3>
+
+
+                    <form id="formularioDisciplina">
+
+                        <div class="form-grid">
+
+
+                            <div class="campo">
+
+                                <label>
+                                    Nombre
+                                </label>
+
+                                <input
+                                    type="text"
+                                    id="disciplinaNombre"
+                                    placeholder="Ej. Fútbol"
+                                    required
+                                >
+
+                            </div>
+
+
+                            <div class="campo">
+
+                                <label>
+                                    Estado
+                                </label>
+
+                                <select
+                                    id="disciplinaActivo"
+                                >
+
+                                    <option value="true">
+                                        Activa
+                                    </option>
+
+                                    <option value="false">
+                                        Inactiva
+                                    </option>
+
+                                </select>
+
+                            </div>
+
+
+                        </div>
+
+
+                        <div class="acciones-formulario">
+
+                            <button
+                                type="submit"
+                                class="btn btn-principal"
+                            >
+                                💾 Guardar
+                            </button>
+
+                            <button
+                                type="button"
+                                id="cancelarDisciplina"
+                                class="btn btn-secundario"
+                            >
+                                Cancelar
+                            </button>
+
+                        </div>
+
+                    </form>
+
+                </div>
+
+
+                <div class="tarjeta">
+
+                    <div class="tabla-contenedor">
+
+                        <table>
+
+                            <thead>
+
+                                <tr>
+
+                                    <th>
+                                        Disciplina
+                                    </th>
+
+                                    <th>
+                                        Estado
+                                    </th>
+
+                                    <th>
+                                        Acciones
+                                    </th>
+
+                                </tr>
+
+                            </thead>
+
+
+                            <tbody id="tablaDisciplinas">
+
+                                <tr>
+
+                                    <td colspan="3">
+                                        Cargando...
+                                    </td>
+
+                                </tr>
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            <!-- =====================================
+                 CATEGORÍAS
+            ===================================== -->
+
+            <section
+                id="panel-categorias"
+                class="panel"
+            >
+
+                <div class="cabecera-panel">
+
+                    <h2>
+                        📂 Categorías
+                    </h2>
+
+                    <button
+                        id="btnNuevaCategoria"
+                        class="btn btn-principal"
+                    >
+                        ➕ Nueva categoría
+                    </button>
+
+                </div>
+
+
+                <div
+                    id="formCategoria"
+                    class="formulario-contenedor"
+                >
+
+                    <h3>
+                        Nueva categoría
+                    </h3>
+
+
+                    <form id="formularioCategoria">
+
+                        <div class="form-grid">
+
+
+                            <div class="campo">
+
+                                <label>
+                                    Nombre
+                                </label>
+
+                                <input
+                                    type="text"
+                                    id="categoriaNombre"
+                                    placeholder="Ej. Abierta"
+                                    required
+                                >
+
+                            </div>
+
+
+                            <div class="campo">
+
+                                <label>
+                                    Edad mínima
+                                </label>
+
+                                <input
+                                    type="number"
+                                    id="categoriaEdadMinima"
+                                    min="0"
+                                    placeholder="Opcional"
+                                >
+
+                            </div>
+
+
+                            <div class="campo">
+
+                                <label>
+                                    Edad máxima
+                                </label>
+
+                                <input
+                                    type="number"
+                                    id="categoriaEdadMaxima"
+                                    min="0"
+                                    placeholder="Opcional"
+                                >
+
+                            </div>
+
+
+                            <div class="campo">
+
+                                <label>
+                                    Estado
+                                </label>
+
+                                <select
+                                    id="categoriaActivo"
+                                >
+
+                                    <option value="true">
+                                        Activa
+                                    </option>
+
+                                    <option value="false">
+                                        Inactiva
+                                    </option>
+
+                                </select>
+
+                            </div>
+
+
+                        </div>
+
+
+                        <div class="acciones-formulario">
+
+                            <button
+                                type="submit"
+                                class="btn btn-principal"
+                            >
+                                💾 Guardar
+                            </button>
+
+                            <button
+                                type="button"
+                                id="cancelarCategoria"
+                                class="btn btn-secundario"
+                            >
+                                Cancelar
+                            </button>
+
+                        </div>
+
+                    </form>
+
+                </div>
+
+
+                <div class="tarjeta">
+
+                    <div class="tabla-contenedor">
+
+                        <table>
+
+                            <thead>
+
+                                <tr>
+
+                                    <th>
+                                        Categoría
+                                    </th>
+
+                                    <th>
+                                        Edad mínima
+                                    </th>
+
+                                    <th>
+                                        Edad máxima
+                                    </th>
+
+                                    <th>
+                                        Estado
+                                    </th>
+
+                                    <th>
+                                        Acciones
+                                    </th>
+
+                                </tr>
+
+                            </thead>
+
+
+                            <tbody id="tablaCategorias">
+
+                                <tr>
+
+                                    <td colspan="5">
+                                        Cargando...
+                                    </td>
+
+                                </tr>
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            <!-- =====================================
+                 GÉNEROS
+            ===================================== -->
+
+            <section
+                id="panel-generos"
+                class="panel"
+            >
+
+                <div class="cabecera-panel">
+
+                    <h2>
+                        🚻 Géneros
+                    </h2>
+
+                    <button
+                        id="btnNuevoGenero"
+                        class="btn btn-principal"
+                    >
+                        ➕ Nuevo género
+                    </button>
+
+                </div>
+
+
+                <div
+                    id="formGenero"
+                    class="formulario-contenedor"
+                >
+
+                    <h3>
+                        Nuevo género
+                    </h3>
+
+
+                    <form id="formularioGenero">
+
+                        <div class="form-grid">
+
+
+                            <div class="campo">
+
+                                <label>
+                                    Nombre
+                                </label>
+
+                                <input
+                                    type="text"
+                                    id="generoNombre"
+                                    placeholder="Ej. Masculino"
+                                    required
+                                >
+
+                            </div>
+
+
+                            <div class="campo">
+
+                                <label>
+                                    Estado
+                                </label>
+
+                                <select
+                                    id="generoActivo"
+                                >
+
+                                    <option value="true">
+                                        Activo
+                                    </option>
+
+                                    <option value="false">
+                                        Inactivo
+                                    </option>
+
+                                </select>
+
+                            </div>
+
+
+                        </div>
+
+
+                        <div class="acciones-formulario">
+
+                            <button
+                                type="submit"
+                                class="btn btn-principal"
+                            >
+                                💾 Guardar
+                            </button>
+
+                            <button
+                                type="button"
+                                id="cancelarGenero"
+                                class="btn btn-secundario"
+                            >
+                                Cancelar
+                            </button>
+
+                        </div>
+
+                    </form>
+
+                </div>
+
+
+                <div class="tarjeta">
+
+                    <div class="tabla-contenedor">
+
+                        <table>
+
+                            <thead>
+
+                                <tr>
+
+                                    <th>
+                                        Género
+                                    </th>
+
+                                    <th>
+                                        Estado
+                                    </th>
+
+                                    <th>
+                                        Acciones
+                                    </th>
+
+                                </tr>
+
+                            </thead>
+
+
+                            <tbody id="tablaGeneros">
+
+                                <tr>
+
+                                    <td colspan="3">
+                                        Cargando...
+                                    </td>
+
+                                </tr>
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+
+        </section>
+
+    </main>
+
+</div>
+
+
+<!-- ==========================================
+     JAVASCRIPT
+========================================== -->
+
+<script type="module">
+
+    import { supabase } from '../js/supabase.js';
+
+    import {
+        protegerAdmin,
+        nombreCompleto,
+        rolesTexto,
+        cerrarSesion
+    } from '../js/admin-auth.js';
+
+
+    let campeonatoEditando = null;
+    let disciplinaEditando = null;
+    let categoriaEditando = null;
+    let generoEditando = null;
+
+
+    /* ==========================================
+       INICIO
+    ========================================== */
+
+    async function iniciar() {
+
+        const usuario = await protegerAdmin();
+
+        if (!usuario) {
+            return;
+        }
+
+
+        document.getElementById('usuarioNombre').textContent =
+            nombreCompleto(usuario) || usuario.email;
+
+
+        document.getElementById('usuarioRol').textContent =
+            rolesTexto(usuario);
+
+
+        document
+            .getElementById('btnSalir')
+            .addEventListener(
+                'click',
+                cerrarSesion
+            );
+
+
+        configurarPestanas();
+
+
+        await cargarCampeonatos();
+
+        await cargarDisciplinas();
+
+        await cargarCategorias();
+
+        await cargarGeneros();
+
+
+        configurarEventos();
+
+    }
+
+
+    /* ==========================================
+       PESTAÑAS
+    ========================================== */
+
+    function configurarPestanas() {
+
+        document
+            .querySelectorAll('.pestana')
+            .forEach(boton => {
+
+                boton.addEventListener(
+                    'click',
+                    () => {
+
+                        document
+                            .querySelectorAll('.pestana')
+                            .forEach(b =>
+                                b.classList.remove('activa')
+                            );
+
+
+                        document
+                            .querySelectorAll('.panel')
+                            .forEach(panel =>
+                                panel.classList.remove('activo')
+                            );
+
+
+                        boton.classList.add('activa');
+
+
+                        document
+                            .getElementById(
+                                'panel-' + boton.dataset.panel
+                            )
+                            .classList.add('activo');
+
+                    }
+                );
+
+            });
+
+    }
+
+
+    /* ==========================================
+       EVENTOS
+    ========================================== */
+
+    function configurarEventos() {
+
+
+        document
+            .getElementById('btnNuevoCampeonato')
+            .addEventListener(
+                'click',
+                () => {
+
+                    campeonatoEditando = null;
+
+                    document
+                        .getElementById('formularioCampeonato')
+                        .reset();
+
+                    document
+                        .getElementById('formCampeonato')
+                        .classList.add('mostrar');
+
+                }
+            );
+
+
+        document
+            .getElementById('cancelarCampeonato')
+            .addEventListener(
+                'click',
+                cerrarFormularioCampeonato
+            );
+
+
+        document
+            .getElementById('formularioCampeonato')
+            .addEventListener(
+                'submit',
+                guardarCampeonato
+            );
+
+
+        document
+            .getElementById('btnNuevaDisciplina')
+            .addEventListener(
+                'click',
+                () => {
+
+                    disciplinaEditando = null;
+
+                    document
+                        .getElementById('formularioDisciplina')
+                        .reset();
+
+                    document
+                        .getElementById('formDisciplina')
+                        .classList.add('mostrar');
+
+                }
+            );
+
+
+        document
+            .getElementById('cancelarDisciplina')
+            .addEventListener(
+                'click',
+                cerrarFormularioDisciplina
+            );
+
+
+        document
+            .getElementById('formularioDisciplina')
+            .addEventListener(
+                'submit',
+                guardarDisciplina
+            );
+
+
+        document
+            .getElementById('btnNuevaCategoria')
+            .addEventListener(
+                'click',
+                () => {
+
+                    categoriaEditando = null;
+
+                    document
+                        .getElementById('formularioCategoria')
+                        .reset();
+
+                    document
+                        .getElementById('formCategoria')
+                        .classList.add('mostrar');
+
+                }
+            );
+
+
+        document
+            .getElementById('cancelarCategoria')
+            .addEventListener(
+                'click',
+                cerrarFormularioCategoria
+            );
+
+
+        document
+            .getElementById('formularioCategoria')
+            .addEventListener(
+                'submit',
+                guardarCategoria
+            );
+
+
+        document
+            .getElementById('btnNuevoGenero')
+            .addEventListener(
+                'click',
+                () => {
+
+                    generoEditando = null;
+
+                    document
+                        .getElementById('formularioGenero')
+                        .reset();
+
+                    document
+                        .getElementById('formGenero')
+                        .classList.add('mostrar');
+
+                }
+            );
+
+
+        document
+            .getElementById('cancelarGenero')
+            .addEventListener(
+                'click',
+                cerrarFormularioGenero
+            );
+
+
+        document
+            .getElementById('formularioGenero')
+            .addEventListener(
+                'submit',
+                guardarGenero
+            );
+
+    }
+
+
+    /* ==========================================
+       CAMPEONATOS
+    ========================================== */
+
+    async function cargarCampeonatos() {
+
+        const tabla =
+            document.getElementById('tablaCampeonatos');
+
+
+        const { data, error } = await supabase
+
+            .from('campeonato')
+
+            .select('*')
+
+            .order(
+                'id',
+                {
+                    ascending: false
+                }
+            );
+
+
+        if (error) {
+
+            console.error(
+                'Error cargando campeonatos:',
+                error
+            );
+
+            tabla.innerHTML = `
+                <tr>
+                    <td colspan="4">
+                        Error al cargar campeonatos.
+                    </td>
+                </tr>
+            `;
+
+            return;
+        }
+
+
+        if (!data || data.length === 0) {
+
+            tabla.innerHTML = `
+                <tr>
+                    <td colspan="4">
+                        No existen campeonatos registrados.
+                    </td>
+                </tr>
+            `;
+
+            return;
+        }
+
+
+        tabla.innerHTML = '';
+
+
+        data.forEach(item => {
+
+            const fila =
+                document.createElement('tr');
+
+
+            fila.innerHTML = `
+
+                <td>
+                    <strong>
+                        ${item.nombre || ''}
+                    </strong>
+                </td>
+
+                <td>
+                    ${item.fecha_inicio || ''}
+                </td>
+
+                <td>
+                    ${item.estado || ''}
+                </td>
+
+                <td>
+
+                    <div class="acciones">
+
+                        <button
+                            class="btn-editar"
+                            onclick="editarCampeonato('${item.id}')"
+                        >
+                            ✏️ Editar
+                        </button>
+
+                        <button
+                            class="btn-eliminar"
+                            onclick="eliminarCampeonato('${item.id}')"
+                        >
+                            🗑️ Eliminar
+                        </button>
+
+                    </div>
+
+                </td>
+
+            `;
+
+
+            tabla.appendChild(fila);
+
+        });
+
+    }
+
+
+    async function guardarCampeonato(event) {
+
+        event.preventDefault();
+
+
+        const datos = {
+
+            nombre:
+                document
+                    .getElementById('campeonatoNombre')
+                    .value
+                    .trim(),
+
+            fecha_inicio:
+                document
+                    .getElementById('campeonatoFechaInicio')
+                    .value,
+
+            estado:
+                document
+                    .getElementById('campeonatoEstado')
+                    .value,
+
+            descripcion:
+                document
+                    .getElementById('campeonatoDescripcion')
+                    .value
+                    .trim()
+
+        };
+
+
+        let resultado;
+
+
+        if (campeonatoEditando) {
+
+            resultado = await supabase
+
+                .from('campeonato')
+
+                .update(datos)
+
+                .eq(
+                    'id',
+                    campeonatoEditando
+                );
+
+        } else {
+
+            resultado = await supabase
+
+                .from('campeonato')
+
+                .insert([datos]);
+
+        }
+
+
+        if (resultado.error) {
+
+            console.error(
+                resultado.error
+            );
+
+            mostrarMensaje(
+                resultado.error.message,
+                'error'
+            );
+
+            return;
+        }
+
+
+        mostrarMensaje(
+            'Campeonato guardado correctamente.',
+            'exito'
+        );
+
+
+        cerrarFormularioCampeonato();
+
+        await cargarCampeonatos();
+
+    }
+
+
+    window.editarCampeonato =
+        async function(id) {
+
+            const { data, error } =
+                await supabase
+
+                    .from('campeonato')
+
+                    .select('*')
+
+                    .eq('id', id)
+
+                    .single();
+
+
+            if (error) {
+
+                mostrarMensaje(
+                    error.message,
+                    'error'
+                );
+
+                return;
+            }
+
+
+            campeonatoEditando = id;
+
+
+            document
+                .getElementById('campeonatoNombre')
+                .value =
+                data.nombre || '';
+
+
+            document
+                .getElementById('campeonatoFechaInicio')
+                .value =
+                data.fecha_inicio || '';
+
+
+            document
+                .getElementById('campeonatoEstado')
+                .value =
+                data.estado || 'PLANIFICADO';
+
+
+            document
+                .getElementById('campeonatoDescripcion')
+                .value =
+                data.descripcion || '';
+
+
+            document
+                .getElementById('formCampeonato')
+                .classList.add('mostrar');
+
+        };
+
+
+    window.eliminarCampeonato =
+        async function(id) {
+
+            if (
+                !confirm(
+                    '¿Está seguro de eliminar este campeonato?'
+                )
+            ) {
+                return;
+            }
+
+
+            const { error } =
+                await supabase
+
+                    .from('campeonato')
+
+                    .delete()
+
+                    .eq('id', id);
+
+
+            if (error) {
+
+                mostrarMensaje(
+                    error.message,
+                    'error'
+                );
+
+                return;
+            }
+
+
+            mostrarMensaje(
+                'Campeonato eliminado.',
+                'exito'
+            );
+
+
+            await cargarCampeonatos();
+
+        };
+
+
+    function cerrarFormularioCampeonato() {
+
+        campeonatoEditando = null;
+
+        document
+            .getElementById('formularioCampeonato')
+            .reset();
+
+        document
+            .getElementById('formCampeonato')
+            .classList.remove('mostrar');
+
+    }
+
+
+    /* ==========================================
+       DISCIPLINAS
+    ========================================== */
+
+    async function cargarDisciplinas() {
+
+        const tabla =
+            document.getElementById('tablaDisciplinas');
+
+
+        const { data, error } =
+            await supabase
+
+                .from('disciplina')
+
+                .select('*')
+
+                .order('nombre');
+
+
+        if (error) {
+
+            console.error(error);
+
+            tabla.innerHTML = `
+                <tr>
+                    <td colspan="3">
+                        Error al cargar disciplinas.
+                    </td>
+                </tr>
+            `;
+
+            return;
+        }
+
+
+        if (!data || data.length === 0) {
+
+            tabla.innerHTML = `
+                <tr>
+                    <td colspan="3">
+                        No existen disciplinas.
+                    </td>
+                </tr>
+            `;
+
+            return;
+        }
+
+
+        tabla.innerHTML = '';
+
+
+        data.forEach(item => {
+
+            const fila =
+                document.createElement('tr');
+
+
+            fila.innerHTML = `
+
+                <td>
+                    <strong>
+                        ${item.nombre || ''}
+                    </strong>
+                </td>
+
+                <td>
+
+                    ${
+                        item.activo !== false
+
+                            ? '<span class="estado-activo">Activa</span>'
+
+                            : '<span class="estado-inactivo">Inactiva</span>'
+                    }
+
+                </td>
+
+                <td>
+
+                    <div class="acciones">
+
+                        <button
+                            class="btn-editar"
+                            onclick="editarDisciplina('${item.id}')"
+                        >
+                            ✏️ Editar
+                        </button>
+
+                        <button
+                            class="btn-eliminar"
+                            onclick="eliminarDisciplina('${item.id}')"
+                        >
+                            🗑️ Eliminar
+                        </button>
+
+                    </div>
+
+                </td>
+
+            `;
+
+
+            tabla.appendChild(fila);
+
+        });
+
+    }
+
+
+    async function guardarDisciplina(event) {
+
+        event.preventDefault();
+
+
+        const datos = {
+
+            nombre:
+                document
+                    .getElementById('disciplinaNombre')
+                    .value
+                    .trim(),
+
+            activo:
+                document
+                    .getElementById('disciplinaActivo')
+                    .value === 'true'
+
+        };
+
+
+        let resultado;
+
+
+        if (disciplinaEditando) {
+
+            resultado = await supabase
+
+                .from('disciplina')
+
+                .update(datos)
+
+                .eq(
+                    'id',
+                    disciplinaEditando
+                );
+
+        } else {
+
+            resultado = await supabase
+
+                .from('disciplina')
+
+                .insert([datos]);
+
+        }
+
+
+        if (resultado.error) {
+
+            console.error(
+                resultado.error
+            );
+
+            mostrarMensaje(
+                resultado.error.message,
+                'error'
+            );
+
+            return;
+        }
+
+
+        mostrarMensaje(
+            'Disciplina guardada correctamente.',
+            'exito'
+        );
+
+
+        cerrarFormularioDisciplina();
+
+        await cargarDisciplinas();
+
+    }
+
+
+    window.editarDisciplina =
+        async function(id) {
+
+            const { data, error } =
+                await supabase
+
+                    .from('disciplina')
+
+                    .select('*')
+
+                    .eq('id', id)
+
+                    .single();
+
+
+            if (error) {
+
+                mostrarMensaje(
+                    error.message,
+                    'error'
+                );
+
+                return;
+            }
+
+
+            disciplinaEditando = id;
+
+
+            document
+                .getElementById('disciplinaNombre')
+                .value =
+                data.nombre || '';
+
+
+            document
+                .getElementById('disciplinaActivo')
+                .value =
+                data.activo === false
+                    ? 'false'
+                    : 'true';
+
+
+            document
+                .getElementById('formDisciplina')
+                .classList.add('mostrar');
+
+        };
+
+
+    window.eliminarDisciplina =
+        async function(id) {
+
+            if (
+                !confirm(
+                    '¿Está seguro de eliminar esta disciplina?'
+                )
+            ) {
+                return;
+            }
+
+
+            const { error } =
+                await supabase
+
+                    .from('disciplina')
+
+                    .delete()
+
+                    .eq('id', id);
+
+
+            if (error) {
+
+                mostrarMensaje(
+                    error.message,
+                    'error'
+                );
+
+                return;
+            }
+
+
+            mostrarMensaje(
+                'Disciplina eliminada.',
+                'exito'
+            );
+
+
+            await cargarDisciplinas();
+
+        };
+
+
+    function cerrarFormularioDisciplina() {
+
+        disciplinaEditando = null;
+
+        document
+            .getElementById('formularioDisciplina')
+            .reset();
+
+        document
+            .getElementById('formDisciplina')
+            .classList.remove('mostrar');
+
+    }
+
+
+    /* ==========================================
+       CATEGORÍAS
+    ========================================== */
+
+    async function cargarCategorias() {
+
+        const tabla =
+            document.getElementById('tablaCategorias');
+
+
+        const { data, error } =
+            await supabase
+
+                .from('categoria')
+
+                .select('*')
+
+                .order('nombre');
+
+
+        if (error) {
+
+            console.error(error);
+
+            tabla.innerHTML = `
+                <tr>
+                    <td colspan="5">
+                        Error al cargar categorías.
+                    </td>
+                </tr>
+            `;
+
+            return;
+        }
+
+
+        if (!data || data.length === 0) {
+
+            tabla.innerHTML = `
+                <tr>
+                    <td colspan="5">
+                        No existen categorías.
+                    </td>
+                </tr>
+            `;
+
+            return;
+        }
+
+
+        tabla.innerHTML = '';
+
+
+        data.forEach(item => {
+
+            const fila =
+                document.createElement('tr');
+
+
+            fila.innerHTML = `
+
+                <td>
+                    <strong>
+                        ${item.nombre || ''}
+                    </strong>
+                </td>
+
+                <td>
+                    ${item.edad_minima ?? ''}
+                </td>
+
+                <td>
+                    ${item.edad_maxima ?? ''}
+                </td>
+
+                <td>
+
+                    ${
+                        item.activo !== false
+
+                            ? '<span class="estado-activo">Activa</span>'
+
+                            : '<span class="estado-inactivo">Inactiva</span>'
+                    }
+
+                </td>
+
+                <td>
+
+                    <div class="acciones">
+
+                        <button
+                            class="btn-editar"
+                            onclick="editarCategoria('${item.id}')"
+                        >
+                            ✏️ Editar
+                        </button>
+
+                        <button
+                            class="btn-eliminar"
+                            onclick="eliminarCategoria('${item.id}')"
+                        >
+                            🗑️ Eliminar
+                        </button>
+
+                    </div>
+
+                </td>
+
+            `;
+
+
+            tabla.appendChild(fila);
+
+        });
+
+    }
+
+
+    async function guardarCategoria(event) {
+
+        event.preventDefault();
+
+
+        const edadMinima =
+            document
+                .getElementById('categoriaEdadMinima')
+                .value;
+
+
+        const edadMaxima =
+            document
+                .getElementById('categoriaEdadMaxima')
+                .value;
+
+
+        const datos = {
+
+            nombre:
+                document
+                    .getElementById('categoriaNombre')
+                    .value
+                    .trim(),
+
+            edad_minima:
+                edadMinima
+                    ? Number(edadMinima)
+                    : null,
+
+            edad_maxima:
+                edadMaxima
+                    ? Number(edadMaxima)
+                    : null,
+
+            activo:
+                document
+                    .getElementById('categoriaActivo')
+                    .value === 'true'
+
+        };
+
+
+        let resultado;
+
+
+        if (categoriaEditando) {
+
+            resultado = await supabase
+
+                .from('categoria')
+
+                .update(datos)
+
+                .eq(
+                    'id',
+                    categoriaEditando
+                );
+
+        } else {
+
+            resultado = await supabase
+
+                .from('categoria')
+
+                .insert([datos]);
+
+        }
+
+
+        if (resultado.error) {
+
+            console.error(
+                resultado.error
+            );
+
+            mostrarMensaje(
+                resultado.error.message,
+                'error'
+            );
+
+            return;
+        }
+
+
+        mostrarMensaje(
+            'Categoría guardada correctamente.',
+            'exito'
+        );
+
+
+        cerrarFormularioCategoria();
+
+        await cargarCategorias();
+
+    }
+
+
+    window.editarCategoria =
+        async function(id) {
+
+            const { data, error } =
+                await supabase
+
+                    .from('categoria')
+
+                    .select('*')
+
+                    .eq('id', id)
+
+                    .single();
+
+
+            if (error) {
+
+                mostrarMensaje(
+                    error.message,
+                    'error'
+                );
+
+                return;
+            }
+
+
+            categoriaEditando = id;
+
+
+            document
+                .getElementById('categoriaNombre')
+                .value =
+                data.nombre || '';
+
+
+            document
+                .getElementById('categoriaEdadMinima')
+                .value =
+                data.edad_minima ?? '';
+
+
+            document
+                .getElementById('categoriaEdadMaxima')
+                .value =
+                data.edad_maxima ?? '';
+
+
+            document
+                .getElementById('categoriaActivo')
+                .value =
+                data.activo === false
+                    ? 'false'
+                    : 'true';
+
+
+            document
+                .getElementById('formCategoria')
+                .classList.add('mostrar');
+
+        };
+
+
+    window.eliminarCategoria =
+        async function(id) {
+
+            if (
+                !confirm(
+                    '¿Está seguro de eliminar esta categoría?'
+                )
+            ) {
+                return;
+            }
+
+
+            const { error } =
+                await supabase
+
+                    .from('categoria')
+
+                    .delete()
+
+                    .eq('id', id);
+
+
+            if (error) {
+
+                mostrarMensaje(
+                    error.message,
+                    'error'
+                );
+
+                return;
+            }
+
+
+            mostrarMensaje(
+                'Categoría eliminada.',
+                'exito'
+            );
+
+
+            await cargarCategorias();
+
+        };
+
+
+    function cerrarFormularioCategoria() {
+
+        categoriaEditando = null;
+
+        document
+            .getElementById('formularioCategoria')
+            .reset();
+
+        document
+            .getElementById('formCategoria')
+            .classList.remove('mostrar');
+
+    }
+
+
+    /* ==========================================
+       GÉNEROS
+    ========================================== */
+
+    async function cargarGeneros() {
+
+        const tabla =
+            document.getElementById('tablaGeneros');
+
+
+        const { data, error } =
+            await supabase
+
+                .from('genero')
+
+                .select('*')
+
+                .order('nombre');
+
+
+        if (error) {
+
+            console.error(error);
+
+            tabla.innerHTML = `
+                <tr>
+                    <td colspan="3">
+                        Error al cargar géneros.
+                    </td>
+                </tr>
+            `;
+
+            return;
+        }
+
+
+        if (!data || data.length === 0) {
+
+            tabla.innerHTML = `
+                <tr>
+                    <td colspan="3">
+                        No existen géneros.
+                    </td>
+                </tr>
+            `;
+
+            return;
+        }
+
+
+        tabla.innerHTML = '';
+
+
+        data.forEach(item => {
+
+            const fila =
+                document.createElement('tr');
+
+
+            fila.innerHTML = `
+
+                <td>
+                    <strong>
+                        ${item.nombre || ''}
+                    </strong>
+                </td>
+
+                <td>
+
+                    ${
+                        item.activo !== false
+
+                            ? '<span class="estado-activo">Activo</span>'
+
+                            : '<span class="estado-inactivo">Inactivo</span>'
+                    }
+
+                </td>
+
+                <td>
+
+                    <div class="acciones">
+
+                        <button
+                            class="btn-editar"
+                            onclick="editarGenero('${item.id}')"
+                        >
+                            ✏️ Editar
+                        </button>
+
+                        <button
+                            class="btn-eliminar"
+                            onclick="eliminarGenero('${item.id}')"
+                        >
+                            🗑️ Eliminar
+                        </button>
+
+                    </div>
+
+                </td>
+
+            `;
+
+
+            tabla.appendChild(fila);
+
+        });
+
+    }
+
+
+    async function guardarGenero(event) {
+
+        event.preventDefault();
+
+
+        const datos = {
+
+            nombre:
+                document
+                    .getElementById('generoNombre')
+                    .value
+                    .trim(),
+
+            activo:
+                document
+                    .getElementById('generoActivo')
+                    .value === 'true'
+
+        };
+
+
+        let resultado;
+
+
+        if (generoEditando) {
+
+            resultado = await supabase
+
+                .from('genero')
+
+                .update(datos)
+
+                .eq(
+                    'id',
+                    generoEditando
+                );
+
+        } else {
+
+            resultado = await supabase
+
+                .from('genero')
+
+                .insert([datos]);
+
+        }
+
+
+        if (resultado.error) {
+
+            console.error(
+                resultado.error
+            );
+
+            mostrarMensaje(
+                resultado.error.message,
+                'error'
+            );
+
+            return;
+        }
+
+
+        mostrarMensaje(
+            'Género guardado correctamente.',
+            'exito'
+        );
+
+
+        cerrarFormularioGenero();
+
+        await cargarGeneros();
+
+    }
+
+
+    window.editarGenero =
+        async function(id) {
+
+            const { data, error } =
+                await supabase
+
+                    .from('genero')
+
+                    .select('*')
+
+                    .eq('id', id)
+
+                    .single();
+
+
+            if (error) {
+
+                mostrarMensaje(
+                    error.message,
+                    'error'
+                );
+
+                return;
+            }
+
+
+            generoEditando = id;
+
+
+            document
+                .getElementById('generoNombre')
+                .value =
+                data.nombre || '';
+
+
+            document
+                .getElementById('generoActivo')
+                .value =
+                data.activo === false
+                    ? 'false'
+                    : 'true';
+
+
+            document
+                .getElementById('formGenero')
+                .classList.add('mostrar');
+
+        };
+
+
+    window.eliminarGenero =
+        async function(id) {
+
+            if (
+                !confirm(
+                    '¿Está seguro de eliminar este género?'
+                )
+            ) {
+                return;
+            }
+
+
+            const { error } =
+                await supabase
+
+                    .from('genero')
+
+                    .delete()
+
+                    .eq('id', id);
+
+
+            if (error) {
+
+                mostrarMensaje(
+                    error.message,
+                    'error'
+                );
+
+                return;
+            }
+
+
+            mostrarMensaje(
+                'Género eliminado.',
+                'exito'
+            );
+
+
+            await cargarGeneros();
+
+        };
+
+
+    function cerrarFormularioGenero() {
+
+        generoEditando = null;
+
+        document
+            .getElementById('formularioGenero')
+            .reset();
+
+        document
+            .getElementById('formGenero')
+            .classList.remove('mostrar');
+
+    }
+
+
+    /* ==========================================
+       MENSAJES
+    ========================================== */
+
+    function mostrarMensaje(texto, tipo) {
+
+        const mensaje =
+            document.getElementById('mensaje');
+
+
+        mensaje.textContent = texto;
+
+        mensaje.className =
+            `mensaje ${tipo}`;
+
+
+        setTimeout(() => {
+
+            mensaje.className =
+                'mensaje';
+
+        }, 4000);
+
+    }
+
+
+    /* ==========================================
+       INICIAR
+    ========================================== */
+
+    iniciar();
+
+</script>
+
+
+</body>
+
+</html>

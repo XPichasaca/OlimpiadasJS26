@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Competencias | Campeonato 2026</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, Helvetica, sans-serif;
+            background: #f4f6f5;
+            color: #26332b;
+        }
+
+        header {
+            background: linear-gradient(135deg, #0d5c35, #16824d);
+            color: white;
+            padding: 20px 30px;
+            box-shadow: 0 3px 10px rgba(0,0,0,.15);
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 27px;
+        }
+
+        header p {
+            margin: 5px 0 0;
+        }
+
+        .contenedor {
+            width: 95%;
+            max-width: 1250px;
+            margin: 25px auto;
+        }
+
+        .menu {
+            background: white;
+            padding: 14px 18px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,.07);
+        }
+
+        .menu a {
+            text-decoration: none;
+            color: #0d5c35;
+            font-weight: bold;
+            margin-right: 22px;
+        }
+
+        .menu a:hover {
+            color: #d09b16;
+        }
+
+        .cabecera {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .cabecera h2 {
+            margin: 0;
+            color: #0d5c35;
+        }
+
+        button {
+            border: none;
+            border-radius: 7px;
+            padding: 11px 17px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .btn-nuevo {
+            background: #d6a529;
+            color: white;
+        }
+
+        .btn-nuevo:hover {
+            background: #b58917;
+        }
+
+        .btn-guardar {
+            background: #0d5c35;
+            color: white;
+        }
+
+        .btn-cancelar {
+            background: #777;
+            color: white;
+        }
+
+        .btn-ver {
+            background: #16824d;
+            color: white;
+            padding: 7px 11px;
+        }
+
+        .btn-editar {
+            background: #2563eb;
+            color: white;
+            padding: 7px 11px;
+        }
+
+        .btn-eliminar {
+            background: #c62828;
+            color: white;
+            padding: 7px 11px;
+        }
+
+        .tarjeta {
+            background: white;
+            border-radius: 12px;
+            padding: 22px;
+            margin-bottom: 22px;
+            box-shadow: 0 3px 12px rgba(0,0,0,.08);
+        }
+
+        .tarjeta h3 {
+            margin-top: 0;
+            color: #0d5c35;
+        }
+
+        /* FORMULARIO */
+
+        #formularioContenedor {
+            display: none;
+        }
+
+        #formularioContenedor.mostrar {
+            display: block;
+        }
+
+        .formulario {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+        }
+
+        .campo {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .campo label {
+            font-weight: bold;
+            margin-bottom: 6px;
+        }
+
+        .campo input,
+        .campo select {
+            padding: 11px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 15px;
+            background: white;
+        }
+
+        .campo input:focus,
+        .campo select:focus {
+            outline: none;
+            border-color: #16824d;
+        }
+
+        .acciones-formulario {
+            grid-column: 1 / -1;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 8px;
+        }
+
+        /* MENSAJES */
+
+        .mensaje {
+            display: none;
+            padding: 12px 15px;
+            border-radius: 7px;
+            margin-bottom: 18px;
+            font-weight: bold;
+        }
+
+        .mensaje.ok {
+            display: block;
+            background: #dff4e7;
+            color: #176b3a;
+        }
+
+        .mensaje.error {
+            display: block;
+            background: #fde2e2;
+            color: #a51f1f;
+        }
+
+        /* TABLA */
+
+        .tabla {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 900px;
+        }
+
+        th {
+            background: #0d5c35;
+            color: white;
+            padding: 13px 10px;
+            text-align: left;
+        }
+
+        td {
+            padding: 12px 10px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        tbody tr:hover td {
+            background: #f5faf7;
+        }
+
+        .acciones {
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+        }
+
+        .estado {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .planificado {
+            background: #fff1c7;
+            color: #806000;
+        }
+
+        .inscripciones {
+            background: #dff4e7;
+            color: #176b3a;
+        }
+
+        .curso {
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+
+        .finalizado {
+            background: #e5e7eb;
+            color: #374151;
+        }
+
+        .sin-datos {
+            text-align: center;
+            padding: 30px;
+            color: #777;
+        }
+
+        @media (max-width: 700px) {
+
+            .formulario {
+                grid-template-columns: 1fr;
+            }
+
+            .acciones-formulario {
+                grid-column: auto;
+            }
+
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+
+    <h1>🏆 Campeonato 2026</h1>
+
+    <p>
+        Administración de competencias
+    </p>
+
+</header>
+
+
+<div class="contenedor">
+
+
+    <!-- ================================
+         MENÚ
+    ================================= -->
+
+    <nav class="menu">
+
+        <a href="admin.html">
+            🏠 Inicio
+        </a>
+
+        <a href="equipos.html">
+            👥 Equipos
+        </a>
+
+        <a href="competencias.html">
+            🏅 Competencias
+        </a>
+
+    </nav>
+
+
+    <!-- ================================
+         CABECERA
+    ================================= -->
+
+    <div class="cabecera">
+
+        <h2>
+            🏅 Gestión de Competencias
+        </h2>
+
+        <button
+            type="button"
+            class="btn-nuevo"
+            id="btnNuevaCompetencia"
+        >
+            ➕ Nueva competencia
+        </button>
+
+    </div>
+
+
+    <!-- ================================
+         MENSAJE
+    ================================= -->
+
+    <div
+        id="mensaje"
+        class="mensaje"
+    ></div>
+
+
+    <!-- ================================
+         FORMULARIO
+    ================================= -->
+
+    <section
+        id="formularioContenedor"
+        class="tarjeta"
+    >
+
+        <h3 id="tituloFormulario">
+            Nueva competencia
+        </h3>
+
+
+        <form id="formCompetencia">
+
+            <div class="formulario">
+
+
+                <!-- CAMPEONATO -->
+
+                <div class="campo">
+
+                    <label for="campeonato">
+                        🏆 Campeonato
+                    </label>
+
+                    <select
+                        id="campeonato"
+                        required
+                    >
+
+                        <option value="">
+                            Cargando campeonatos...
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <!-- DISCIPLINA -->
+
+                <div class="campo">
+
+                    <label for="disciplina">
+                        🏅 Disciplina
+                    </label>
+
+                    <select
+                        id="disciplina"
+                        required
+                    >
+
+                        <option value="">
+                            Cargando disciplinas...
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <!-- CATEGORÍA -->
+
+                <div class="campo">
+
+                    <label for="categoria">
+                        📂 Categoría
+                    </label>
+
+                    <select
+                        id="categoria"
+                        required
+                    >
+
+                        <option value="">
+                            Cargando categorías...
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <!-- GÉNERO -->
+
+                <div class="campo">
+
+                    <label for="genero">
+                        🚻 Género
+                    </label>
+
+                    <select
+                        id="genero"
+                        required
+                    >
+
+                        <option value="">
+                            Cargando géneros...
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <!-- FECHA -->
+
+                <div class="campo">
+
+                    <label for="fechaLimite">
+                        📅 Fecha límite de inscripción
+                    </label>
+
+                    <input
+                        type="date"
+                        id="fechaLimite"
+                        required
+                    >
+
+                </div>
+
+
+                <!-- ESTADO -->
+
+                <div class="campo">
+
+                    <label for="estado">
+                        📌 Estado
+                    </label>
+
+                    <select
+                        id="estado"
+                        required
+                    >
+
+                        <option value="PLANIFICADO">
+                            Planificado
+                        </option>
+
+                        <option value="INSCRIPCIONES">
+                            Inscripciones
+                        </option>
+
+                        <option value="EN_CURSO">
+                            En curso
+                        </option>
+
+                        <option value="FINALIZADO">
+                            Finalizado
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <!-- BOTONES -->
+
+                <div class="acciones-formulario">
+
+                    <button
+                        type="button"
+                        class="btn-cancelar"
+                        id="btnCancelar"
+                    >
+                        Cancelar
+                    </button>
+
+                    <button
+                        type="submit"
+                        class="btn-guardar"
+                    >
+                        💾 Guardar competencia
+                    </button>
+
+                </div>
+
+            </div>
+
+        </form>
+
+    </section>
+
+
+    <!-- ================================
+         LISTADO
+    ================================= -->
+
+    <section class="tarjeta">
+
+        <h3>
+            Competencias registradas
+        </h3>
+
+        <div class="tabla">
+
+            <table>
+
+                <thead>
+
+                    <tr>
+
+                        <th>
+                            Campeonato
+                        </th>
+
+                        <th>
+                            Disciplina
+                        </th>
+
+                        <th>
+                            Categoría
+                        </th>
+
+                        <th>
+                            Género
+                        </th>
+
+                        <th>
+                            Fecha límite
+                        </th>
+
+                        <th>
+                            Estado
+                        </th>
+
+                        <th>
+                            Acciones
+                        </th>
+
+                    </tr>
+
+                </thead>
+
+
+                <tbody id="listaCompetencias">
+
+                    <tr>
+
+                        <td
+                            colspan="7"
+                            class="sin-datos"
+                        >
+                            Cargando competencias...
+                        </td>
+
+                    </tr>
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </section>
+
+</div>
+
+
+<!-- =====================================
+     SUPABASE + COMPETENCIAS
+===================================== -->
+
+<script type="module" src="../js/competencias.js"></script>
+
+
+<!-- =====================================
+     BOTONES DEL FORMULARIO
+===================================== -->
+
+<script>
+
+document.addEventListener(
+    'DOMContentLoaded',
+    function () {
+
+        const botonNueva =
+            document.getElementById(
+                'btnNuevaCompetencia'
+            );
+
+        const formulario =
+            document.getElementById(
+                'formularioContenedor'
+            );
+
+        const botonCancelar =
+            document.getElementById(
+                'btnCancelar'
+            );
+
+
+        /* ==============================
+           ABRIR FORMULARIO
+        ============================== */
+
+        botonNueva.addEventListener(
+            'click',
+            function () {
+
+                formulario.classList.add(
+                    'mostrar'
+                );
+
+                window.scrollTo({
+                    top: 0,
+                    behavior: 'smooth'
+                });
+
+            }
+        );
+
+
+        /* ==============================
+           CANCELAR
+        ============================== */
+
+        botonCancelar.addEventListener(
+            'click',
+            function () {
+
+                formulario.classList.remove(
+                    'mostrar'
+                );
+
+            }
+        );
+
+    }
+);
+
+</script>
+
+</body>
+</html>

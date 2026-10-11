@@ -1,0 +1,1518 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Inscripción de Jugadores | Campeonato 2026</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, Helvetica, sans-serif;
+            background: #f3f6f4;
+            color: #26352d;
+        }
+
+        header {
+            background: linear-gradient(135deg, #075b32, #0b7a43);
+            color: white;
+            padding: 22px 20px;
+            box-shadow: 0 3px 10px rgba(0,0,0,.15);
+        }
+
+        .header-contenido {
+            max-width: 1200px;
+            margin: auto;
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 28px;
+        }
+
+        header p {
+            margin: 7px 0 0;
+            opacity: .9;
+        }
+
+        main {
+            max-width: 1200px;
+            margin: 25px auto;
+            padding: 0 15px;
+        }
+
+        .tarjeta {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 22px;
+            box-shadow: 0 3px 14px rgba(0,0,0,.08);
+        }
+
+        .tarjeta h2 {
+            margin-top: 0;
+            color: #075b32;
+            border-bottom: 2px solid #d5aa32;
+            padding-bottom: 10px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+        }
+
+        .campo {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .campo-completo {
+            grid-column: 1 / -1;
+        }
+
+        label {
+            font-weight: bold;
+            margin-bottom: 6px;
+            color: #34463b;
+        }
+
+        input,
+        select {
+            width: 100%;
+            padding: 11px 12px;
+            border: 1px solid #c9d2cc;
+            border-radius: 7px;
+            font-size: 15px;
+            background: white;
+        }
+
+        input:focus,
+        select:focus {
+            outline: none;
+            border-color: #0b7a43;
+            box-shadow: 0 0 0 2px rgba(11,122,67,.12);
+        }
+
+        .info {
+            background: #eef8f1;
+            border-left: 5px solid #0b7a43;
+            padding: 12px 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+
+        .acciones {
+            display: flex;
+            gap: 10px;
+            margin-top: 22px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            border: none;
+            border-radius: 7px;
+            padding: 12px 20px;
+            font-size: 15px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .btn-guardar {
+            background: #075b32;
+            color: white;
+        }
+
+        .btn-guardar:hover {
+            background: #064a29;
+        }
+
+        .btn-limpiar {
+            background: #e2e7e4;
+            color: #26352d;
+        }
+
+        .btn-limpiar:hover {
+            background: #d3dad5;
+        }
+
+        button:disabled {
+            opacity: .6;
+            cursor: not-allowed;
+        }
+
+        #mensaje {
+            display: none;
+            margin-top: 18px;
+            padding: 13px 15px;
+            border-radius: 7px;
+            font-weight: bold;
+        }
+
+        .mensaje-ok {
+            display: block !important;
+            background: #e4f6e9;
+            color: #17652f;
+            border: 1px solid #a8dcb5;
+        }
+
+        .mensaje-error {
+            display: block !important;
+            background: #fdeaea;
+            color: #9b2222;
+            border: 1px solid #e4aaaa;
+        }
+
+        .tabla-contenedor {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            min-width: 850px;
+        }
+
+        th {
+            background: #075b32;
+            color: white;
+            padding: 12px 10px;
+            text-align: left;
+        }
+
+        td {
+            padding: 11px 10px;
+            border-bottom: 1px solid #e1e6e2;
+        }
+
+        tr:hover td {
+            background: #f6faf7;
+        }
+
+        .estado {
+            display: inline-block;
+            padding: 5px 9px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            background: #fff4d5;
+            color: #8a6500;
+        }
+
+        .contador {
+            margin-top: 8px;
+            color: #68766e;
+            font-size: 14px;
+        }
+
+        .cargando {
+            color: #68766e;
+            padding: 15px 0;
+        }
+
+        .vacio {
+            padding: 20px;
+            text-align: center;
+            background: #f6f8f7;
+            color: #6c7771;
+            border-radius: 7px;
+        }
+
+        footer {
+            text-align: center;
+            padding: 25px 15px;
+            color: #68766e;
+            font-size: 13px;
+        }
+
+        .campo-check {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            margin-top: 10px;
+        }
+
+        .campo-check input {
+            width: auto;
+        }
+
+        .texto-pequeno {
+            font-size: 12px;
+            color: #727d77;
+            margin-top: 5px;
+        }
+
+        @media (max-width: 700px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+
+            .campo-completo {
+                grid-column: auto;
+            }
+
+            .tarjeta {
+                padding: 18px;
+            }
+
+            header h1 {
+                font-size: 23px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <div class="header-contenido">
+        <h1>Campeonato 2026</h1>
+        <p>Inscripción de jugadores</p>
+    </div>
+</header>
+
+<main>
+
+    <!-- DATOS DE INSCRIPCIÓN -->
+    <section class="tarjeta">
+
+        <h2>1. Seleccionar inscripción</h2>
+
+        <div class="info">
+            Seleccione el equipo y la competencia en la que desea registrar al jugador.
+            La inscripción del equipo debe existir previamente.
+        </div>
+
+        <div class="grid">
+
+            <div class="campo">
+                <label for="inscripcionEquipo">
+                    Equipo / Competencia
+                </label>
+
+                <select id="inscripcionEquipo" required>
+                    <option value="">Cargando inscripciones...</option>
+                </select>
+
+                <div class="texto-pequeno">
+                    Se muestran las inscripciones de equipos existentes.
+                </div>
+            </div>
+
+            <div class="campo">
+                <label>
+                    Inscripción seleccionada
+                </label>
+
+                <input
+                    type="text"
+                    id="descripcionInscripcion"
+                    readonly
+                    placeholder="Seleccione una inscripción"
+                >
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- DATOS DEL JUGADOR -->
+    <section class="tarjeta">
+
+        <h2>2. Datos del jugador</h2>
+
+        <form id="formJugador">
+
+            <div class="grid">
+
+                <div class="campo">
+                    <label for="nombres">
+                        Nombres *
+                    </label>
+
+                    <input
+                        type="text"
+                        id="nombres"
+                        required
+                        maxlength="150"
+                        placeholder="Nombres del jugador"
+                    >
+                </div>
+
+
+                <div class="campo">
+                    <label for="apellidos">
+                        Apellidos *
+                    </label>
+
+                    <input
+                        type="text"
+                        id="apellidos"
+                        required
+                        maxlength="150"
+                        placeholder="Apellidos del jugador"
+                    >
+                </div>
+
+
+                <div class="campo">
+                    <label for="documento">
+                        Número de cédula
+                    </label>
+
+                    <input
+                        type="text"
+                        id="documento"
+                        maxlength="20"
+                        placeholder="Ej.: 0301234567"
+                    >
+
+                    <div class="texto-pequeno">
+                        La cédula se utiliza para evitar jugadores duplicados.
+                    </div>
+                </div>
+
+
+                <div class="campo">
+                    <label for="fechaNacimiento">
+                        Fecha de nacimiento *
+                    </label>
+
+                    <input
+                        type="date"
+                        id="fechaNacimiento"
+                        required
+                    >
+                </div>
+
+
+                <div class="campo">
+                    <label for="numero">
+                        Número de camiseta
+                    </label>
+
+                    <input
+                        type="number"
+                        id="numero"
+                        min="1"
+                        placeholder="Ej.: 10"
+                    >
+                </div>
+
+
+                <div class="campo">
+                    <label for="posicion">
+                        Posición
+                    </label>
+
+                    <input
+                        type="text"
+                        id="posicion"
+                        maxlength="100"
+                        placeholder="Ej.: DELANTERO"
+                    >
+                </div>
+
+
+                <div class="campo">
+                    <label for="origen">
+                        Origen
+                    </label>
+
+                    <select id="origen">
+                        <option value="">Seleccione</option>
+                        <option value="NACIMIENTO">Nacimiento</option>
+                        <option value="MATRIMONIAL">Matrimonial</option>
+                        <option value="FAMILIAR">Familiar</option>
+                        <option value="RESIDENCIA">Residencia</option>
+                    </select>
+                </div>
+
+
+                <div class="campo">
+
+                    <label>
+                        Jugador especial
+                    </label>
+
+                    <div class="campo-check">
+
+                        <input
+                            type="checkbox"
+                            id="esEspecial"
+                        >
+
+                        <label for="esEspecial">
+                            Marcar como jugador especial
+                        </label>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div class="acciones">
+
+                <button
+                    type="submit"
+                    class="btn-guardar"
+                    id="btnGuardar"
+                >
+                    REGISTRAR JUGADOR
+                </button>
+
+                <button
+                    type="button"
+                    class="btn-limpiar"
+                    id="btnLimpiar"
+                >
+                    LIMPIAR
+                </button>
+
+            </div>
+
+        </form>
+
+
+        <div id="mensaje"></div>
+
+    </section>
+
+
+    <!-- NÓMINA -->
+    <section class="tarjeta">
+
+        <h2>3. Jugadores registrados</h2>
+
+        <div id="contador" class="contador">
+            Seleccione una inscripción para ver la nómina.
+        </div>
+
+        <div id="contenedorTabla">
+            <div class="vacio">
+                Seleccione un equipo y competencia.
+            </div>
+        </div>
+
+    </section>
+
+</main>
+
+
+<footer>
+    Comuna Quilloac | Desarrollado por Xavier Pichasaca © 2025
+</footer>
+
+
+<script type="module">
+
+    import { supabase } from './js/supabase.js';
+
+
+    // =========================================================
+    // ELEMENTOS
+    // =========================================================
+
+    const selectInscripcion =
+        document.getElementById('inscripcionEquipo');
+
+    const descripcionInscripcion =
+        document.getElementById('descripcionInscripcion');
+
+    const formJugador =
+        document.getElementById('formJugador');
+
+    const btnGuardar =
+        document.getElementById('btnGuardar');
+
+    const btnLimpiar =
+        document.getElementById('btnLimpiar');
+
+    const mensaje =
+        document.getElementById('mensaje');
+
+    const contenedorTabla =
+        document.getElementById('contenedorTabla');
+
+    const contador =
+        document.getElementById('contador');
+
+
+    let inscripciones = [];
+
+
+    // =========================================================
+    // MENSAJES
+    // =========================================================
+
+    function mostrarMensaje(texto, tipo = 'ok') {
+
+        mensaje.textContent = texto;
+
+        mensaje.className =
+            tipo === 'ok'
+                ? 'mensaje-ok'
+                : 'mensaje-error';
+
+    }
+
+
+    function ocultarMensaje() {
+
+        mensaje.textContent = '';
+        mensaje.className = '';
+
+    }
+
+
+    // =========================================================
+    // CARGAR INSCRIPCIONES DE EQUIPOS
+    // =========================================================
+
+    async function cargarInscripciones() {
+
+        selectInscripcion.innerHTML =
+            '<option value="">Cargando inscripciones...</option>';
+
+        const { data, error } = await supabase
+
+            .from('inscripcion_equipo')
+
+            .select(`
+                id,
+                equipo_id,
+                competencia_id,
+                estado,
+
+                equipo:equipo_id (
+                    id,
+                    nombre
+                ),
+
+                competencia:competencia_id (
+                    id,
+                    nombre,
+                    estado
+                )
+            `)
+
+            .order('id', { ascending: false });
+
+
+        if (error) {
+
+            console.error(
+                'Error cargando inscripciones:',
+                error
+            );
+
+            selectInscripcion.innerHTML =
+                '<option value="">Error al cargar</option>';
+
+            mostrarMensaje(
+                'No se pudieron cargar las inscripciones de equipos: '
+                + error.message,
+                'error'
+            );
+
+            return;
+        }
+
+
+        inscripciones = data || [];
+
+
+        // No mostrar inscripciones rechazadas
+        inscripciones =
+            inscripciones.filter(
+                item =>
+                    item.estado !== 'RECHAZADA'
+                    &&
+                    item.competencia?.estado !== 'FINALIZADA'
+            );
+
+
+        selectInscripcion.innerHTML =
+            '<option value="">Seleccione equipo y competencia</option>';
+
+
+        inscripciones.forEach(item => {
+
+            const option =
+                document.createElement('option');
+
+            option.value = item.id;
+
+
+            const nombreEquipo =
+                item.equipo?.nombre || 'Equipo sin nombre';
+
+            const nombreCompetencia =
+                item.competencia?.nombre || 'Competencia sin nombre';
+
+
+            option.textContent =
+                nombreEquipo
+                + ' — '
+                + nombreCompetencia;
+
+
+            selectInscripcion.appendChild(option);
+
+        });
+
+
+        if (inscripciones.length === 0) {
+
+            selectInscripcion.innerHTML =
+                '<option value="">No existen inscripciones</option>';
+
+            descripcionInscripcion.value = '';
+
+            contenedorTabla.innerHTML =
+                '<div class="vacio">'
+                + 'No existen inscripciones de equipos disponibles.'
+                + '</div>';
+
+        }
+
+    }
+
+
+    // =========================================================
+    // CAMBIO DE INSCRIPCIÓN
+    // =========================================================
+
+    selectInscripcion.addEventListener(
+        'change',
+        async function () {
+
+            ocultarMensaje();
+
+
+            const id =
+                Number(this.value);
+
+
+            if (!id) {
+
+                descripcionInscripcion.value = '';
+
+                contador.textContent =
+                    'Seleccione una inscripción para ver la nómina.';
+
+                contenedorTabla.innerHTML =
+                    '<div class="vacio">'
+                    + 'Seleccione un equipo y competencia.'
+                    + '</div>';
+
+                return;
+            }
+
+
+            const inscripcion =
+                inscripciones.find(
+                    item => Number(item.id) === id
+                );
+
+
+            if (!inscripcion) {
+                return;
+            }
+
+
+            descripcionInscripcion.value =
+                (inscripcion.equipo?.nombre || '')
+                + ' — '
+                + (inscripcion.competencia?.nombre || '');
+
+
+            await cargarJugadores(id);
+
+        }
+    );
+
+
+    // =========================================================
+    // CARGAR JUGADORES
+    // =========================================================
+
+    async function cargarJugadores(
+        inscripcionEquipoId
+    ) {
+
+        contador.textContent =
+            'Cargando jugadores...';
+
+
+        contenedorTabla.innerHTML =
+            '<div class="cargando">'
+            + 'Consultando nómina...'
+            + '</div>';
+
+
+        const { data, error } = await supabase
+
+            .from('inscripcion_jugador')
+
+            .select(`
+                id,
+                jugador_id,
+                numero,
+                posicion,
+                es_especial,
+                estado,
+                observacion,
+
+                jugador:jugador_id (
+                    id,
+                    nombres,
+                    apellidos,
+                    fecha_nacimiento,
+                    numero_cedula,
+                    origen,
+                    activo
+                )
+            `)
+
+            .eq(
+                'inscripcion_equipo_id',
+                inscripcionEquipoId
+            )
+
+            .order('numero', {
+                ascending: true,
+                nullsFirst: false
+            });
+
+
+        if (error) {
+
+            console.error(
+                'Error cargando jugadores:',
+                error
+            );
+
+            contador.textContent =
+                'Error al cargar la nómina.';
+
+            contenedorTabla.innerHTML =
+                '<div class="vacio">'
+                + error.message
+                + '</div>';
+
+            return;
+        }
+
+
+        const jugadores =
+            data || [];
+
+
+        contador.textContent =
+            jugadores.length
+            + ' jugador(es) registrado(s)';
+
+
+        if (jugadores.length === 0) {
+
+            contenedorTabla.innerHTML =
+                '<div class="vacio">'
+                + 'Todavía no hay jugadores registrados '
+                + 'en esta inscripción.'
+                + '</div>';
+
+            return;
+        }
+
+
+        let html = `
+
+            <div class="tabla-contenedor">
+
+                <table>
+
+                    <thead>
+
+                        <tr>
+
+                            <th>#</th>
+                            <th>Jugador</th>
+                            <th>Cédula</th>
+                            <th>Fecha nacimiento</th>
+                            <th>Posición</th>
+                            <th>Origen</th>
+                            <th>Especial</th>
+                            <th>Estado</th>
+
+                        </tr>
+
+                    </thead>
+
+                    <tbody>
+        `;
+
+
+        jugadores.forEach(item => {
+
+            const jugador =
+                item.jugador || {};
+
+
+            const nombreCompleto =
+                `${jugador.apellidos || ''} ${jugador.nombres || ''}`
+                    .trim();
+
+
+            const fecha =
+                jugador.fecha_nacimiento
+                    ? formatearFecha(
+                        jugador.fecha_nacimiento
+                    )
+                    : '-';
+
+
+            const especial =
+                item.es_especial
+                    ? 'Sí'
+                    : 'No';
+
+
+            const estado =
+                item.estado || 'PENDIENTE';
+
+
+            html += `
+
+                <tr>
+
+                    <td>
+                        ${item.numero ?? '-'}
+                    </td>
+
+                    <td>
+                        <strong>
+                            ${escapeHtml(nombreCompleto)}
+                        </strong>
+                    </td>
+
+                    <td>
+                        ${escapeHtml(
+                            jugador.numero_cedula || '-'
+                        )}
+                    </td>
+
+                    <td>
+                        ${fecha}
+                    </td>
+
+                    <td>
+                        ${escapeHtml(
+                            item.posicion || '-'
+                        )}
+                    </td>
+
+                    <td>
+                        ${escapeHtml(
+                            jugador.origen || '-'
+                        )}
+                    </td>
+
+                    <td>
+                        ${especial}
+                    </td>
+
+                    <td>
+                        <span class="estado">
+                            ${escapeHtml(estado)}
+                        </span>
+                    </td>
+
+                </tr>
+
+            `;
+
+        });
+
+
+        html += `
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        `;
+
+
+        contenedorTabla.innerHTML =
+            html;
+
+    }
+
+
+    // =========================================================
+    // REGISTRAR JUGADOR
+    // =========================================================
+
+    formJugador.addEventListener(
+        'submit',
+        async function (event) {
+
+            event.preventDefault();
+
+            ocultarMensaje();
+
+
+            // -------------------------------------------------
+            // VALIDAR INSCRIPCIÓN
+            // -------------------------------------------------
+
+            const inscripcionEquipoId =
+                Number(selectInscripcion.value);
+
+
+            if (!inscripcionEquipoId) {
+
+                mostrarMensaje(
+                    'Primero seleccione el equipo y la competencia.',
+                    'error'
+                );
+
+                return;
+            }
+
+
+            // -------------------------------------------------
+            // DATOS
+            // -------------------------------------------------
+
+            const nombres =
+                document
+                    .getElementById('nombres')
+                    .value
+                    .trim();
+
+
+            const apellidos =
+                document
+                    .getElementById('apellidos')
+                    .value
+                    .trim();
+
+
+            const documento =
+                document
+                    .getElementById('documento')
+                    .value
+                    .trim();
+
+
+            const fechaNacimiento =
+                document
+                    .getElementById('fechaNacimiento')
+                    .value;
+
+
+            const numeroTexto =
+                document
+                    .getElementById('numero')
+                    .value
+                    .trim();
+
+
+            const posicion =
+                document
+                    .getElementById('posicion')
+                    .value
+                    .trim();
+
+
+            const origen =
+                document
+                    .getElementById('origen')
+                    .value;
+
+
+            const esEspecial =
+                document
+                    .getElementById('esEspecial')
+                    .checked;
+
+
+            // -------------------------------------------------
+            // VALIDACIONES
+            // -------------------------------------------------
+
+            if (!nombres) {
+
+                mostrarMensaje(
+                    'Ingrese los nombres del jugador.',
+                    'error'
+                );
+
+                return;
+            }
+
+
+            if (!apellidos) {
+
+                mostrarMensaje(
+                    'Ingrese los apellidos del jugador.',
+                    'error'
+                );
+
+                return;
+            }
+
+
+            if (!fechaNacimiento) {
+
+                mostrarMensaje(
+                    'Ingrese la fecha de nacimiento.',
+                    'error'
+                );
+
+                return;
+            }
+
+
+            let numero = null;
+
+
+            if (numeroTexto !== '') {
+
+                numero =
+                    Number(numeroTexto);
+
+
+                if (
+                    !Number.isInteger(numero)
+                    ||
+                    numero <= 0
+                ) {
+
+                    mostrarMensaje(
+                        'El número de camiseta debe ser mayor que cero.',
+                        'error'
+                    );
+
+                    return;
+                }
+
+            }
+
+
+            // -------------------------------------------------
+            // DESACTIVAR BOTÓN
+            // -------------------------------------------------
+
+            btnGuardar.disabled = true;
+
+            btnGuardar.textContent =
+                'GUARDANDO...';
+
+
+            try {
+
+                // =============================================
+                // 1. BUSCAR JUGADOR POR CÉDULA
+                // =============================================
+
+                let jugador = null;
+
+                let jugadorNuevo = false;
+
+
+                if (documento) {
+
+                    const resultado =
+                        await supabase
+
+                            .from('jugador')
+
+                            .select(`
+                                id,
+                                nombres,
+                                apellidos,
+                                numero_cedula
+                            `)
+
+                            .eq(
+                                'numero_cedula',
+                                documento
+                            )
+
+                            .maybeSingle();
+
+
+                    if (resultado.error) {
+
+                        throw resultado.error;
+
+                    }
+
+
+                    jugador =
+                        resultado.data;
+
+                }
+
+
+                // =============================================
+                // 2. CREAR JUGADOR SI NO EXISTE
+                // =============================================
+
+                if (!jugador) {
+
+                    const resultado =
+                        await supabase
+
+                            .from('jugador')
+
+                            .insert({
+
+                                nombres:
+                                    nombres,
+
+                                apellidos:
+                                    apellidos,
+
+                                fecha_nacimiento:
+                                    fechaNacimiento,
+
+                                numero_cedula:
+                                    documento || null,
+
+                                foto:
+                                    null,
+
+                                foto_cedula:
+                                    null,
+
+                                origen:
+                                    origen || null,
+
+                                activo:
+                                    true
+
+                            })
+
+                            .select(`
+                                id,
+                                nombres,
+                                apellidos,
+                                numero_cedula
+                            `)
+
+                            .single();
+
+
+                    if (resultado.error) {
+
+                        throw resultado.error;
+
+                    }
+
+
+                    jugador =
+                        resultado.data;
+
+                    jugadorNuevo = true;
+
+                }
+
+
+                // =============================================
+                // 3. COMPROBAR SI YA ESTÁ EN ESTA INSCRIPCIÓN
+                // =============================================
+
+                const duplicado =
+                    await supabase
+
+                        .from('inscripcion_jugador')
+
+                        .select('id')
+
+                        .eq(
+                            'inscripcion_equipo_id',
+                            inscripcionEquipoId
+                        )
+
+                        .eq(
+                            'jugador_id',
+                            jugador.id
+                        )
+
+                        .maybeSingle();
+
+
+                if (duplicado.error) {
+
+                    throw duplicado.error;
+
+                }
+
+
+                if (duplicado.data) {
+
+                    mostrarMensaje(
+                        'Este jugador ya está registrado en esta inscripción.',
+                        'error'
+                    );
+
+                    return;
+
+                }
+
+
+                // =============================================
+                // 4. REGISTRAR JUGADOR EN EL EQUIPO
+                // =============================================
+
+                const registro =
+                    await supabase
+
+                        .from('inscripcion_jugador')
+
+                        .insert({
+
+                            inscripcion_equipo_id:
+                                inscripcionEquipoId,
+
+                            jugador_id:
+                                jugador.id,
+
+                            numero:
+                                numero,
+
+                            posicion:
+                                posicion || null,
+
+                            es_especial:
+                                esEspecial,
+
+                            estado:
+                                'PENDIENTE',
+
+                            observacion:
+                                null,
+
+                            fecha_revision:
+                                null,
+
+                            revisado_por:
+                                null
+
+                        })
+
+                        .select('id')
+                        .single();
+
+
+                if (registro.error) {
+
+                    throw registro.error;
+
+                }
+
+
+                // =============================================
+                // 5. ÉXITO
+                // =============================================
+
+                mostrarMensaje(
+                    '✅ Jugador registrado correctamente. Estado: PENDIENTE.',
+                    'ok'
+                );
+
+
+                // Limpiar únicamente datos del jugador
+                formJugador.reset();
+
+
+                // Volver a cargar nómina
+                await cargarJugadores(
+                    inscripcionEquipoId
+                );
+
+            }
+
+            catch (error) {
+
+                console.error(
+                    'ERROR REGISTRANDO JUGADOR:',
+                    error
+                );
+
+
+                let mensajeError =
+                    error?.message
+                    ||
+                    'No se pudo registrar el jugador.';
+
+
+                // Mensaje específico de cédula duplicada
+                if (
+                    mensajeError
+                        .toLowerCase()
+                        .includes('duplicate')
+                    ||
+                    mensajeError
+                        .toLowerCase()
+                        .includes('unique')
+                ) {
+
+                    mensajeError =
+                        'La cédula ya existe en la base de datos.';
+
+                }
+
+
+                // Mensaje RLS
+                if (
+                    mensajeError
+                        .toLowerCase()
+                        .includes('row-level security')
+                ) {
+
+                    mensajeError =
+                        'Supabase bloqueó el registro por las políticas RLS. '
+                        + 'Debemos revisar los permisos de INSERT de jugador '
+                        + 'e inscripcion_jugador.';
+
+                }
+
+
+                mostrarMensaje(
+                    '❌ ' + mensajeError,
+                    'error'
+                );
+
+            }
+
+            finally {
+
+                btnGuardar.disabled = false;
+
+                btnGuardar.textContent =
+                    'REGISTRAR JUGADOR';
+
+            }
+
+        }
+    );
+
+
+    // =========================================================
+    // LIMPIAR
+    // =========================================================
+
+    btnLimpiar.addEventListener(
+        'click',
+        function () {
+
+            formJugador.reset();
+
+            ocultarMensaje();
+
+        }
+    );
+
+
+    // =========================================================
+    // FORMATEAR FECHA
+    // =========================================================
+
+    function formatearFecha(
+        fecha
+    ) {
+
+        if (!fecha) {
+            return '-';
+        }
+
+
+        const partes =
+            fecha.split('-');
+
+
+        if (partes.length !== 3) {
+            return fecha;
+        }
+
+
+        return (
+            partes[2]
+            + '/'
+            + partes[1]
+            + '/'
+            + partes[0]
+        );
+
+    }
+
+
+    // =========================================================
+    // SEGURIDAD HTML
+    // =========================================================
+
+    function escapeHtml(
+        texto
+    ) {
+
+        return String(texto)
+            .replaceAll('&', '&amp;')
+            .replaceAll('<', '&lt;')
+            .replaceAll('>', '&gt;')
+            .replaceAll('"', '&quot;')
+            .replaceAll("'", '&#039;');
+
+    }
+
+
+    // =========================================================
+    // INICIO
+    // =========================================================
+
+    async function iniciar() {
+
+        try {
+
+            await cargarInscripciones();
+
+        }
+
+        catch (error) {
+
+            console.error(
+                'Error iniciando página:',
+                error
+            );
+
+            mostrarMensaje(
+                'No se pudo iniciar la página.',
+                'error'
+            );
+
+        }
+
+    }
+
+
+    iniciar();
+
+</script>
+
+</body>
+</html>

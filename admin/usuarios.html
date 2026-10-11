@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Usuarios | Campeonato 2026</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f4f6f5;
+            color: #222;
+        }
+
+        header {
+            background: #075b35;
+            color: white;
+            padding: 20px;
+        }
+
+        header h1 {
+            margin: 0;
+        }
+
+        header p {
+            margin: 5px 0 0;
+        }
+
+        main {
+            max-width: 900px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 3px 12px rgba(0,0,0,.10);
+        }
+
+        h2 {
+            margin-top: 0;
+            color: #075b35;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 18px;
+        }
+
+        .campo {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .campo.completo {
+            grid-column: 1 / -1;
+        }
+
+        label {
+            font-weight: bold;
+            margin-bottom: 7px;
+        }
+
+        input,
+        select {
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 7px;
+            font-size: 15px;
+        }
+
+        input:focus,
+        select:focus {
+            outline: none;
+            border-color: #075b35;
+        }
+
+        button {
+            margin-top: 25px;
+            width: 100%;
+            padding: 14px;
+            background: #075b35;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #06482b;
+        }
+
+        button:disabled {
+            background: #999;
+            cursor: not-allowed;
+        }
+
+        #resultado {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            display: none;
+            white-space: pre-wrap;
+        }
+
+        .exito {
+            display: block !important;
+            background: #d9f5e5;
+            color: #075b35;
+            border: 1px solid #8bd3a9;
+        }
+
+        .error {
+            display: block !important;
+            background: #ffe1e1;
+            color: #9b0000;
+            border: 1px solid #e59a9a;
+        }
+
+        .info {
+            background: #f0f7f3;
+            border-left: 4px solid #075b35;
+            padding: 12px;
+            margin-bottom: 20px;
+        }
+
+        .volver {
+            display: inline-block;
+            margin-top: 20px;
+            color: #075b35;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        @media (max-width: 700px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+
+            .campo.completo {
+                grid-column: auto;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <h1>Campeonato 2026</h1>
+    <p>Administración de usuarios</p>
+</header>
+
+<main>
+
+    <div class="card">
+
+        <h2>Crear nuevo usuario</h2>
+
+        <div class="info">
+            El usuario será creado automáticamente en Authentication,
+            en el perfil del sistema y se le asignará el rol seleccionado.
+        </div>
+
+        <form id="formUsuario">
+
+            <div class="grid">
+
+                <div class="campo">
+                    <label for="nombres">Nombres</label>
+                    <input
+                        type="text"
+                        id="nombres"
+                        required
+                        placeholder="Ej. Juan Carlos"
+                    >
+                </div>
+
+                <div class="campo">
+                    <label for="apellidos">Apellidos</label>
+                    <input
+                        type="text"
+                        id="apellidos"
+                        required
+                        placeholder="Ej. Pérez López"
+                    >
+                </div>
+
+                <div class="campo completo">
+                    <label for="email">Correo electrónico</label>
+                    <input
+                        type="email"
+                        id="email"
+                        required
+                        placeholder="correo@ejemplo.com"
+                    >
+                </div>
+
+                <div class="campo">
+                    <label for="password">Contraseña</label>
+                    <input
+                        type="password"
+                        id="password"
+                        required
+                        minlength="6"
+                        placeholder="Mínimo 6 caracteres"
+                    >
+                </div>
+
+                <div class="campo">
+                    <label for="rol">Rol</label>
+
+                    <select id="rol" required>
+
+                        <option value="">
+                            Seleccione un rol
+                        </option>
+
+                        <option value="ADMINISTRADOR">
+                            ADMINISTRADOR
+                        </option>
+
+                        <option value="COMISION">
+                            COMISION
+                        </option>
+
+                        <option value="CAPITAN">
+                            CAPITAN
+                        </option>
+
+                        <option value="ARBITRO">
+                            ARBITRO
+                        </option>
+
+                        <option value="DELEGADO_MESA">
+                            DELEGADO_MESA
+                        </option>
+
+                    </select>
+                </div>
+
+            </div>
+
+            <button type="submit" id="btnCrear">
+                CREAR USUARIO
+            </button>
+
+        </form>
+
+        <div id="resultado"></div>
+
+        <a class="volver" href="index.html">
+            ← Volver al panel administrativo
+        </a>
+
+    </div>
+
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script>
+
+const SUPABASE_URL =
+    "https://phkrlnzwjkhxitzqjgkk.supabase.co";
+
+const SUPABASE_KEY =
+    "sb_publishable_YtE6VSoNjxjJ55gQG4vWDw_Z0pevgjg";
+
+const cliente = window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_KEY
+);
+
+const form = document.getElementById("formUsuario");
+const resultado = document.getElementById("resultado");
+const boton = document.getElementById("btnCrear");
+
+
+form.addEventListener("submit", async function(event) {
+
+    event.preventDefault();
+
+    resultado.className = "";
+    resultado.style.display = "none";
+    resultado.textContent = "";
+
+    boton.disabled = true;
+    boton.textContent = "CREANDO USUARIO...";
+
+    try {
+
+        // --------------------------------------------------
+        // 1. COMPROBAR SESIÓN
+        // --------------------------------------------------
+
+        const {
+            data: { session },
+            error: sessionError
+        } = await cliente.auth.getSession();
+
+        if (sessionError) {
+            throw new Error(sessionError.message);
+        }
+
+        if (!session) {
+            throw new Error(
+                "No existe una sesión activa. Inicie sesión como administrador."
+            );
+        }
+
+
+        // --------------------------------------------------
+        // 2. OBTENER DATOS DEL FORMULARIO
+        // --------------------------------------------------
+
+        const datos = {
+
+            nombres:
+                document.getElementById("nombres").value.trim(),
+
+            apellidos:
+                document.getElementById("apellidos").value.trim(),
+
+            email:
+                document.getElementById("email").value.trim(),
+
+            password:
+                document.getElementById("password").value,
+
+            rol:
+                document.getElementById("rol").value
+
+        };
+
+
+        // --------------------------------------------------
+        // 3. LLAMAR A LA EDGE FUNCTION
+        // --------------------------------------------------
+
+        const respuesta = await fetch(
+            SUPABASE_URL + "/functions/v1/crear-usuario",
+            {
+                method: "POST",
+
+                headers: {
+                    "Content-Type": "application/json",
+
+                    "Authorization":
+                        "Bearer " + session.access_token
+                },
+
+                body: JSON.stringify(datos)
+            }
+        );
+
+
+        // --------------------------------------------------
+        // 4. LEER RESPUESTA
+        // --------------------------------------------------
+
+        const resultadoJSON = await respuesta.json();
+
+        console.log("Respuesta:", resultadoJSON);
+
+
+        // --------------------------------------------------
+        // 5. ERROR
+        // --------------------------------------------------
+
+        if (!respuesta.ok || !resultadoJSON.success) {
+
+            resultado.className = "error";
+
+            resultado.textContent =
+                "ERROR\n\n" +
+                (resultadoJSON.error || "No se pudo crear el usuario.") +
+                (
+                    resultadoJSON.detalle
+                        ? "\n\nDetalle: " + resultadoJSON.detalle
+                        : ""
+                );
+
+            return;
+        }
+
+
+        // --------------------------------------------------
+        // 6. ÉXITO
+        // --------------------------------------------------
+
+        resultado.className = "exito";
+
+        resultado.textContent =
+            "✓ USUARIO CREADO CORRECTAMENTE\n\n" +
+
+            "Nombre: " +
+            resultadoJSON.perfil.nombres +
+            " " +
+            resultadoJSON.perfil.apellidos +
+
+            "\nCorreo: " +
+            resultadoJSON.usuario.email +
+
+            "\nRol: " +
+            resultadoJSON.rol +
+
+            "\n\nEl usuario ya puede iniciar sesión.";
+
+        // Limpiar formulario
+        form.reset();
+
+
+    } catch (error) {
+
+        console.error(error);
+
+        resultado.className = "error";
+
+        resultado.textContent =
+            "ERROR\n\n" +
+            error.message;
+
+    } finally {
+
+        boton.disabled = false;
+        boton.textContent = "CREAR USUARIO";
+
+    }
+
+});
+
+</script>
+
+</body>
+</html>
