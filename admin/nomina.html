@@ -4,326 +4,522 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#123d2a">
 
-  <title>Nóminas | Olimpiadas Juan Solano 2026</title>
+  <title>Revisión de nóminas | Campeonato 2026</title>
 
   <style>
     :root {
-      --verde: #174c32;
-      --verde-oscuro: #103522;
-      --verde-claro: #e9f4ec;
-      --dorado: #d7ad48;
-      --fondo: #f4f7f4;
-      --blanco: #fff;
-      --texto: #24352b;
-      --gris: #6b7b70;
-      --borde: #dfe7e0;
-      --rojo: #b93838;
-      --sombra: 0 8px 28px rgba(20,55,35,.07);
+      --verde: #14532d;
+      --verde-oscuro: #103d23;
+      --verde-claro: #e8f5ec;
+      --dorado: #d6a62e;
+      --fondo: #f3f6f4;
+      --blanco: #ffffff;
+      --texto: #24352a;
+      --gris: #64748b;
+      --borde: #e1e8e3;
+      --rojo: #b91c1c;
+      --sombra: 0 8px 25px rgba(20, 60, 35, 0.07);
     }
 
-    * { box-sizing: border-box; }
+    * {
+      box-sizing: border-box;
+    }
 
     body {
       margin: 0;
       background: var(--fondo);
       color: var(--texto);
-      font-family: Inter, "Segoe UI", Arial, sans-serif;
-      font-size: 14px;
+      font-family: Arial, Helvetica, sans-serif;
     }
 
-    button, input, select, textarea { font: inherit; }
-    button { cursor: pointer; }
-    button:disabled { cursor: not-allowed; opacity: .6; }
+    button,
+    input,
+    select,
+    textarea {
+      font: inherit;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    button:disabled {
+      opacity: 0.6;
+      cursor: wait;
+    }
 
     .barra-superior {
-      background: linear-gradient(120deg,var(--verde-oscuro),var(--verde));
+      background: linear-gradient(120deg, var(--verde-oscuro), var(--verde));
       color: white;
       padding: 19px 5%;
-      border-bottom: 4px solid var(--dorado);
-    }
-
-    .barra-interior {
-      max-width: 1450px;
-      margin: auto;
       display: flex;
       justify-content: space-between;
       align-items: center;
       gap: 20px;
       flex-wrap: wrap;
+      border-bottom: 4px solid var(--dorado);
     }
 
-    .marca, .usuario-barra {
+    .marca {
       display: flex;
       align-items: center;
-      gap: 14px;
-      flex-wrap: wrap;
+      gap: 13px;
     }
 
     .marca-icono {
-      width: 50px;
-      height: 50px;
+      width: 49px;
+      height: 49px;
+      border-radius: 13px;
+      background: rgba(255, 255, 255, 0.12);
       display: grid;
       place-items: center;
-      background: rgba(255,255,255,.12);
-      border: 1px solid rgba(255,255,255,.2);
-      border-radius: 14px;
       font-size: 25px;
     }
 
-    .marca h1 { font-size: 20px; margin: 0 0 5px; }
-    .marca p { color: #dce9df; margin: 0; font-size: 12px; }
-    .usuario-nombre { color: #f4e7bd; font-weight: 700; }
+    .marca h1 {
+      margin: 0;
+      font-size: 21px;
+    }
+
+    .marca p {
+      margin: 5px 0 0;
+      font-size: 12px;
+      opacity: 0.8;
+    }
+
+    .usuario {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .usuario-nombre {
+      font-size: 13px;
+      font-weight: bold;
+    }
 
     .contenedor {
-      width: min(1450px,92%);
-      margin: 30px auto 50px;
+      width: min(1500px, 94%);
+      margin: 30px auto;
     }
 
     .encabezado-pagina {
       display: flex;
       justify-content: space-between;
       align-items: flex-start;
-      gap: 18px;
       flex-wrap: wrap;
+      gap: 16px;
       margin-bottom: 25px;
     }
 
     .encabezado-pagina h2 {
-      margin: 0 0 8px;
-      font-size: clamp(23px,3vw,30px);
+      font-size: 27px;
+      margin: 0 0 9px;
       color: var(--verde-oscuro);
     }
 
     .encabezado-pagina p {
-      color: var(--gris);
       margin: 0;
-      line-height: 1.6;
+      color: var(--gris);
+      line-height: 1.5;
     }
 
-    .acciones-principales, .decision-acciones {
+    .botones-encabezado {
       display: flex;
-      gap: 10px;
       flex-wrap: wrap;
+      gap: 9px;
     }
 
     .btn {
-      border: 0;
+      border: none;
       border-radius: 9px;
-      padding: 10px 15px;
-      font-weight: 700;
+      padding: 11px 16px;
+      font-size: 13px;
+      font-weight: bold;
       display: inline-flex;
       align-items: center;
       justify-content: center;
       gap: 7px;
       text-decoration: none;
-      transition: .18s ease;
+      transition: 0.2s;
     }
 
-    .btn:hover { filter: brightness(.96); transform: translateY(-1px); }
-    .btn-verde { background: var(--verde); color: white; }
-    .btn-dorado { background: #f4e5b9; color: #624b12; }
-    .btn-rojo { background: #fde8e7; color: #a32828; }
-    .btn-claro { background: #edf2ed; color: var(--verde); border: 1px solid var(--borde); }
-    .btn-pequeno { padding: 7px 10px; font-size: 12px; white-space: nowrap; }
+    .btn:hover {
+      filter: brightness(0.95);
+      transform: translateY(-1px);
+    }
+
+    .btn-verde {
+      background: var(--verde);
+      color: white;
+    }
+
+    .btn-dorado {
+      background: var(--dorado);
+      color: #29200a;
+    }
+
+    .btn-rojo {
+      background: #fee2e2;
+      color: var(--rojo);
+    }
+
+    .btn-claro {
+      background: #edf2ee;
+      color: var(--verde);
+      border: 1px solid var(--borde);
+    }
+
+    .btn-pequeno {
+      padding: 8px 11px;
+      font-size: 12px;
+    }
 
     .estadisticas {
       display: grid;
-      grid-template-columns: repeat(4,minmax(0,1fr));
+      grid-template-columns: repeat(4, minmax(0, 1fr));
       gap: 16px;
-      margin-bottom: 24px;
+      margin-bottom: 25px;
     }
 
-    .estadistica {
-      background: var(--blanco);
+    .tarjeta-estadistica {
+      background: white;
       border: 1px solid var(--borde);
       border-radius: 15px;
       padding: 20px;
       box-shadow: var(--sombra);
-      position: relative;
-      overflow: hidden;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      min-width: 0;
     }
 
-    .estadistica::after {
-      content: "";
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 4px;
-      height: 100%;
-      background: var(--dorado);
+    .estadistica-icono {
+      flex-shrink: 0;
+      width: 49px;
+      height: 49px;
+      border-radius: 13px;
+      display: grid;
+      place-items: center;
+      font-size: 24px;
+      background: var(--verde-claro);
     }
 
-    .estadistica span {
-      display: block;
+    .tarjeta-estadistica:nth-child(2) .estadistica-icono {
+      background: #e0f2fe;
+    }
+
+    .tarjeta-estadistica:nth-child(3) .estadistica-icono {
+      background: #fef3c7;
+    }
+
+    .tarjeta-estadistica:nth-child(4) .estadistica-icono {
+      background: #dcfce7;
+    }
+
+    .estadistica-titulo {
       color: var(--gris);
       font-size: 12px;
-      margin-bottom: 10px;
+      margin-bottom: 7px;
     }
 
-    .estadistica strong { color: var(--verde); font-size: 29px; }
+    .estadistica-numero {
+      color: var(--verde-oscuro);
+      font-size: 27px;
+      font-weight: 800;
+    }
 
     .panel {
-      background: var(--blanco);
+      background: white;
       border: 1px solid var(--borde);
-      border-radius: 15px;
+      border-radius: 16px;
       box-shadow: var(--sombra);
       overflow: hidden;
-      margin-bottom: 22px;
+      margin-bottom: 25px;
     }
 
     .panel-cabecera {
-      padding: 19px 22px;
-      border-bottom: 1px solid var(--borde);
+      padding: 21px 23px;
       display: flex;
-      align-items: center;
       justify-content: space-between;
-      gap: 12px;
+      align-items: center;
       flex-wrap: wrap;
+      gap: 12px;
+      border-bottom: 1px solid var(--borde);
     }
 
-    .panel-cabecera h3 { margin: 0; color: var(--verde-oscuro); font-size: 17px; }
+    .panel-cabecera h3 {
+      margin: 0;
+      font-size: 17px;
+      color: var(--verde-oscuro);
+    }
 
     .contador {
       background: var(--verde-claro);
       color: var(--verde);
-      border-radius: 20px;
-      padding: 7px 11px;
+      border-radius: 30px;
+      padding: 7px 12px;
       font-size: 12px;
-      font-weight: 700;
+      font-weight: bold;
     }
 
     .filtros {
-      padding: 18px 22px;
       display: grid;
       grid-template-columns: 1.2fr 1fr 1.7fr auto;
-      gap: 12px;
-      align-items: end;
+      gap: 13px;
+      padding: 20px 23px;
       border-bottom: 1px solid var(--borde);
     }
 
-    .campo { display: flex; flex-direction: column; gap: 7px; min-width: 0; }
-    .campo label { color: #526358; font-size: 12px; font-weight: 700; }
+    .campo {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+      min-width: 0;
+    }
 
-    .campo input, .campo select, .campo textarea {
+    .campo label {
+      color: #475569;
+      font-size: 12px;
+      font-weight: bold;
+    }
+
+    .campo input,
+    .campo select,
+    .campo textarea {
       width: 100%;
-      padding: 11px 12px;
-      border: 1px solid #d6e0d7;
-      border-radius: 9px;
-      outline: none;
-      color: var(--texto);
+      border: 1px solid #d5dfd8;
       background: white;
+      color: var(--texto);
+      border-radius: 9px;
+      padding: 11px 12px;
+      outline: none;
     }
 
-    .campo input:focus, .campo select:focus, .campo textarea:focus {
+    .campo input:focus,
+    .campo select:focus,
+    .campo textarea:focus {
       border-color: var(--verde);
-      box-shadow: 0 0 0 3px rgba(23,76,50,.09);
+      box-shadow: 0 0 0 3px rgba(20, 83, 45, 0.08);
     }
 
-    .tabla-contenedor { overflow-x: auto; }
+    .tabla-contenedor {
+      overflow-x: auto;
+      width: 100%;
+    }
 
-    table { border-collapse: collapse; width: 100%; min-width: 850px; }
-    thead { background: #f6f8f6; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 900px;
+    }
+
+    thead {
+      background: #f7faf8;
+    }
+
     th {
       text-align: left;
-      color: #526358;
+      color: #647568;
       font-size: 11px;
       text-transform: uppercase;
-      letter-spacing: .045em;
-      padding: 15px 17px;
+      letter-spacing: 0.4px;
+      padding: 15px;
       white-space: nowrap;
     }
 
     td {
-      padding: 15px 17px;
-      border-top: 1px solid #edf1ed;
+      border-top: 1px solid #edf1ee;
+      padding: 15px;
+      font-size: 13px;
       vertical-align: middle;
     }
 
-    tbody tr:hover { background: #fafcf9; }
+    tbody tr:hover {
+      background: #fafcfb;
+    }
 
-    .equipo-celda { display: flex; align-items: center; gap: 12px; min-width: 180px; }
+    .equipo-celda {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      min-width: 190px;
+    }
+
     .logo-equipo {
       width: 43px;
       height: 43px;
-      border-radius: 11px;
+      object-fit: contain;
+      border-radius: 10px;
       border: 1px solid var(--borde);
-      object-fit: cover;
-      background: var(--verde-claro);
+      background: white;
+      padding: 3px;
+      flex-shrink: 0;
     }
 
-    .equipo-celda strong { display: block; max-width: 220px; overflow-wrap: anywhere; }
-    .equipo-celda small { display: block; color: var(--gris); margin-top: 4px; font-size: 10px; }
+    .equipo-celda strong {
+      display: block;
+      color: var(--verde-oscuro);
+      margin-bottom: 5px;
+    }
+
+    .equipo-celda small {
+      display: block;
+      color: var(--gris);
+      font-size: 10px;
+    }
 
     .estado {
       display: inline-flex;
       align-items: center;
-      border-radius: 20px;
-      padding: 6px 9px;
-      font-size: 11px;
+      justify-content: center;
+      padding: 6px 10px;
+      border-radius: 30px;
+      font-size: 10px;
       font-weight: 800;
       white-space: nowrap;
+      background: #f1f5f9;
+      color: #475569;
     }
 
-    .estado-pendiente { color: #815b0d; background: #fff1c9; }
-    .estado-aprobada { color: #17653a; background: #dcf5e4; }
-    .estado-observada { color: #a02b2b; background: #ffe5e3; }
-    .estado-en-revision { color: #245c99; background: #e2efff; }
+    .estado-pendiente {
+      background: #fef3c7;
+      color: #92400e;
+    }
+
+    .estado-aprobada {
+      background: #dcfce7;
+      color: #166534;
+    }
+
+    .estado-observada {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+
+    .estado-en-revision {
+      background: #dbeafe;
+      color: #1d4ed8;
+    }
 
     .sin-resultados {
-      padding: 35px 20px;
       text-align: center;
+      padding: 42px 20px;
       color: var(--gris);
-      line-height: 1.7;
+      line-height: 1.6;
     }
 
-    .sin-resultados strong { color: var(--verde); }
-    .pie-tabla { padding: 14px 20px; border-top: 1px solid var(--borde); color: var(--gris); font-size: 12px; }
+    .sin-resultados strong {
+      display: block;
+      color: var(--verde-oscuro);
+      margin-bottom: 8px;
+    }
 
     .mensaje {
       display: none;
+      margin-bottom: 20px;
       padding: 13px 16px;
       border-radius: 10px;
-      margin-bottom: 18px;
+      font-size: 13px;
       line-height: 1.5;
-      overflow-wrap: anywhere;
     }
 
-    .mensaje.visible { display: block; }
-    .mensaje.ok { background: #e3f5e8; color: #175c32; border: 1px solid #c4e8ce; }
-    .mensaje.error { background: #ffebea; color: #a12727; border: 1px solid #f1cecb; }
-    .mensaje.info { background: #eaf2fb; color: #254f7d; border: 1px solid #d3e3f5; }
-    .nota-pequena { display: block; color: var(--gris); font-size: 12px; margin-top: 7px; line-height: 1.5; }
+    .mensaje.visible {
+      display: block;
+    }
 
-    /* Modal */
+    .mensaje.error {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+
+    .mensaje.ok {
+      background: #dcfce7;
+      color: #166534;
+    }
+
+    .mensaje.info {
+      background: #dbeafe;
+      color: #1e40af;
+    }
+
+    .pantalla-carga {
+      position: fixed;
+      inset: 0;
+      background: rgba(9, 30, 17, 0.68);
+      z-index: 2000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .pantalla-carga.oculto {
+      display: none;
+    }
+
+    .carga-caja {
+      background: white;
+      border-radius: 17px;
+      padding: 30px;
+      text-align: center;
+      width: min(340px, 100%);
+      box-shadow: var(--sombra);
+    }
+
+    .rueda {
+      width: 38px;
+      height: 38px;
+      border: 4px solid #dbe9df;
+      border-top-color: var(--verde);
+      border-radius: 50%;
+      animation: girar 0.8s linear infinite;
+      margin: 0 auto 17px;
+    }
+
+    @keyframes girar {
+      to { transform: rotate(360deg); }
+    }
+
+    .carga-caja p {
+      margin: 0;
+      color: var(--gris);
+      font-size: 13px;
+    }
+
+    /* MODAL */
+
     .modal {
       display: none;
       position: fixed;
       inset: 0;
       z-index: 1000;
-      background: rgba(8,28,17,.68);
+      background: rgba(15, 30, 20, 0.72);
       padding: 22px;
       overflow-y: auto;
       align-items: flex-start;
       justify-content: center;
     }
 
-    .modal.abierto { display: flex; }
+    .modal.abierto {
+      display: flex;
+    }
 
     .modal-contenido {
-      background: var(--fondo);
-      width: min(1100px,100%);
+      width: min(1100px, 100%);
       margin: auto;
-      border-radius: 17px;
+      background: white;
+      border-radius: 18px;
       overflow: hidden;
-      box-shadow: 0 25px 80px rgba(0,0,0,.25);
+      box-shadow: 0 25px 80px rgba(0, 0, 0, 0.25);
     }
 
     .modal-cabecera {
-      background: var(--verde);
+      background: var(--verde-oscuro);
       color: white;
-      padding: 19px 23px;
+      padding: 20px 24px;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -333,282 +529,511 @@
       z-index: 2;
     }
 
-    .modal-cabecera h2 { font-size: 20px; margin: 0; overflow-wrap: anywhere; }
+    .modal-cabecera h2 {
+      font-size: 20px;
+      margin: 0;
+    }
 
     .btn-cerrar {
-      background: rgba(255,255,255,.13);
-      border: 1px solid rgba(255,255,255,.25);
+      background: rgba(255, 255, 255, 0.12);
       color: white;
-      border-radius: 9px;
-      width: 39px;
-      height: 39px;
+      border: none;
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
       font-size: 24px;
       flex-shrink: 0;
     }
 
-    #detalleNomina { padding: 22px; }
+    .modal-cuerpo {
+      padding: 24px;
+    }
 
     .resumen-equipo {
       display: flex;
       align-items: center;
       gap: 20px;
-      padding: 20px;
-      background: white;
+      padding: 19px;
+      background: #f7faf8;
       border: 1px solid var(--borde);
-      border-radius: 13px;
-      margin-bottom: 18px;
+      border-radius: 14px;
+      margin-bottom: 20px;
     }
 
     .resumen-equipo > img {
-      width: 88px;
-      height: 88px;
-      object-fit: cover;
-      border-radius: 14px;
+      width: 95px;
+      height: 95px;
+      object-fit: contain;
+      border-radius: 13px;
       border: 1px solid var(--borde);
-      background: var(--verde-claro);
+      background: white;
+      padding: 6px;
+      flex-shrink: 0;
     }
 
-    .resumen-equipo h3 { margin: 0 0 10px; font-size: 22px; color: var(--verde); }
-    .resumen-equipo p { margin: 6px 0; color: #526358; line-height: 1.5; }
+    .resumen-equipo h3 {
+      color: var(--verde-oscuro);
+      margin: 0 0 12px;
+    }
 
-    .documentos { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 14px; margin-bottom: 24px; }
-    .documento-box { background: white; padding: 16px; border: 1px solid var(--borde); border-radius: 11px; overflow-wrap: anywhere; }
-    .documento-box strong { display: block; margin-bottom: 10px; }
-    .documento-box a, .documento-jugador a { color: var(--verde); font-weight: 700; }
+    .resumen-equipo p {
+      font-size: 13px;
+      margin: 7px 0;
+      line-height: 1.5;
+    }
 
-    .seccion-jugadores { margin-bottom: 24px; }
-    .seccion-jugadores-cabecera { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 14px; }
-    .seccion-jugadores-cabecera h3 { color: var(--verde); margin: 0; font-size: 19px; }
+    .documentos {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 13px;
+      margin-bottom: 25px;
+    }
 
-    .jugadores-lista { display: grid; gap: 13px; }
-
-    .jugador-fila {
-      background: white;
+    .documento-box {
       border: 1px solid var(--borde);
-      border-radius: 13px;
+      border-radius: 11px;
       padding: 15px;
       display: flex;
-      align-items: flex-start;
-      gap: 15px;
-      min-width: 0;
+      flex-direction: column;
+      gap: 10px;
+      font-size: 13px;
+    }
+
+    .documento-box a,
+    .documento-jugador a {
+      color: var(--verde);
+      font-weight: bold;
+      text-decoration: none;
+    }
+
+    .documento-box a:hover,
+    .documento-jugador a:hover {
+      text-decoration: underline;
+    }
+
+    .nota-pequena {
+      color: var(--gris);
+      font-size: 11px;
+      line-height: 1.5;
+    }
+
+    .seccion-jugadores {
+      margin-bottom: 27px;
+    }
+
+    .seccion-jugadores-cabecera {
+      margin-bottom: 15px;
+    }
+
+    .seccion-jugadores-cabecera h3 {
+      margin: 0 0 7px;
+      color: var(--verde-oscuro);
+    }
+
+    .jugadores-lista {
+      display: flex;
+      flex-direction: column;
+      gap: 13px;
+    }
+
+    .jugador-fila {
+      display: grid;
+      grid-template-columns: 95px minmax(0, 1fr);
+      gap: 16px;
+      padding: 16px;
+      border: 1px solid var(--borde);
+      border-radius: 14px;
+      background: white;
+    }
+
+    .jugador-foto-mini {
+      width: 95px;
+      height: 115px;
+      border-radius: 10px;
+      overflow: hidden;
+      border: 1px solid var(--borde);
+      background: #edf3ef;
     }
 
     .jugador-foto-mini img {
-      width: 76px;
-      height: 88px;
-      border-radius: 10px;
+      width: 100%;
+      height: 100%;
       object-fit: cover;
-      border: 1px solid var(--borde);
-      background: var(--verde-claro);
     }
 
-    .jugador-contenido { flex: 1; min-width: 0; }
+    .jugador-contenido {
+      min-width: 0;
+    }
 
     .jugador-linea-superior {
       display: flex;
       align-items: center;
-      flex-wrap: wrap;
       gap: 10px;
-      justify-content: space-between;
-      margin-bottom: 13px;
+      flex-wrap: wrap;
+      margin-bottom: 15px;
     }
 
-    .jugador-identidad-mini { display: grid; gap: 5px; min-width: 150px; }
-    .jugador-identidad-mini strong { font-size: 15px; color: var(--verde-oscuro); overflow-wrap: anywhere; }
+    .jugador-identidad-mini {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      flex-wrap: wrap;
+      flex: 1 1 260px;
+    }
+
+    .jugador-identidad-mini > strong {
+      color: var(--verde-oscuro);
+      font-size: 14px;
+    }
 
     .camiseta {
-      width: fit-content;
-      border-radius: 6px;
       background: var(--verde-claro);
       color: var(--verde);
-      font-weight: 800;
-      padding: 4px 7px;
+      padding: 6px 8px;
+      border-radius: 7px;
+      font-size: 11px;
+      font-weight: bold;
+    }
+
+    .cedula-mini {
+      color: var(--gris);
       font-size: 11px;
     }
 
-    .cedula-mini { color: var(--gris); font-size: 11px; overflow-wrap: anywhere; }
-
-    .jugador-resumen-datos, .detalle-grid {
-      display: grid;
-      grid-template-columns: repeat(3,minmax(0,1fr));
-      gap: 10px;
+    .check-habilitacion {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      color: var(--gris);
     }
 
-    .dato-mini, .detalle-dato { padding: 10px; border-radius: 8px; background: #f6f8f6; min-width: 0; }
-    .dato-mini span, .detalle-dato span { display: block; color: var(--gris); font-size: 11px; margin-bottom: 5px; }
-    .dato-mini strong, .detalle-dato strong { display: block; font-size: 12px; overflow-wrap: anywhere; line-height: 1.5; }
+    .jugador-resumen-datos {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 9px;
+    }
 
-    .jugador-detalle { margin-top: 15px; padding-top: 15px; border-top: 1px solid var(--borde); }
-    .jugador-detalle[hidden] { display: none !important; }
-    .jugador-detalle h4 { color: var(--verde); margin: 0 0 12px; font-size: 15px; }
+    .dato-mini,
+    .detalle-dato {
+      background: #f7faf8;
+      border: 1px solid #edf1ee;
+      border-radius: 8px;
+      padding: 10px;
+      min-width: 0;
+    }
+
+    .dato-mini span,
+    .detalle-dato span {
+      display: block;
+      font-size: 10px;
+      color: var(--gris);
+      margin-bottom: 6px;
+    }
+
+    .dato-mini strong,
+    .detalle-dato strong {
+      font-size: 12px;
+      line-height: 1.5;
+      overflow-wrap: anywhere;
+    }
+
+    .jugador-detalle {
+      margin-top: 17px;
+      padding-top: 16px;
+      border-top: 1px solid var(--borde);
+    }
+
+    .jugador-detalle[hidden] {
+      display: none !important;
+    }
+
+    .jugador-detalle h4 {
+      color: var(--verde-oscuro);
+      margin: 0 0 13px;
+    }
+
+    .detalle-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 9px;
+    }
 
     .documento-jugador {
       display: grid;
-      grid-template-columns: repeat(2,minmax(0,1fr));
+      grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 15px;
       margin-top: 17px;
     }
 
     .documento-imagen {
-      background: white;
       border: 1px solid var(--borde);
       border-radius: 10px;
-      padding: 12px;
+      padding: 13px;
       display: flex;
       flex-direction: column;
-      gap: 10px;
       align-items: flex-start;
+      gap: 11px;
       min-width: 0;
     }
 
+    .documento-imagen > strong {
+      font-size: 12px;
+      color: var(--verde-oscuro);
+    }
+
     .documento-imagen img {
-      display: block;
+      width: auto;
       max-width: 100%;
-      max-height: 260px;
+      max-height: 320px;
       object-fit: contain;
       border-radius: 7px;
+      background: #f1f5f2;
     }
 
-    .decision-panel { padding: 20px; border-radius: 13px; background: white; border: 1px solid var(--borde); }
-    .decision-panel h3 { color: var(--verde); margin: 0 0 17px; }
-    .decision-acciones { margin-top: 16px; }
-    .decision-ayuda { color: var(--gris); font-size: 12px; line-height: 1.5; margin-bottom: 0; }
+    .decision-panel {
+      border-top: 2px solid var(--borde);
+      padding-top: 23px;
+    }
 
-    .pantalla-carga {
-      position: fixed;
-      inset: 0;
-      z-index: 2000;
-      background: rgba(244,247,244,.96);
+    .decision-panel h3 {
+      color: var(--verde-oscuro);
+      margin: 0 0 17px;
+    }
+
+    .decision-acciones {
       display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 16px;
-      padding: 24px;
-      text-align: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 16px;
     }
 
-    .pantalla-carga.oculto { display: none !important; }
-
-    .rueda {
-      width: 43px;
-      height: 43px;
-      border: 4px solid #dce8de;
-      border-top-color: var(--verde);
-      border-radius: 50%;
-      animation: girar .8s linear infinite;
+    .decision-ayuda {
+      color: var(--gris);
+      font-size: 11px;
+      line-height: 1.6;
+      margin-top: 15px;
     }
 
-    .pantalla-carga strong { color: var(--verde); font-size: 16px; }
-    .pantalla-carga small { color: var(--gris); max-width: 350px; line-height: 1.6; }
-    @keyframes girar { to { transform: rotate(360deg); } }
-
-    .pie-pagina {
-      padding: 22px;
+    footer {
+      padding: 23px 15px;
       text-align: center;
       color: var(--gris);
-      border-top: 1px solid var(--borde);
       font-size: 12px;
-      line-height: 1.7;
     }
 
-    @media (max-width: 950px) {
-      .estadisticas { grid-template-columns: repeat(2,minmax(0,1fr)); }
-      .filtros { grid-template-columns: repeat(2,minmax(0,1fr)); }
-      .jugador-resumen-datos, .detalle-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
+    @media (max-width: 1000px) {
+      .estadisticas {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .filtros {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .jugador-resumen-datos,
+      .detalle-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
     }
 
     @media (max-width: 600px) {
-      .contenedor { width: 94%; margin-top: 22px; }
-      .barra-superior { padding: 15px 4%; }
-      .marca h1 { font-size: 16px; }
-      .marca-icono { width: 42px; height: 42px; }
-      .estadisticas { gap: 10px; }
-      .estadistica { padding: 15px; }
-      .estadistica strong { font-size: 25px; }
-      .filtros { grid-template-columns: 1fr; padding: 15px; }
-      .panel-cabecera { padding: 16px; }
-      .modal { padding: 8px; }
-      #detalleNomina { padding: 12px; }
-      .resumen-equipo { align-items: flex-start; padding: 13px; gap: 12px; }
-      .resumen-equipo > img { width: 65px; height: 65px; }
-      .resumen-equipo h3 { font-size: 17px; }
-      .documentos, .documento-jugador { grid-template-columns: 1fr; }
-      .jugador-fila { padding: 10px; gap: 10px; }
-      .jugador-foto-mini img { width: 57px; height: 68px; }
-      .jugador-linea-superior { align-items: flex-start; }
-      .jugador-resumen-datos, .detalle-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
-      .decision-acciones .btn { flex: 1 1 100%; }
+      .contenedor {
+        width: 94%;
+        margin-top: 20px;
+      }
+
+      .marca h1 {
+        font-size: 17px;
+      }
+
+      .encabezado-pagina h2 {
+        font-size: 23px;
+      }
+
+      .estadisticas {
+        gap: 9px;
+      }
+
+      .tarjeta-estadistica {
+        padding: 13px;
+        gap: 10px;
+      }
+
+      .estadistica-icono {
+        width: 38px;
+        height: 38px;
+        font-size: 19px;
+      }
+
+      .estadistica-numero {
+        font-size: 23px;
+      }
+
+      .filtros {
+        grid-template-columns: 1fr;
+        padding: 15px;
+      }
+
+      .panel-cabecera {
+        padding: 17px;
+      }
+
+      .modal {
+        padding: 7px;
+      }
+
+      .modal-cuerpo {
+        padding: 13px;
+      }
+
+      .modal-cabecera {
+        padding: 15px;
+      }
+
+      .modal-cabecera h2 {
+        font-size: 16px;
+      }
+
+      .resumen-equipo {
+        align-items: flex-start;
+        gap: 12px;
+        padding: 12px;
+      }
+
+      .resumen-equipo > img {
+        width: 65px;
+        height: 65px;
+      }
+
+      .documentos,
+      .documento-jugador {
+        grid-template-columns: 1fr;
+      }
+
+      .jugador-fila {
+        grid-template-columns: 68px minmax(0, 1fr);
+        gap: 10px;
+        padding: 10px;
+      }
+
+      .jugador-foto-mini {
+        width: 68px;
+        height: 88px;
+      }
+
+      .jugador-resumen-datos,
+      .detalle-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .jugador-identidad-mini {
+        flex-basis: 100%;
+      }
+
+      .decision-acciones {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+      }
     }
   </style>
 </head>
 
 <body>
-  <header class="barra-superior">
-    <div class="barra-interior">
-      <div class="marca">
-        <div class="marca-icono" aria-hidden="true">🏆</div>
-        <div>
-          <h1>OLIMPIADAS JUAN SOLANO 2026</h1>
-          <p>COMUNIDAD DE QUILLOAC · ADMINISTRACIÓN</p>
-        </div>
-      </div>
 
-      <div class="usuario-barra">
-        <span>Usuario:</span>
-        <span class="usuario-nombre" id="usuarioNombre">Verificando acceso...</span>
-        <button type="button" class="btn btn-claro btn-pequeno" id="btnSalir">
-          Cerrar sesión
-        </button>
+  <header class="barra-superior">
+    <div class="marca">
+      <div class="marca-icono">🏆</div>
+
+      <div>
+        <h1>Campeonato 2026</h1>
+        <p>Sistema de administración deportiva</p>
       </div>
+    </div>
+
+    <div class="usuario">
+      <span>Administrador:</span>
+      <span id="usuarioNombre" class="usuario-nombre">
+        Verificando acceso...
+      </span>
+
+      <button type="button" id="btnSalir" class="btn btn-claro">
+        Cerrar sesión
+      </button>
     </div>
   </header>
 
   <main class="contenedor">
+
+    <div id="mensaje" class="mensaje" role="status"></div>
+
     <section class="encabezado-pagina">
       <div>
-        <h2>Control de nóminas</h2>
-        <p>Consulta los equipos inscritos, revisa sus jugadores y gestiona el estado de cada inscripción.</p>
+        <h2>Revisión de nóminas</h2>
+        <p>
+          Consulta las inscripciones, revisa los jugadores y sus fotografías,
+          y registra la decisión de la comisión.
+        </p>
       </div>
 
-      <div class="acciones-principales">
-        <button type="button" class="btn btn-claro" id="btnVolver">
+      <div class="botones-encabezado">
+        <button type="button" id="btnVolver" class="btn btn-claro">
           ← Volver al panel
         </button>
-        <button type="button" class="btn btn-verde" id="btnActualizar">
-          ↻ Actualizar información
+
+        <button type="button" id="btnActualizar" class="btn btn-verde">
+          ↻ Actualizar datos
         </button>
       </div>
     </section>
 
-    <div id="mensaje" class="mensaje" role="status" aria-live="polite"></div>
+    <section class="estadisticas">
 
-    <section class="estadisticas" aria-label="Resumen de inscripciones">
-      <article class="estadistica">
-        <span>Total de inscripciones</span>
-        <strong id="totalInscripciones">0</strong>
+      <article class="tarjeta-estadistica">
+        <div class="estadistica-icono">📋</div>
+        <div>
+          <div class="estadistica-titulo">Inscripciones</div>
+          <div id="totalInscripciones" class="estadistica-numero">0</div>
+        </div>
       </article>
-      <article class="estadistica">
-        <span>Total de jugadores inscritos</span>
-        <strong id="totalJugadores">0</strong>
+
+      <article class="tarjeta-estadistica">
+        <div class="estadistica-icono">👥</div>
+        <div>
+          <div class="estadistica-titulo">Jugadores registrados</div>
+          <div id="totalJugadores" class="estadistica-numero">0</div>
+        </div>
       </article>
-      <article class="estadistica">
-        <span>Pendientes o en revisión</span>
-        <strong id="totalPendientes">0</strong>
+
+      <article class="tarjeta-estadistica">
+        <div class="estadistica-icono">⏳</div>
+        <div>
+          <div class="estadistica-titulo">Pendientes / en revisión</div>
+          <div id="totalPendientes" class="estadistica-numero">0</div>
+        </div>
       </article>
-      <article class="estadistica">
-        <span>Inscripciones aprobadas</span>
-        <strong id="totalAprobadas">0</strong>
+
+      <article class="tarjeta-estadistica">
+        <div class="estadistica-icono">✓</div>
+        <div>
+          <div class="estadistica-titulo">Inscripciones aprobadas</div>
+          <div id="totalAprobadas" class="estadistica-numero">0</div>
+        </div>
       </article>
+
     </section>
 
     <section class="panel">
+
       <div class="panel-cabecera">
-        <h3>Equipos y nóminas registradas</h3>
-        <span class="contador" id="contadorResultados">0 inscripciones</span>
+        <h3>Inscripciones de equipos</h3>
+        <span id="contadorResultados" class="contador">
+          0 inscripciones
+        </span>
       </div>
 
       <div class="filtros">
+
         <div class="campo">
           <label for="filtroEquipo">Equipo</label>
           <select id="filtroEquipo">
@@ -629,16 +1054,21 @@
         </div>
 
         <div class="campo">
-          <label for="buscarJugador">Buscar equipo, capitán o jugador</label>
-          <input type="search"
-                 id="buscarJugador"
-                 placeholder="Escribe un nombre o número de cédula..."
-                 autocomplete="off">
+          <label for="buscarJugador">Buscar equipo o jugador</label>
+          <input
+            type="search"
+            id="buscarJugador"
+            placeholder="Nombre, apellido o número de cédula..."
+          >
         </div>
 
-        <button type="button" class="btn btn-claro" id="btnLimpiar">
-          Limpiar filtros
-        </button>
+        <div class="campo">
+          <label>&nbsp;</label>
+          <button type="button" id="btnLimpiar" class="btn btn-claro">
+            Limpiar filtros
+          </button>
+        </div>
+
       </div>
 
       <div class="tabla-contenedor">
@@ -654,62 +1084,69 @@
               <th>Acciones</th>
             </tr>
           </thead>
-          <tbody id="tablaNomina">
-            <tr>
-              <td colspan="7" class="sin-resultados">
-                Cargando inscripciones...
-              </td>
-            </tr>
-          </tbody>
+
+          <tbody id="tablaNomina"></tbody>
         </table>
       </div>
 
       <div id="sinResultados" class="sin-resultados" hidden>
-        <strong>No se encontraron inscripciones.</strong>
-        <p>Comprueba los filtros o actualiza la información.</p>
+        <strong>No se encontraron inscripciones</strong>
+        <p>
+          No hay registros que coincidan con los filtros seleccionados.
+          Puedes limpiar los filtros o actualizar los datos.
+        </p>
       </div>
 
-      <div class="pie-tabla">
-        Los datos se consultan desde Supabase según los permisos de tu cuenta.
-      </div>
     </section>
+
   </main>
 
-  <footer class="pie-pagina">
-    <strong>Olimpiadas Juan Solano 2026</strong><br>
+  <footer>
     Comuna Quilloac | Desarrollado por Xavier Pichasaca © 2026
   </footer>
 
-  <div id="modalNomina"
-       class="modal"
-       role="dialog"
-       aria-modal="true"
-       aria-labelledby="tituloModal">
+  <!-- MODAL DE NÓMINA -->
+
+  <div
+    id="modalNomina"
+    class="modal"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="tituloModal"
+  >
     <div class="modal-contenido">
+
       <div class="modal-cabecera">
-        <h2 id="tituloModal">Detalle de la nómina</h2>
-        <button type="button"
-                class="btn-cerrar"
-                id="cerrarModal"
-                aria-label="Cerrar ventana">×</button>
+        <h2 id="tituloModal">Detalle de nómina</h2>
+
+        <button
+          type="button"
+          id="cerrarModal"
+          class="btn-cerrar"
+          aria-label="Cerrar ventana"
+        >
+          ×
+        </button>
       </div>
 
-      <div id="detalleNomina">
-        <div class="sin-resultados">
-          Selecciona una inscripción para ver sus jugadores.
-        </div>
+      <div id="detalleNomina" class="modal-cuerpo">
+        <p>Cargando información...</p>
       </div>
+
     </div>
   </div>
 
+  <!-- PANTALLA DE CARGA -->
+
   <div id="pantallaCarga" class="pantalla-carga">
-    <div class="rueda" aria-hidden="true"></div>
-    <strong id="textoCarga">Iniciando módulo de nóminas...</strong>
-    <small>Verificando sesión y consultando información del campeonato.</small>
+    <div class="carga-caja">
+      <div class="rueda"></div>
+      <p id="textoCarga">Verificando acceso...</p>
+    </div>
   </div>
 
-  <!-- Correcto si nomina.html está en /admin y nomina.js en /js -->
   <script type="module" src="../js/nomina.js"></script>
+
 </body>
 </html>
 ```

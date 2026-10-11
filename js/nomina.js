@@ -3,7 +3,10 @@ import { supabase } from "./supabase.js";
 
 const $ = (id) => document.getElementById(id);
 
-const BUCKET_JUGADORES = "documentos-campeonato";
+// CORREGIDO: las fotografías de jugadores están en este bucket.
+const BUCKET_JUGADORES = "jugadores";
+
+// Los documentos de inscripción permanecen en este bucket.
 const BUCKET_DOCUMENTOS = "documentos-campeonato";
 
 let nominas = [];
@@ -13,11 +16,14 @@ let mensajeTemporizador = null;
 const FOTO_VACIA =
   "data:image/svg+xml;charset=UTF-8," +
   encodeURIComponent(`
-    <svg xmlns="http://www.w3.org/2000/svg" width="120" height="140" viewBox="0 0 120 140">
+    <svg xmlns="http://www.w3.org/2000/svg"
+         width="120" height="140" viewBox="0 0 120 140">
       <rect width="120" height="140" fill="#edf3ef"/>
       <circle cx="60" cy="46" r="23" fill="#bdcec2"/>
-      <path d="M18 132c3-30 19-46 42-46s39 16 42 46" fill="#bdcec2"/>
-      <text x="60" y="17" font-size="8" text-anchor="middle" fill="#42634e">SIN FOTO</text>
+      <path d="M18 132c3-30 19-46 42-46s39 16 42 46"
+            fill="#bdcec2"/>
+      <text x="60" y="17" font-size="8"
+            text-anchor="middle" fill="#42634e">SIN FOTO</text>
     </svg>
   `);
 
@@ -60,7 +66,9 @@ function fechaLegible(fecha) {
 
   const valor = new Date(fecha);
 
-  if (Number.isNaN(valor.getTime())) return String(fecha);
+  if (Number.isNaN(valor.getTime())) {
+    return String(fecha);
+  }
 
   return valor.toLocaleDateString("es-EC", {
     year: "numeric",
@@ -105,6 +113,7 @@ function mostrarMensaje(texto, tipo = "info") {
   }
 
   clearTimeout(mensajeTemporizador);
+
   elemento.textContent = texto;
   elemento.className = `mensaje visible ${tipo}`;
 
@@ -114,7 +123,10 @@ function mostrarMensaje(texto, tipo = "info") {
 }
 
 function actualizarCarga(texto) {
-  if ($("textoCarga")) $("textoCarga").textContent = texto;
+  if ($("textoCarga")) {
+    $("textoCarga").textContent = texto;
+  }
+
   $("pantallaCarga")?.classList.remove("oculto");
 }
 
@@ -134,15 +146,7 @@ function cerrarModal() {
 }
 
 /* =====================================================
-   SUPABASE STORAGE: FOTOS Y DOCUMENTOS
-
-   La columna foto debe guardar la ruta del archivo
-   dentro del bucket, no solamente el nombre del jugador.
-
-   Ejemplo:
-   carpeta/archivo.jpg
-
-   También se aceptan URL completas.
+   ARCHIVOS DE SUPABASE STORAGE
 ===================================================== */
 
 function esURLCompleta(valor) {
@@ -157,51 +161,36 @@ async function resolverArchivoPrivado(bucket, ruta) {
   if (!ruta) return "";
 
   const valor = String(ruta).trim();
+
   if (!valor) return "";
 
-  // Si la base ya guarda una URL completa, utilizarla.
-  if (esURLCompleta(valor)) return valor;
+  if (esURLCompleta(valor)) {
+    return valor;
+  }
 
   const rutaFinal = normalizarRutaArchivo(valor);
+
   if (!rutaFinal) return "";
 
-  // Primera opción: generar un enlace temporal.
-  const { data: firmada, error: errorFirmada } =
-    await supabase.storage
-      .from(bucket)
-      .createSignedUrl(rutaFinal, 3600);
+  const { data, error } = await supabase.storage
+    .from(bucket)
+    .createSignedUrl(rutaFinal, 3600);
 
-  if (!errorFirmada && firmada?.signedUrl) {
-    return firmada.signedUrl;
-  }
-
-  console.warn(
-    "No se pudo crear el enlace temporal. Se probará la URL pública.",
-    {
+  if (error) {
+    console.error("Error al generar URL firmada:", {
       bucket,
       ruta: rutaFinal,
-      error: errorFirmada?.message
-    }
-  );
+      error: error.message
+    });
 
-  // Segunda opción: utilizar la URL pública del bucket.
-  const { data: publica } = supabase.storage
-    .from(bucket)
-    .getPublicUrl(rutaFinal);
-
-  if (publica?.publicUrl) {
-    return publica.publicUrl;
+    return "";
   }
 
-  console.error("No se pudo resolver el archivo:", {
-    bucket,
-    ruta: rutaFinal
-  });
-
-  return "";
+  return data?.signedUrl || "";
 }
 
 async function resolverFotoJugador(ruta) {
+  // CORREGIDO: fotos y cédulas de jugadores usan el bucket jugadores.
   return resolverArchivoPrivado(BUCKET_JUGADORES, ruta);
 }
 
@@ -231,11 +220,18 @@ function enlaceDocumento(url, texto = "Abrir documento") {
    CONSULTAS A SUPABASE
 ===================================================== */
 
-async function consultarPorIds(tabla, columna, ids, campos = "*") {
+async function consultarPorIds(
+  tabla,
+  columna,
+  ids,
+  campos = "*"
+) {
   const unicos = [
     ...new Set(
       (ids || []).filter(
-        (id) => id !== null && id !== undefined && id !== ""
+        (id) => id !== null &&
+                id !== undefined &&
+                id !== ""
       )
     )
   ];
@@ -253,7 +249,7 @@ async function consultarPorIds(tabla, columna, ids, campos = "*") {
 }
 
 /* =====================================================
-   VALIDAR ACCESO DEL ADMINISTRADOR O COMISIÓN
+   VALIDAR ACCESO DEL ADMINISTRADOR
 ===================================================== */
 
 async function verificarAcceso() {
@@ -279,7 +275,9 @@ async function verificarAcceso() {
   if (perfilError) throw perfilError;
 
   if (!perfil || perfil.activo !== true) {
-    throw new Error("Su perfil no existe o se encuentra inactivo.");
+    throw new Error(
+      "Su perfil no existe o se encuentra inactivo."
+    );
   }
 
   const { data: relaciones, error: rolesError } =
@@ -313,7 +311,9 @@ async function verificarAcceso() {
   );
 
   if (!autorizado) {
-    throw new Error("No tiene permisos para revisar las nóminas.");
+    throw new Error(
+      "No tiene permisos para revisar las nóminas."
+    );
   }
 
   if ($("usuarioNombre")) {
@@ -331,20 +331,23 @@ async function cargarNominas() {
   actualizarCarga("Cargando inscripciones y fotografías...");
 
   try {
-    const { data: inscripciones, error } = await supabase
-      .from("inscripcion_equipo")
-      .select(`
-        id,
-        equipo_id,
-        competencia_id,
-        capitan_id,
-        estado,
-        fecha_inscripcion,
-        observacion,
-        documento_inscripcion,
-        documento_aval
-      `)
-      .order("fecha_inscripcion", { ascending: false });
+    const { data: inscripciones, error } =
+      await supabase
+        .from("inscripcion_equipo")
+        .select(`
+          id,
+          equipo_id,
+          competencia_id,
+          capitan_id,
+          estado,
+          fecha_inscripcion,
+          observacion,
+          documento_inscripcion,
+          documento_aval
+        `)
+        .order("fecha_inscripcion", {
+          ascending: false
+        });
 
     if (error) throw error;
 
@@ -409,7 +412,9 @@ async function cargarNominas() {
     ]);
 
     const crearMapa = (elementos) =>
-      new Map(elementos.map((x) => [String(x.id), x]));
+      new Map(
+        elementos.map((x) => [String(x.id), x])
+      );
 
     const equipoPorId = crearMapa(equipos);
     const competenciaPorId = crearMapa(competencias);
@@ -433,11 +438,14 @@ async function cargarNominas() {
       jugadoresPorInscripcion.get(clave).push({
         ...jugador,
         ...relacion,
+
         jugadorId: jugador.id ?? relacion.jugador_id,
+
         nombreCompleto: [
           jugador.nombres,
           jugador.apellidos
-        ].filter(Boolean).join(" ").trim() || "Jugador sin nombre"
+        ].filter(Boolean).join(" ").trim()
+          || "Jugador sin nombre"
       });
     }
 
@@ -470,12 +478,15 @@ async function cargarNominas() {
           })
         );
 
-        const [logoUrl, documentoInscripcionUrl, documentoAvalUrl] =
-          await Promise.all([
-            resolverArchivoPrivado(BUCKET_DOCUMENTOS, equipo.logo),
-            resolverDocumento(inscripcion.documento_inscripcion),
-            resolverDocumento(inscripcion.documento_aval)
-          ]);
+        const [
+          logoUrl,
+          documentoInscripcionUrl,
+          documentoAvalUrl
+        ] = await Promise.all([
+          resolverArchivoPrivado(BUCKET_DOCUMENTOS, equipo.logo),
+          resolverDocumento(inscripcion.documento_inscripcion),
+          resolverDocumento(inscripcion.documento_aval)
+        ]);
 
         return {
           ...inscripcion,
@@ -524,6 +535,7 @@ async function cargarNominas() {
 
 function prepararFiltroEquipos() {
   const select = $("filtroEquipo");
+
   if (!select) return;
 
   const anterior = select.value;
@@ -538,18 +550,19 @@ function prepararFiltroEquipos() {
     }
   }
 
-  select.innerHTML = `<option value="">Todos los equipos</option>`;
+  select.innerHTML =
+    `<option value="">Todos los equipos</option>`;
 
   [...equipos.entries()]
     .sort((a, b) => a[1].localeCompare(b[1], "es"))
     .forEach(([id, nombre]) => {
-      const opcion = document.createElement("option");
-      opcion.value = id;
-      opcion.textContent = nombre;
-      select.appendChild(opcion);
+      select.insertAdjacentHTML(
+        "beforeend",
+        `<option value="${escapar(id)}">${escapar(nombre)}</option>`
+      );
     });
 
-  if ([...select.options].some((o) => o.value === anterior)) {
+  if ([...select.options].some((opcion) => opcion.value === anterior)) {
     select.value = anterior;
   }
 }
@@ -586,9 +599,13 @@ function obtenerNominasFiltradas() {
   const busqueda = normalizarEstado($("buscarJugador")?.value || "");
 
   return nominas.filter((n) => {
-    if (equipo && String(n.equipo_id) !== equipo) return false;
+    if (equipo && String(n.equipo_id) !== equipo) {
+      return false;
+    }
 
-    if (estado && normalizarEstado(n.estado) !== estado) return false;
+    if (estado && normalizarEstado(n.estado) !== estado) {
+      return false;
+    }
 
     if (busqueda) {
       const texto = [
@@ -600,7 +617,9 @@ function obtenerNominasFiltradas() {
         ...(n.jugadores || []).map((j) => j.numero_cedula)
       ].join(" ");
 
-      if (!normalizarEstado(texto).includes(busqueda)) return false;
+      if (!normalizarEstado(texto).includes(busqueda)) {
+        return false;
+      }
     }
 
     return true;
@@ -613,6 +632,7 @@ function obtenerNominasFiltradas() {
 
 function renderizarNominas() {
   const tbody = $("tablaNomina");
+
   if (!tbody) return;
 
   const filtradas = obtenerNominasFiltradas();
@@ -705,20 +725,25 @@ function tarjetaJugador(item, indice) {
   const estadoRelacion = item.estado || "PENDIENTE";
 
   const estadoJugador =
-    item.activo === true ? "Activo" :
-    item.activo === false ? "Inactivo" :
-    "No especificado";
+    item.activo === true
+      ? "Activo"
+      : item.activo === false
+        ? "Inactivo"
+        : "No especificado";
 
   const especial =
-    item.es_especial === true ? "Sí" :
-    item.es_especial === false ? "No" :
-    "No registrado";
+    item.es_especial === true
+      ? "Sí"
+      : item.es_especial === false
+        ? "No"
+        : "No registrado";
 
   const fichaId =
     `ficha-${id.replace(/[^a-zA-Z0-9_-]/g, "")}-${indice}`;
 
   return `
     <article class="jugador-fila">
+
       <div class="jugador-foto-mini">
         <img src="${escapar(foto)}"
              alt="Foto de ${escapar(nombre)}"
@@ -727,10 +752,16 @@ function tarjetaJugador(item, indice) {
       </div>
 
       <div class="jugador-contenido">
+
         <div class="jugador-linea-superior">
+
           <div class="jugador-identidad-mini">
-            <span class="camiseta">N.º ${escapar(item.numero ?? "—")}</span>
+            <span class="camiseta">
+              N.º ${escapar(item.numero ?? "—")}
+            </span>
+
             <strong>${escapar(nombre)}</strong>
+
             <span class="cedula-mini">
               CI: ${escapar(item.numero_cedula || "No registrada")}
             </span>
@@ -749,6 +780,7 @@ function tarjetaJugador(item, indice) {
                   data-ver-jugador="${escapar(fichaId)}">
             Ver detalles
           </button>
+
         </div>
 
         <div class="jugador-resumen-datos">
@@ -760,7 +792,10 @@ function tarjetaJugador(item, indice) {
           ${datoMini("Observación", item.observacion)}
         </div>
 
-        <section class="jugador-detalle" id="${escapar(fichaId)}" hidden>
+        <section class="jugador-detalle"
+                 id="${escapar(fichaId)}"
+                 hidden>
+
           <h4>Ficha completa del jugador</h4>
 
           <div class="detalle-grid">
@@ -779,6 +814,7 @@ function tarjetaJugador(item, indice) {
           </div>
 
           <div class="documento-jugador">
+
             <div class="documento-imagen">
               <strong>Fotografía del jugador</strong>
 
@@ -810,16 +846,20 @@ function tarjetaJugador(item, indice) {
                        rel="noopener noreferrer">
                       <img src="${escapar(fotoCedula)}"
                            alt="Fotografía de cédula"
-                           onerror="this.onerror=null;this.style.display='none'">
+                           onerror="this.style.display='none'">
                     </a>
                   `
-                  : `<span class="nota-pequena">
-                       No disponible o sin permiso para consultar el documento.
-                     </span>`
+                  : `
+                    <span class="nota-pequena">
+                      No disponible o sin permiso para consultar el documento.
+                    </span>
+                  `
               }
             </div>
+
           </div>
         </section>
+
       </div>
     </article>
   `;
@@ -830,7 +870,9 @@ function tarjetaJugador(item, indice) {
 ===================================================== */
 
 function mostrarDetalleNomina(id) {
-  const n = nominas.find((item) => String(item.id) === String(id));
+  const n = nominas.find(
+    (item) => String(item.id) === String(id)
+  );
 
   if (!n) {
     mostrarMensaje("No se encontró la inscripción seleccionada.", "error");
@@ -839,8 +881,10 @@ function mostrarDetalleNomina(id) {
 
   nominaActual = n;
 
-  $("tituloModal").textContent =
-    `Nómina: ${n.equipo?.nombre || "Equipo sin nombre"}`;
+  if ($("tituloModal")) {
+    $("tituloModal").textContent =
+      `Nómina: ${n.equipo?.nombre || "Equipo sin nombre"}`;
+  }
 
   const competencia = [
     n.disciplina?.nombre,
@@ -856,14 +900,20 @@ function mostrarDetalleNomina(id) {
       </div>
     `;
 
-  $("detalleNomina").innerHTML = `
+  const contenedor = $("detalleNomina");
+
+  if (!contenedor) return;
+
+  contenedor.innerHTML = `
     <section class="resumen-equipo">
+
       <img src="${escapar(n.equipo?.logo_url || FOTO_VACIA)}"
            alt="Logo del equipo"
            onerror="this.onerror=null;this.src='${FOTO_VACIA}'">
 
       <div>
         <h3>${escapar(n.equipo?.nombre || "Equipo sin nombre")}</h3>
+
         <p><strong>Competencia:</strong> ${escapar(competencia)}</p>
         <p><strong>Capitán:</strong> ${escapar(nombrePersona(n.capitan))}</p>
         <p><strong>Inscripción:</strong> ${etiquetaEstado(n.estado)}</p>
@@ -884,6 +934,7 @@ function mostrarDetalleNomina(id) {
     </section>
 
     <section class="seccion-jugadores">
+
       <div class="seccion-jugadores-cabecera">
         <h3>Jugadores registrados (${n.jugadores?.length || 0})</h3>
         <span class="nota-pequena">
@@ -891,30 +942,48 @@ function mostrarDetalleNomina(id) {
         </span>
       </div>
 
-      <div class="jugadores-lista">${jugadoresHTML}</div>
+      <div class="jugadores-lista">
+        ${jugadoresHTML}
+      </div>
+
     </section>
 
     <section class="decision-panel">
+
       <h3>Decisión sobre la inscripción</h3>
 
       <div class="campo">
         <label for="observacionDecision">Observación de la comisión</label>
+
         <textarea id="observacionDecision"
                   rows="3"
                   placeholder="Escriba observaciones o documentos faltantes...">${escapar(n.observacion || "")}</textarea>
       </div>
 
       <div class="decision-acciones">
-        <button class="btn btn-rojo" data-decision="RECHAZADA">Rechazar</button>
-        <button class="btn btn-dorado" data-decision="OBSERVADA">Registrar observación</button>
-        <button class="btn btn-claro" data-decision="EN REVISION">En revisión</button>
-        <button class="btn btn-verde" data-decision="APROBADA">Aprobar inscripción</button>
+        <button class="btn btn-rojo" data-decision="RECHAZADA">
+          Rechazar
+        </button>
+
+        <button class="btn btn-dorado" data-decision="OBSERVADA">
+          Registrar observación
+        </button>
+
+        <button class="btn btn-claro" data-decision="EN REVISION">
+          En revisión
+        </button>
+
+        <button class="btn btn-verde" data-decision="APROBADA">
+          Aprobar inscripción
+        </button>
       </div>
 
       <p class="decision-ayuda">
         La decisión se guarda en inscripcion_equipo.
-        La casilla individual “Habilitar” todavía no modifica la base de datos.
+        La casilla individual “Habilitar” es solamente visual;
+        no modifica la base de datos.
       </p>
+
     </section>
   `;
 
@@ -947,14 +1016,20 @@ async function guardarDecision(estado) {
     $("observacionDecision")?.value.trim() || null;
 
   const botones = document.querySelectorAll("[data-decision]");
-  botones.forEach((b) => { b.disabled = true; });
+
+  botones.forEach((b) => {
+    b.disabled = true;
+  });
 
   actualizarCarga("Guardando decisión...");
 
   try {
     const { data, error } = await supabase
       .from("inscripcion_equipo")
-      .update({ estado, observacion })
+      .update({
+        estado,
+        observacion
+      })
       .eq("id", nominaActual.id)
       .select("id,estado,observacion")
       .single();
@@ -992,7 +1067,10 @@ async function guardarDecision(estado) {
 
   } finally {
     ocultarCarga();
-    botones.forEach((b) => { b.disabled = false; });
+
+    botones.forEach((b) => {
+      b.disabled = false;
+    });
   }
 }
 
@@ -1009,6 +1087,7 @@ function configurarEventos() {
     if ($("filtroEquipo")) $("filtroEquipo").value = "";
     if ($("filtroEstado")) $("filtroEstado").value = "";
     if ($("buscarJugador")) $("buscarJugador").value = "";
+
     renderizarNominas();
   });
 
@@ -1016,7 +1095,9 @@ function configurarEventos() {
   $("cerrarModal")?.addEventListener("click", cerrarModal);
 
   $("modalNomina")?.addEventListener("click", (evento) => {
-    if (evento.target === $("modalNomina")) cerrarModal();
+    if (evento.target === $("modalNomina")) {
+      cerrarModal();
+    }
   });
 
   document.addEventListener("keydown", (evento) => {
@@ -1026,7 +1107,9 @@ function configurarEventos() {
   $("tablaNomina")?.addEventListener("click", (evento) => {
     const boton = evento.target.closest("[data-ver-nomina]");
 
-    if (boton) mostrarDetalleNomina(boton.dataset.verNomina);
+    if (boton) {
+      mostrarDetalleNomina(boton.dataset.verNomina);
+    }
   });
 
   $("detalleNomina")?.addEventListener("click", (evento) => {
@@ -1039,6 +1122,7 @@ function configurarEventos() {
 
       if (ficha) {
         ficha.hidden = !ficha.hidden;
+
         botonDetalle.textContent = ficha.hidden
           ? "Ver detalles"
           : "Ocultar detalles";
@@ -1056,13 +1140,16 @@ function configurarEventos() {
 
   $("detalleNomina")?.addEventListener("change", (evento) => {
     const checkbox = evento.target.closest("[data-habilitar-jugador]");
+
     if (!checkbox) return;
 
     const jugador = nominaActual?.jugadores?.find(
-      (j) => String(j.id) === String(checkbox.dataset.habilitarJugador)
+      (j) =>
+        String(j.id) ===
+        String(checkbox.dataset.habilitarJugador)
     );
 
-    // Evitar mostrar un cambio que no se ha guardado.
+    // No simular una actualización que aún no se guarda en Supabase.
     checkbox.checked =
       normalizarEstado(jugador?.estado) === "HABILITADO";
 
@@ -1108,7 +1195,11 @@ async function inicializarNominas() {
     await cargarNominas();
 
   } catch (error) {
-    console.error("Error inicializando revisión de nóminas:", error);
+    console.error(
+      "Error inicializando revisión de nóminas:",
+      error
+    );
+
     ocultarCarga();
 
     mostrarMensaje(
