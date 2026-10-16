@@ -811,10 +811,23 @@
                   <label for="numero">Número de camiseta</label>
                   <input type="number" id="numero" name="numero" min="0" step="1" placeholder="Ej. 10">
                 </div>
+                
                 <div class="campo">
                   <label for="posicion">Posición</label>
-                  <input type="text" id="posicion" name="posicion" maxlength="60" placeholder="Defensa, delantero...">
+                    <select id="posicion" name="posicion" required>
+                      <option value="">Seleccione una posición</option>
+                      <option value="Portero">Portero</option>
+                      <option value="Defensa central">Defensa central</option>
+                      <option value="Lateral izquierdo">Lateral izquierdo</option>
+                      <option value="Lateral derecho">Lateral derecho</option>
+                      <option value="Volante izquierdo">Volante izquierdo</option>
+                      <option value="Volante derecho">Volante derecho</option>
+                      <option value="Mediocampista">Mediocampista</option>
+                      <option value="Delantero">Delantero</option>
+                  </select>
                 </div>
+                
+                
                 <label class="especial-linea" for="esEspecial">
                   <input type="checkbox" id="esEspecial" name="esEspecial">
                   <span><strong>Jugador de categoría especial</strong><br>Marca esta casilla si corresponde según el reglamento.</span>
