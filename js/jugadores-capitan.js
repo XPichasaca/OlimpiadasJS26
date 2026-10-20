@@ -1,4 +1,3 @@
-
 import { supabase } from './supabase.js';
 
 console.log('✅ jugadores-capitan.js cargado');
@@ -62,6 +61,73 @@ const btnSubirInscripcion = document.getElementById('btnSubirInscripcion');
 const estadoAval = document.getElementById('estadoAval');
 const estadoInscripcion = document.getElementById('estadoInscripcion');
 const mensajeDocumentos = document.getElementById('mensajeDocumentos');
+
+// =====================================================
+// CASILLA JUGADOR ESPECIAL
+// Se utiliza la existente o se crea automáticamente.
+// =====================================================
+
+
+let esEspecialInput =
+  document.getElementById('esEspecial') ||
+  document.getElementById('es_especial') ||
+  formJugador?.querySelector('[name="es_especial"]') ||
+  formJugador?.querySelector('[name="esEspecial"]');
+
+if (esEspecialInput) {
+  esEspecialInput.type = 'checkbox';
+  esEspecialInput.id = 'esEspecial';
+  esEspecialInput.name = 'es_especial';
+} else if (formJugador) {
+  const etiquetaEspecial = document.createElement('label');
+
+  etiquetaEspecial.htmlFor = 'esEspecial';
+  etiquetaEspecial.style.display = 'flex';
+  etiquetaEspecial.style.alignItems = 'center';
+  etiquetaEspecial.style.gap = '10px';
+  etiquetaEspecial.style.margin = '15px 0';
+  etiquetaEspecial.style.padding = '13px';
+  etiquetaEspecial.style.border = '1px solid #c7dfc9';
+  etiquetaEspecial.style.borderRadius = '10px';
+  etiquetaEspecial.style.background = '#edf7ed';
+  etiquetaEspecial.style.cursor = 'default';
+
+  esEspecialInput = document.createElement('input');
+  esEspecialInput.type = 'checkbox';
+  esEspecialInput.id = 'esEspecial';
+  esEspecialInput.name = 'es_especial';
+  esEspecialInput.style.width = '19px';
+  esEspecialInput.style.height = '19px';
+
+  const textoEspecial = document.createElement('span');
+  textoEspecial.textContent = 'Jugador especial';
+  textoEspecial.style.fontWeight = '700';
+  textoEspecial.style.color = '#174d32';
+
+  etiquetaEspecial.append(esEspecialInput, textoEspecial);
+
+  const elementoGuardar = btnGuardar
+    ? [...formJugador.children].find(
+        elemento =>
+          elemento === btnGuardar || elemento.contains(btnGuardar)
+      )
+    : null;
+
+  if (elementoGuardar) {
+    formJugador.insertBefore(etiquetaEspecial, elementoGuardar);
+  } else {
+    formJugador.appendChild(etiquetaEspecial);
+  }
+}
+
+// La casilla es únicamente informativa.
+// El valor lo calcula y almacena Supabase.
+if (esEspecialInput) {
+  esEspecialInput.disabled = true;
+  esEspecialInput.style.cursor = 'default';
+  esEspecialInput.title =
+    'Se calcula automáticamente según la edad y la competencia';
+}
 
 // =====================================================
 // CONFIGURACIÓN DE STORAGE
@@ -438,7 +504,6 @@ async function subirArchivosJugador(jugadorId) {
   const foto = fotoJugadorInput?.files?.[0];
   const cedula = cedulaArchivoInput?.files?.[0];
 
-  // Si no se selecciona un archivo nuevo, se conserva el existente.
   if (!foto && !cedula) return;
 
   if (foto) {
@@ -488,7 +553,7 @@ async function crearEnlacePrivado(bucket, ruta) {
 }
 
 // =====================================================
-// VISTA PREVIA DE ARCHIVOS EXISTENTES AL EDITAR
+// VISTA PREVIA DE ARCHIVOS
 // =====================================================
 
 async function cargarVistaPreviaArchivo(ruta, contenedorVista, tipo) {
@@ -566,7 +631,95 @@ async function mostrarArchivosActuales(jugador) {
 }
 
 // =====================================================
-// FICHA AMPLIA: CREACIÓN AUTOMÁTICA DEL MODAL
+// VISTA PREVIA DE ARCHIVOS NUEVOS ANTES DE GUARDAR
+// =====================================================
+
+function mostrarVistaPreviaArchivoNuevo(file, contenedorVista, tipo) {
+  if (!file || !contenedorVista) return;
+
+  contenedorVista.replaceChildren();
+
+  const url = URL.createObjectURL(file);
+
+  if (tipo === 'imagen') {
+    const imagen = document.createElement('img');
+    imagen.src = url;
+    imagen.alt = 'Vista previa de la fotografía seleccionada';
+    imagen.style.display = 'block';
+    imagen.style.maxWidth = '100%';
+    imagen.style.maxHeight = '220px';
+    imagen.style.objectFit = 'contain';
+    imagen.style.margin = '10px auto';
+    imagen.style.borderRadius = '10px';
+
+    imagen.onload = () => URL.revokeObjectURL(url);
+
+    imagen.onerror = () => {
+      URL.revokeObjectURL(url);
+      contenedorVista.textContent = 'No se pudo visualizar la fotografía seleccionada.';
+    };
+
+    contenedorVista.appendChild(imagen);
+    return;
+  }
+
+  if (file.type === 'application/pdf') {
+    const texto = document.createElement('p');
+    texto.textContent = `📄 PDF seleccionado: ${file.name}`;
+    contenedorVista.appendChild(texto);
+    URL.revokeObjectURL(url);
+    return;
+  }
+
+  const imagen = document.createElement('img');
+  imagen.src = url;
+  imagen.alt = 'Vista previa del documento de identidad';
+  imagen.style.display = 'block';
+  imagen.style.maxWidth = '100%';
+  imagen.style.maxHeight = '220px';
+  imagen.style.objectFit = 'contain';
+  imagen.style.margin = '10px auto';
+
+  imagen.onload = () => URL.revokeObjectURL(url);
+
+  imagen.onerror = () => {
+    URL.revokeObjectURL(url);
+    contenedorVista.textContent = 'No se pudo visualizar el documento seleccionado.';
+  };
+
+  contenedorVista.appendChild(imagen);
+}
+
+fotoJugadorInput?.addEventListener('change', () => {
+  const archivo = fotoJugadorInput.files?.[0];
+
+  if (!archivo) return;
+
+  try {
+    validarArchivo(archivo, true);
+    mostrarVistaPreviaArchivoNuevo(archivo, vistaFotoJugador, 'imagen');
+  } catch (error) {
+    fotoJugadorInput.value = '';
+    mostrarMensaje(error.message, 'error');
+  }
+});
+
+cedulaArchivoInput?.addEventListener('change', () => {
+  const archivo = cedulaArchivoInput.files?.[0];
+
+  if (!archivo) return;
+
+  try {
+    validarArchivo(archivo, false);
+    mostrarVistaPreviaArchivoNuevo(archivo, vistaCedulaJugador, 'documento');
+  } catch (error) {
+    cedulaArchivoInput.value = '';
+    mostrarMensaje(error.message, 'error');
+  }
+});
+
+// =====================================================
+// FICHA AMPLIA DEL JUGADOR
 // =====================================================
 
 let fichaModal = null;
@@ -583,7 +736,6 @@ let fichaObservacionElemento = null;
 let fichaDocumentoElemento = null;
 
 function prepararFichaJugador() {
-  // Si el HTML ya contiene la ficha, reutilizarla.
   const existente = document.getElementById('modalVerJugador');
 
   if (existente) {
@@ -620,142 +772,81 @@ function prepararFichaJugador() {
     return existente;
   }
 
-  // Si no existe, construir la ficha automáticamente.
   const estilo = document.createElement('style');
   estilo.id = 'estilosFichaJugador';
   estilo.textContent = `
     #modalVerJugador {
-      position: fixed;
-      inset: 0;
-      z-index: 99999;
-      display: none;
-      align-items: center;
-      justify-content: center;
-      padding: 18px;
-      background: rgba(9, 20, 15, .78);
-      backdrop-filter: blur(5px);
-      box-sizing: border-box;
+      position:fixed; inset:0; z-index:99999; display:none;
+      align-items:center; justify-content:center; padding:18px;
+      background:rgba(9,20,15,.78); backdrop-filter:blur(5px);
+      box-sizing:border-box;
     }
-    #modalVerJugador * { box-sizing: border-box; }
+    #modalVerJugador * { box-sizing:border-box; }
     #modalVerJugador .ficha-panel {
-      width: min(1120px, 96vw);
-      max-height: 94vh;
-      overflow-y: auto;
-      background: #fff;
-      color: #24342a;
-      border-radius: 20px;
-      box-shadow: 0 25px 80px rgba(0,0,0,.3);
+      width:min(1120px,96vw); max-height:94vh; overflow-y:auto;
+      background:#fff; color:#24342a; border-radius:20px;
+      box-shadow:0 25px 80px rgba(0,0,0,.3);
     }
     #modalVerJugador .ficha-cabecera {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 15px;
-      padding: 20px 26px;
-      background: #174d32;
-      color: white;
-      border-bottom: 4px solid #d7b34b;
+      display:flex; align-items:center; justify-content:space-between;
+      gap:15px; padding:20px 26px; background:#174d32;
+      color:white; border-bottom:4px solid #d7b34b;
     }
-    #modalVerJugador .ficha-cabecera h2 {
-      margin: 0;
-      font-size: 1.35rem;
-    }
+    #modalVerJugador .ficha-cabecera h2 { margin:0; font-size:1.35rem; }
     #modalVerJugador .ficha-cerrar {
-      border: 0;
-      border-radius: 10px;
-      padding: 10px 14px;
-      cursor: pointer;
-      background: #fff;
-      color: #174d32;
-      font-weight: 700;
+      border:0; border-radius:10px; padding:10px 14px;
+      cursor:pointer; background:#fff; color:#174d32; font-weight:700;
     }
-    #modalVerJugador .ficha-cuerpo { padding: 26px; }
+    #modalVerJugador .ficha-cuerpo { padding:26px; }
     #modalVerJugador .ficha-superior {
-      display: grid;
-      grid-template-columns: 220px minmax(0, 1fr);
-      gap: 28px;
-      align-items: start;
+      display:grid; grid-template-columns:220px minmax(0,1fr);
+      gap:28px; align-items:start;
     }
-    #modalVerJugador .ficha-foto-contenedor {
-      text-align: center;
-    }
+    #modalVerJugador .ficha-foto-contenedor { text-align:center; }
     #modalVerJugador #fichaFoto {
-      width: 200px;
-      height: 220px;
-      max-width: 100%;
-      object-fit: cover;
-      border-radius: 16px;
-      background: #eef1ed;
-      border: 3px solid #e5e9e4;
+      width:200px; height:220px; max-width:100%; object-fit:cover;
+      border-radius:16px; background:#eef1ed; border:3px solid #e5e9e4;
     }
     #modalVerJugador .ficha-nombre {
-      margin: 0 0 18px;
-      font-size: 1.65rem;
-      overflow-wrap: anywhere;
+      margin:0 0 18px; font-size:1.65rem; overflow-wrap:anywhere;
     }
     #modalVerJugador .ficha-grid {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 12px;
+      display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px;
     }
     #modalVerJugador .ficha-dato {
-      padding: 13px;
-      border: 1px solid #e2e8e1;
-      border-radius: 12px;
-      background: #f8faf7;
-      min-width: 0;
+      padding:13px; border:1px solid #e2e8e1; border-radius:12px;
+      background:#f8faf7; min-width:0;
     }
     #modalVerJugador .ficha-etiqueta {
-      display: block;
-      color: #637267;
-      font-size: .78rem;
-      margin-bottom: 5px;
+      display:block; color:#637267; font-size:.78rem; margin-bottom:5px;
     }
     #modalVerJugador .ficha-valor {
-      display: block;
-      font-weight: 700;
-      overflow-wrap: anywhere;
+      display:block; font-weight:700; overflow-wrap:anywhere;
     }
     #modalVerJugador .ficha-seccion {
-      margin-top: 25px;
-      padding-top: 20px;
-      border-top: 1px solid #e3e8e2;
+      margin-top:25px; padding-top:20px; border-top:1px solid #e3e8e2;
     }
-    #modalVerJugador .ficha-seccion h3 {
-      margin: 0 0 14px;
-      color: #174d32;
-    }
+    #modalVerJugador .ficha-seccion h3 { margin:0 0 14px; color:#174d32; }
     #modalVerJugador .ficha-documento img {
-      display: block;
-      max-width: 100%;
-      max-height: 500px;
-      object-fit: contain;
-      margin-top: 14px;
-      border: 1px solid #e0e5df;
-      border-radius: 10px;
+      display:block; max-width:100%; max-height:500px; object-fit:contain;
+      margin-top:14px; border:1px solid #e0e5df; border-radius:10px;
     }
     #modalVerJugador .ficha-pie {
-      display: flex;
-      justify-content: flex-end;
-      padding-top: 24px;
+      display:flex; justify-content:flex-end; padding-top:24px;
     }
     #modalVerJugador .ficha-enlace {
-      display: inline-block;
-      padding: 10px 14px;
-      color: #174d32;
-      background: #edf5ed;
-      border-radius: 9px;
-      font-weight: 700;
-      text-decoration: none;
+      display:inline-block; padding:10px 14px; color:#174d32;
+      background:#edf5ed; border-radius:9px; font-weight:700;
+      text-decoration:none;
     }
     @media(max-width:650px) {
-      #modalVerJugador { padding: 7px; }
-      #modalVerJugador .ficha-panel { width: 100%; max-height: 96vh; }
-      #modalVerJugador .ficha-cuerpo { padding: 16px; }
-      #modalVerJugador .ficha-superior { grid-template-columns: 1fr; gap: 18px; }
-      #modalVerJugador .ficha-grid { grid-template-columns: 1fr; }
-      #modalVerJugador .ficha-nombre { font-size: 1.3rem; }
-      #modalVerJugador #fichaFoto { width: 170px; height: 180px; }
+      #modalVerJugador { padding:7px; }
+      #modalVerJugador .ficha-panel { width:100%; max-height:96vh; }
+      #modalVerJugador .ficha-cuerpo { padding:16px; }
+      #modalVerJugador .ficha-superior { grid-template-columns:1fr; gap:18px; }
+      #modalVerJugador .ficha-grid { grid-template-columns:1fr; }
+      #modalVerJugador .ficha-nombre { font-size:1.3rem; }
+      #modalVerJugador #fichaFoto { width:170px; height:180px; }
     }
   `;
 
@@ -771,67 +862,36 @@ function prepararFichaJugador() {
     <div class="ficha-panel">
       <div class="ficha-cabecera">
         <h2>Ficha del jugador</h2>
-        <button type="button" class="ficha-cerrar" data-cerrar-ficha>
-          ✕ Cerrar
-        </button>
+        <button type="button" class="ficha-cerrar" data-cerrar-ficha>✕ Cerrar</button>
       </div>
-
       <div class="ficha-cuerpo">
         <div class="ficha-superior">
           <div class="ficha-foto-contenedor">
             <img id="fichaFoto" alt="Fotografía del jugador">
           </div>
-
           <div>
             <h2 id="fichaNombre" class="ficha-nombre">Jugador</h2>
-
             <div class="ficha-grid">
-              <div class="ficha-dato">
-                <span class="ficha-etiqueta">Número de camiseta</span>
-                <span id="fichaNumero" class="ficha-valor">—</span>
-              </div>
-              <div class="ficha-dato">
-                <span class="ficha-etiqueta">Cédula</span>
-                <span id="fichaCedula" class="ficha-valor">—</span>
-              </div>
-              <div class="ficha-dato">
-                <span class="ficha-etiqueta">Fecha de nacimiento</span>
-                <span id="fichaFecha" class="ficha-valor">—</span>
-              </div>
-              <div class="ficha-dato">
-                <span class="ficha-etiqueta">Posición</span>
-                <span id="fichaPosicion" class="ficha-valor">—</span>
-              </div>
-              <div class="ficha-dato">
-                <span class="ficha-etiqueta">Origen</span>
-                <span id="fichaOrigen" class="ficha-valor">—</span>
-              </div>
-              <div class="ficha-dato">
-                <span class="ficha-etiqueta">Estado del jugador</span>
-                <span id="fichaEstado" class="ficha-valor">—</span>
-              </div>
-              <div class="ficha-dato">
-                <span class="ficha-etiqueta">Jugador especial</span>
-                <span id="fichaEspecial" class="ficha-valor">—</span>
-              </div>
+              <div class="ficha-dato"><span class="ficha-etiqueta">Número de camiseta</span><span id="fichaNumero" class="ficha-valor">—</span></div>
+              <div class="ficha-dato"><span class="ficha-etiqueta">Cédula</span><span id="fichaCedula" class="ficha-valor">—</span></div>
+              <div class="ficha-dato"><span class="ficha-etiqueta">Fecha de nacimiento</span><span id="fichaFecha" class="ficha-valor">—</span></div>
+              <div class="ficha-dato"><span class="ficha-etiqueta">Posición</span><span id="fichaPosicion" class="ficha-valor">—</span></div>
+              <div class="ficha-dato"><span class="ficha-etiqueta">Origen</span><span id="fichaOrigen" class="ficha-valor">—</span></div>
+              <div class="ficha-dato"><span class="ficha-etiqueta">Estado del jugador</span><span id="fichaEstado" class="ficha-valor">—</span></div>
+              <div class="ficha-dato"><span class="ficha-etiqueta">Jugador especial</span><span id="fichaEspecial" class="ficha-valor">—</span></div>
             </div>
           </div>
         </div>
-
         <div class="ficha-seccion">
           <h3>Observaciones de la inscripción</h3>
           <p id="fichaObservacion">Sin observaciones registradas.</p>
         </div>
-
         <div class="ficha-seccion ficha-documento">
           <h3>Documento de identidad</h3>
           <div id="fichaDocumento">Consultando documento...</div>
         </div>
-
         <div class="ficha-pie">
-          <button type="button" class="ficha-cerrar" data-cerrar-ficha>
-            Cerrar ficha
-          </button>
+          <button type="button" class="ficha-cerrar" data-cerrar-ficha>Cerrar ficha</button>
         </div>
       </div>
     </div>
@@ -894,19 +954,9 @@ async function verJugador(id) {
   texto(fichaFechaElemento, formatearFecha(j.fecha_nacimiento));
   texto(fichaPosicionElemento, registro.posicion, 'No registrada');
   texto(fichaOrigenElemento, j.origen, 'No registrado');
-  texto(
-    fichaEstadoElemento,
-    j.activo === false ? 'Inactivo' : 'Activo'
-  );
-  texto(
-    fichaEspecialElemento,
-    registro.es_especial ? 'Sí' : 'No'
-  );
-  texto(
-    fichaObservacionElemento,
-    registro.observacion,
-    'Sin observaciones registradas.'
-  );
+  texto(fichaEstadoElemento, j.activo === false ? 'Inactivo' : 'Activo');
+  texto(fichaEspecialElemento, registro.es_especial === true ? 'Sí' : 'No');
+  texto(fichaObservacionElemento, registro.observacion, 'Sin observaciones registradas.');
 
   if (fichaImagen) {
     fichaImagen.removeAttribute('src');
@@ -921,7 +971,6 @@ async function verJugador(id) {
   modalFicha.style.display = 'flex';
   document.body.style.overflow = 'hidden';
 
-  // La ficha aparece primero; los archivos se cargan después.
   const idConsultado = registro.id;
 
   const [urlFoto, urlDocumento] = await Promise.all([
@@ -929,7 +978,6 @@ async function verJugador(id) {
     crearEnlacePrivado(BUCKET_JUGADORES, j.foto_cedula)
   ]);
 
-  // No mostrar archivos de una consulta anterior si se abrió otra ficha.
   if (
     !fichaModal ||
     fichaModal.style.display !== 'flex' ||
@@ -950,10 +998,9 @@ async function verJugador(id) {
     fichaDocumentoElemento.replaceChildren();
 
     if (!urlDocumento) {
-      fichaDocumentoElemento.textContent =
-        j.foto_cedula
-          ? 'No se pudo abrir el documento. Verifica que exista en el bucket jugadores y que Storage permita generar enlaces firmados.'
-          : 'No hay documento de identidad cargado.';
+      fichaDocumentoElemento.textContent = j.foto_cedula
+        ? 'No se pudo abrir el documento. Verifica el bucket jugadores y los permisos de Storage.'
+        : 'No hay documento de identidad cargado.';
     } else {
       const enlace = document.createElement('a');
       enlace.href = urlDocumento;
@@ -965,9 +1012,8 @@ async function verJugador(id) {
       fichaDocumentoElemento.appendChild(enlace);
 
       const ruta = String(j.foto_cedula || '').split('?')[0];
-      const esImagen = /\.(jpg|jpeg|png|webp)$/i.test(ruta);
 
-      if (esImagen) {
+      if (/\.(jpg|jpeg|png|webp)$/i.test(ruta)) {
         const imagen = document.createElement('img');
         imagen.src = urlDocumento;
         imagen.alt = 'Documento de identidad del jugador';
@@ -983,10 +1029,7 @@ async function verJugador(id) {
 }
 
 function cerrarFichaJugador() {
-  if (fichaModal) {
-    fichaModal.style.display = 'none';
-  }
-
+  if (fichaModal) fichaModal.style.display = 'none';
   document.body.style.overflow = '';
 }
 
@@ -1054,10 +1097,7 @@ async function subirDocumentoEquipo(tipo) {
   const inscripcion = obtenerInscripcionEquipoActual();
 
   if (!inscripcion) {
-    mostrarMensajeDocumento(
-      'No se encontró una inscripción de equipo para cargar documentos.',
-      'error'
-    );
+    mostrarMensajeDocumento('No se encontró una inscripción de equipo para cargar documentos.', 'error');
     return;
   }
 
@@ -1260,15 +1300,15 @@ function renderizarJugadores() {
       imagen.style.borderRadius = '50%';
       imagen.style.background = '#eee';
 
-      crearEnlacePrivado(BUCKET_JUGADORES, j.foto).then(url => {
-        if (url) {
-          imagen.src = url;
-        } else {
-          imagen.alt = 'Fotografía no disponible';
-        }
-      }).catch(error => {
-        console.warn('No se pudo cargar la miniatura:', error);
-      });
+      crearEnlacePrivado(BUCKET_JUGADORES, j.foto)
+        .then(url => {
+          if (url) {
+            imagen.src = url;
+          } else {
+            imagen.alt = 'Fotografía no disponible';
+          }
+        })
+        .catch(error => console.warn('No se pudo cargar la miniatura:', error));
 
       contenedorFoto.appendChild(imagen);
     }
@@ -1356,6 +1396,7 @@ function renderizarJugadores() {
 
 function actualizarEstadisticas() {
   const total = jugadores.filter(r => r.jugador).length;
+
   const activos = jugadores.filter(
     r => r.jugador && r.jugador.activo !== false
   ).length;
@@ -1374,16 +1415,19 @@ function abrirAgregar() {
 
   formJugador?.reset();
 
+  if (esEspecialInput) esEspecialInput.checked = false;
   if (fotoJugadorInput) fotoJugadorInput.value = '';
   if (cedulaArchivoInput) cedulaArchivoInput.value = '';
 
   if (tituloModal) tituloModal.textContent = 'Agregar jugador';
 
   if (vistaFotoJugador) {
+    vistaFotoJugador.replaceChildren();
     vistaFotoJugador.textContent = '📷 La fotografía aparecerá aquí.';
   }
 
   if (vistaCedulaJugador) {
+    vistaCedulaJugador.replaceChildren();
     vistaCedulaJugador.textContent = '📄 El documento aparecerá aquí.';
   }
 
@@ -1399,7 +1443,10 @@ function abrirAgregar() {
 async function abrirEditar(id) {
   const registro = jugadores.find(r => String(r.id) === String(id));
 
-  if (!registro?.jugador) return;
+  if (!registro?.jugador) {
+    mostrarMensaje('No se encontró el jugador.', 'error');
+    return;
+  }
 
   jugadorEditando = registro;
   const j = registro.jugador;
@@ -1413,8 +1460,14 @@ async function abrirEditar(id) {
   setValue('origen', j.origen);
   setValue('jugadorId', j.id);
 
-  // No se rellenan inputs de archivo; los navegadores lo impiden.
-  // Los archivos existentes se muestran y se conservan si no se reemplazan.
+  // Cargar el valor que realmente está guardado en la base de datos.
+  if (esEspecialInput) {
+    esEspecialInput.checked =
+      registro.es_especial === true ||
+      registro.es_especial === 'true' ||
+      registro.es_especial === 1;
+  }
+
   if (fotoJugadorInput) fotoJugadorInput.value = '';
   if (cedulaArchivoInput) cedulaArchivoInput.value = '';
 
@@ -1457,6 +1510,9 @@ async function guardarJugador(event) {
   const posicion = getValue('posicion') || null;
   const origen = getValue('origen') || null;
 
+  // Leer el estado de la casilla al pulsar Guardar.
+
+
   if (!nombres || !apellidos || !cedula) {
     mostrarMensaje('Complete nombres, apellidos y número de cédula.', 'error');
     return;
@@ -1475,10 +1531,17 @@ async function guardarJugador(event) {
   mostrarMensaje('', '');
 
   try {
+    // ===================================================
+    // ACTUALIZAR JUGADOR EXISTENTE
+    // ===================================================
+
     if (jugadorEditando) {
       const jugadorId = jugadorEditando.jugador.id;
 
-      const { error: jugadorError } = await supabase
+      const {
+        data: jugadorActualizado,
+        error: jugadorError
+      } = await supabase
         .from('jugador')
         .update({
           nombres,
@@ -1487,32 +1550,70 @@ async function guardarJugador(event) {
           fecha_nacimiento: fechaNacimiento,
           origen
         })
-        .eq('id', jugadorId);
+        .eq('id', jugadorId)
+        .select('id')
+        .maybeSingle();
 
       if (jugadorError) {
-        throw new Error(`Error actualizando jugador: ${jugadorError.message}`);
+        throw new Error(
+          `Error actualizando los datos personales: ${jugadorError.message}`
+        );
       }
 
+      if (!jugadorActualizado) {
+        throw new Error(
+          'No se actualizaron los datos personales. Verifica los permisos UPDATE de la tabla jugador.'
+        );
+      }
+
+      // Los archivos existentes se conservan si no se seleccionan reemplazos.
       await subirArchivosJugador(jugadorId);
 
+      console.log('ID inscripción a actualizar:', jugadorEditando.id);
+      console.log('Jugador especial seleccionado:', esEspecial);
+
+      // ACTUALIZAR NÚMERO, POSICIÓN Y JUGADOR ESPECIAL.
       const {
+        data: inscripcionActualizada,
         error: inscripcionError
       } = await supabase
         .from('inscripcion_jugador')
-        .update({ numero, posicion })
+        .update({
+          numero,
+          posicion,
+          
+        })
         .eq('id', jugadorEditando.id)
-        .eq('inscripcion_equipo_id', jugadorEditando.inscripcion_equipo_id);
+        .eq(
+          'inscripcion_equipo_id',
+          jugadorEditando.inscripcion_equipo_id
+        )
+        .select('id, numero, posicion, es_especial')
+        .maybeSingle();
 
       if (inscripcionError) {
         throw new Error(
           'Los datos personales se guardaron, pero no se pudo actualizar ' +
-          `la inscripción: ${inscripcionError.message}`
+          `la nómina: ${inscripcionError.message}`
         );
       }
+
+      if (!inscripcionActualizada) {
+        throw new Error(
+          'Los datos personales se guardaron, pero no se actualizó la nómina. ' +
+          'Comprueba el ID y los permisos UPDATE de las políticas RLS.'
+        );
+      }
+
+      console.log('✅ Inscripción actualizada:', inscripcionActualizada);
 
       mostrarMensaje('Jugador actualizado correctamente.', 'ok');
 
     } else {
+      // =================================================
+      // REGISTRAR JUGADOR NUEVO
+      // =================================================
+
       let jugador;
 
       const {
@@ -1580,6 +1681,7 @@ async function guardarJugador(event) {
         throw new Error('No se encontró una inscripción para el equipo.');
       }
 
+      // Evitar duplicados en la nómina del equipo.
       const {
         data: duplicada,
         error: dupError
@@ -1599,21 +1701,25 @@ async function guardarJugador(event) {
 
       if (duplicada) {
         throw new Error(
-          'Este jugador ya está registrado en la nómina. ' +
-          'Utiliza Editar para modificar sus datos.'
+          'Este jugador ya está registrado en la nómina. Utiliza Editar para modificarlo.'
         );
       }
 
-      const { error: inscripcionError } = await supabase
+      // INSERTAR EL VALOR DE LA CASILLA EN LA BASE DE DATOS.
+      const {
+        data: nuevaInscripcion,
+        error: inscripcionError
+      } = await supabase
         .from('inscripcion_jugador')
         .insert({
           inscripcion_equipo_id: inscripcion.id,
           jugador_id: jugador.id,
           numero,
           posicion,
-          es_especial: false,
           estado: 'PENDIENTE'
-        });
+        })
+        .select('id, es_especial')
+        .single();
 
       if (inscripcionError) {
         throw new Error(
@@ -1622,17 +1728,29 @@ async function guardarJugador(event) {
         );
       }
 
+      console.log('✅ Nueva inscripción:', nuevaInscripcion);
+
+      // Subir fotografía y documento si fueron seleccionados.
       await subirArchivosJugador(jugador.id);
-      mostrarMensaje('Jugador agregado correctamente.', 'ok');
+
+      mostrarMensaje(
+        `Jugador agregado correctamente. Jugador especial: ${esEspecial ? 'Sí' : 'No'}.`,
+        'ok'
+      );
     }
 
+    // Recargar datos desde Supabase.
     await cargarJugadores();
 
-    setTimeout(() => cerrarModal(), 700);
+    setTimeout(() => cerrarModal(), 1000);
 
   } catch (error) {
     console.error('❌ Error guardando jugador:', error);
-    mostrarMensaje(error?.message || 'No se pudo guardar el jugador.', 'error');
+
+    mostrarMensaje(
+      error?.message || 'No se pudo guardar el jugador.',
+      'error'
+    );
 
   } finally {
     if (btnGuardar) {
@@ -1691,6 +1809,7 @@ function cerrarModal() {
 
   formJugador?.reset();
 
+  if (esEspecialInput) esEspecialInput.checked = false;
   if (fotoJugadorInput) fotoJugadorInput.value = '';
   if (cedulaArchivoInput) cedulaArchivoInput.value = '';
 
