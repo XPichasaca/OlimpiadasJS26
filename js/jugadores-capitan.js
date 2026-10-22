@@ -136,7 +136,7 @@ if (esEspecialInput) {
 const BUCKET_JUGADORES = 'jugadores';
 const BUCKET_DOCUMENTOS_EQUIPO = 'documentos-campeonato';
 
-const MAX_ARCHIVO_BYTES = 10 * 1024 * 1024;
+const MAX_ARCHIVO_BYTES = 50 * 1024 * 1024;
 
 const MIME_IMAGEN = [
   'image/jpeg',
