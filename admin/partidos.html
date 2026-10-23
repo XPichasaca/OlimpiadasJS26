@@ -1,0 +1,1048 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#10291d">
+  <title>Gestión de Partidos | Olimpiadas Juan Solano 2026</title>
+
+  <style>
+    :root {
+      --verde: #176b3a;
+      --verde-oscuro: #10291d;
+      --verde-claro: #e7f5eb;
+      --dorado: #d8ad43;
+      --fondo: #f3f5f3;
+      --texto: #26352c;
+      --borde: #dfe5df;
+      --blanco: #fff;
+      --rojo: #b42318;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: var(--fondo);
+      color: var(--texto);
+    }
+
+    button, input, select {
+      font: inherit;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    .barra-superior {
+      background: linear-gradient(120deg, var(--verde-oscuro), #205b36);
+      color: white;
+      padding: 20px 28px;
+      border-bottom: 4px solid var(--dorado);
+    }
+
+    .barra-contenido {
+      max-width: 1500px;
+      margin: auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    .marca h1 {
+      margin: 0 0 7px;
+      font-size: 24px;
+    }
+
+    .marca p {
+      margin: 0;
+      color: #dce9df;
+      font-size: 13px;
+    }
+
+    .etiqueta-version {
+      color: #fff0bf;
+      font-size: 12px;
+      font-weight: bold;
+      letter-spacing: 1px;
+    }
+
+    .contenedor {
+      max-width: 1500px;
+      margin: 25px auto;
+      padding: 0 20px;
+      display: grid;
+      grid-template-columns: 245px minmax(0, 1fr);
+      gap: 22px;
+    }
+
+    .menu-lateral {
+      background: var(--blanco);
+      border: 1px solid var(--borde);
+      border-radius: 14px;
+      padding: 16px;
+      height: fit-content;
+      position: sticky;
+      top: 15px;
+    }
+
+    .menu-lateral h3 {
+      font-size: 12px;
+      text-transform: uppercase;
+      color: #748176;
+      letter-spacing: 1px;
+      padding: 0 10px;
+      margin: 8px 0 14px;
+    }
+
+    .menu-lateral button {
+      display: block;
+      width: 100%;
+      padding: 12px;
+      margin: 5px 0;
+      border: 0;
+      border-radius: 8px;
+      background: transparent;
+      color: #39483d;
+      text-align: left;
+      font-weight: 600;
+    }
+
+    .menu-lateral button:hover,
+    .menu-lateral button.activo {
+      background: var(--verde-claro);
+      color: var(--verde);
+    }
+
+    .contenido {
+      min-width: 0;
+    }
+
+    .encabezado-contenido {
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 15px;
+      flex-wrap: wrap;
+    }
+
+    .encabezado-contenido h2 {
+      margin: 0;
+      font-size: 25px;
+      color: var(--verde-oscuro);
+    }
+
+    .seccion {
+      display: none;
+    }
+
+    .seccion.activa {
+      display: block;
+    }
+
+    .panel {
+      background: white;
+      border: 1px solid var(--borde);
+      border-radius: 13px;
+      padding: 22px;
+      margin-bottom: 20px;
+      box-shadow: 0 3px 12px #10291d08;
+    }
+
+    .panel h2 {
+      margin: 0 0 10px;
+      font-size: 19px;
+      color: var(--verde-oscuro);
+    }
+
+    .panel h3 {
+      margin-top: 0;
+    }
+
+    .texto-secundario {
+      color: #6b776e;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .campo {
+      margin: 16px 0;
+    }
+
+    .campo label {
+      display: block;
+      font-weight: bold;
+      margin-bottom: 7px;
+      font-size: 13px;
+    }
+
+    .campo input,
+    .campo select {
+      width: 100%;
+      padding: 11px 12px;
+      border: 1px solid #cfd8d0;
+      border-radius: 8px;
+      background: white;
+      min-height: 42px;
+    }
+
+    .formulario-sorteo {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .acciones {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .btn {
+      padding: 11px 16px;
+      border: 0;
+      border-radius: 8px;
+      font-weight: bold;
+      font-size: 13px;
+      transition: .15s;
+    }
+
+    .btn:disabled {
+      opacity: .5;
+      cursor: not-allowed;
+    }
+
+    .btn-verde {
+      color: white;
+      background: var(--verde);
+    }
+
+    .btn-verde:hover:not(:disabled) {
+      background: #10532d;
+    }
+
+    .btn-dorado {
+      color: #2b2410;
+      background: var(--dorado);
+    }
+
+    .btn-secundario {
+      color: #35443a;
+      background: #e9eee9;
+    }
+
+    .btn-peligro {
+      color: white;
+      background: var(--rojo);
+    }
+
+    .aviso {
+      display: none;
+      padding: 13px 15px;
+      border-radius: 9px;
+      margin-bottom: 18px;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .aviso.visible {
+      display: block;
+    }
+
+    .aviso.info {
+      color: #1d4e79;
+      background: #e8f3ff;
+    }
+
+    .aviso.exito {
+      color: #166534;
+      background: #e7f8ec;
+    }
+
+    .aviso.error {
+      color: #8b1b15;
+      background: #fff0ef;
+    }
+
+    .tarjetas {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+
+    .tarjeta {
+      padding: 20px;
+      background: white;
+      border: 1px solid var(--borde);
+      border-radius: 12px;
+    }
+
+    .tarjeta span {
+      display: block;
+      font-size: 13px;
+      color: #6b776e;
+      margin-bottom: 10px;
+    }
+
+    .tarjeta strong {
+      font-size: 28px;
+      color: var(--verde);
+    }
+
+    .grupos {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 18px;
+    }
+
+    .grupo {
+      border: 1px solid var(--borde);
+      border-radius: 11px;
+      overflow: hidden;
+      background: white;
+    }
+
+    .grupo-titulo {
+      background: var(--verde-oscuro);
+      color: white;
+      padding: 14px 17px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .grupo-titulo h3 {
+      margin: 0;
+    }
+
+    .lista-equipos {
+      padding: 10px;
+      min-height: 100px;
+    }
+
+    .equipo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 10px;
+      border-bottom: 1px solid #edf0ed;
+    }
+
+    .equipo:last-child {
+      border-bottom: 0;
+    }
+
+    .orden {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 30px;
+      height: 30px;
+      background: var(--verde-claro);
+      color: var(--verde);
+      border-radius: 50%;
+      font-weight: bold;
+      flex-shrink: 0;
+    }
+
+    .equipo-nombre {
+      font-weight: bold;
+      font-size: 14px;
+    }
+
+    .equipo-subtitulo {
+      font-size: 12px;
+      color: #778178;
+      margin-top: 4px;
+    }
+
+    .vacio {
+      color: #788178;
+      padding: 18px 10px;
+      text-align: center;
+      font-size: 13px;
+    }
+
+    .tabla-contenedor {
+      overflow-x: auto;
+      width: 100%;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 1050px;
+    }
+
+    th, td {
+      text-align: left;
+      vertical-align: middle;
+      padding: 11px 10px;
+      border-bottom: 1px solid #e8ece8;
+      font-size: 13px;
+    }
+
+    th {
+      background: #f0f5f0;
+      color: #34483a;
+      white-space: nowrap;
+    }
+
+    tbody tr:hover {
+      background: #fafcfa;
+    }
+
+    #tablaPartidos input,
+    #tablaPartidos select {
+      width: 100%;
+      min-width: 105px;
+      padding: 8px;
+      border: 1px solid #cfd8d0;
+      border-radius: 6px;
+    }
+
+    .pie {
+      max-width: 1500px;
+      margin: 30px auto;
+      padding: 20px;
+      text-align: center;
+      color: #718075;
+      font-size: 12px;
+    }
+
+    .modo-proyeccion {
+      background: #07160e;
+      color: white;
+    }
+
+    .modo-proyeccion .barra-superior {
+      display: none;
+    }
+
+    .modo-proyeccion .contenedor {
+      display: block;
+      max-width: 1600px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    .modo-proyeccion .menu-lateral,
+    .modo-proyeccion .encabezado-contenido,
+    .modo-proyeccion #aviso,
+    .modo-proyeccion #seccion-inicio,
+    .modo-proyeccion #seccion-sorteo,
+    .modo-proyeccion #seccion-grupos,
+    .modo-proyeccion #seccion-partidos,
+    .modo-proyeccion #seccion-nomina,
+    .modo-proyeccion .pie {
+      display: none !important;
+    }
+
+    .modo-proyeccion #pantallaProyeccion {
+      display: block !important;
+    }
+
+    .proy-cabecera {
+      text-align: center;
+      padding: 20px 10px;
+      border-bottom: 2px solid var(--dorado);
+    }
+
+    .proy-cabecera h1 {
+      margin: 0 0 12px;
+      color: var(--dorado);
+      font-size: clamp(24px, 4vw, 46px);
+    }
+
+    #proyCompetencia {
+      font-size: clamp(15px, 2vw, 22px);
+    }
+
+    .proy-columnas {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr) minmax(0, 1fr);
+      gap: 20px;
+      align-items: stretch;
+      margin-top: 24px;
+    }
+
+    .proy-panel {
+      padding: 20px;
+      border: 1px solid #315540;
+      background: #10291d;
+      border-radius: 15px;
+      min-width: 0;
+    }
+
+    .proy-panel h2 {
+      color: var(--dorado);
+      text-align: center;
+    }
+
+    .proy-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 5px;
+      border-bottom: 1px solid #315540;
+      overflow-wrap: anywhere;
+    }
+
+    .proy-num {
+      color: var(--dorado);
+      font-weight: bold;
+    }
+
+    .proy-kicker {
+      color: var(--dorado);
+      font-size: 13px;
+      letter-spacing: 2px;
+      text-align: center;
+    }
+
+    .proy-nombre {
+      text-align: center;
+      overflow-wrap: anywhere;
+    }
+
+    .proy-subtitulo {
+      text-align: center;
+      color: #d0dfd4;
+    }
+
+    .proy-grupo {
+      margin-top: 20px;
+      text-align: center;
+      color: var(--dorado);
+      font-size: 26px;
+      font-weight: bold;
+    }
+
+    .proy-orden {
+      text-align: center;
+      margin-top: 12px;
+    }
+
+    .proy-escudo {
+      display: block;
+      width: 110px;
+      height: 110px;
+      object-fit: contain;
+      margin: 20px auto;
+    }
+
+    .proy-sin-equipo {
+      text-align: center;
+      line-height: 1.7;
+    }
+
+    .proy-botones {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 25px;
+    }
+
+    .proy-actualizado {
+      color: #a9c0af;
+      text-align: center;
+      margin-top: 20px;
+      font-size: 12px;
+    }
+
+    @media (max-width: 1000px) {
+      .contenedor {
+        grid-template-columns: 1fr;
+      }
+
+      .menu-lateral {
+        position: static;
+      }
+
+      .menu-lateral nav {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 5px;
+      }
+
+      .tarjetas {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .proy-columnas {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 650px) {
+      .formulario-sorteo,
+      .grupos {
+        grid-template-columns: 1fr;
+      }
+
+      .tarjetas {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .barra-superior {
+        padding: 18px;
+      }
+
+      .contenedor {
+        padding: 0 12px;
+      }
+
+      .panel {
+        padding: 16px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- CABECERA -->
+
+  <header class="barra-superior">
+    <div class="barra-contenido">
+      <div class="marca">
+        <h1>🏆 Olimpiadas Juan Solano 2026</h1>
+        <p>Sistema de gestión deportiva y programación de encuentros</p>
+      </div>
+      <div class="etiqueta-version">PANEL ADMINISTRATIVO</div>
+    </div>
+  </header>
+
+  <!-- APLICACIÓN -->
+
+  <div class="contenedor">
+
+    <aside class="menu-lateral">
+      <h3>Administración deportiva</h3>
+
+      <nav>
+        <button type="button" class="activo" data-seccion="inicio">
+          ▦ Dashboard
+        </button>
+
+        <button type="button" data-seccion="sorteo">
+          ◉ Sorteo de equipos
+        </button>
+
+        <button type="button" data-seccion="grupos">
+          ☷ Consultar grupos
+        </button>
+
+        <button type="button" data-seccion="partidos">
+          ⚽ Gestión de partidos
+        </button>
+
+        <button type="button" data-seccion="nomina">
+          ☑ Nóminas de partidos
+        </button>
+
+        <button type="button" id="btnVolver">
+          ← Volver al administrador
+        </button>
+      </nav>
+    </aside>
+
+    <main class="contenido">
+
+      <div class="encabezado-contenido">
+        <h2 id="tituloSeccion">Dashboard deportivo</h2>
+        <button type="button" class="btn btn-secundario" id="btnAbrirPantalla">
+          Abrir pantalla de sorteo
+        </button>
+      </div>
+
+      <div id="aviso" class="aviso" role="status" aria-live="polite"></div>
+
+      <!-- DASHBOARD -->
+
+      <section id="seccion-inicio" class="seccion activa">
+
+        <div class="tarjetas">
+          <div class="tarjeta">
+            <span>Equipos habilitados</span>
+            <strong id="statEquipos">0</strong>
+          </div>
+
+          <div class="tarjeta">
+            <span>Equipos sorteados</span>
+            <strong id="statSorteados">0</strong>
+          </div>
+
+          <div class="tarjeta">
+            <span>Partidos programados</span>
+            <strong id="statProgramados">0</strong>
+          </div>
+
+          <div class="tarjeta">
+            <span>Partidos finalizados</span>
+            <strong id="statFinalizados">0</strong>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h2>Bienvenido a la gestión deportiva</h2>
+          <p class="texto-secundario">
+            Selecciona una competencia para administrar el sorteo,
+            consultar los grupos y generar su calendario de partidos.
+          </p>
+
+          <div class="campo">
+            <label for="competenciaInicio">Competencia</label>
+            <select id="competenciaInicio">
+              <option value="">Seleccionar competencia...</option>
+            </select>
+          </div>
+
+          <div class="acciones">
+            <button type="button" class="btn btn-verde" data-ir="sorteo">
+              Administrar sorteo
+            </button>
+
+            <button type="button" class="btn btn-secundario" data-ir="grupos">
+              Consultar grupos
+            </button>
+
+            <button type="button" class="btn btn-dorado" data-ir="partidos">
+              Programar partidos
+            </button>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- SORTEO -->
+
+      <section id="seccion-sorteo" class="seccion">
+
+        <div class="panel">
+          <h2>Sorteo de equipos</h2>
+          <p class="texto-secundario">
+            Selecciona una competencia y consulta los equipos habilitados
+            para asignarlos a un grupo y un orden.
+          </p>
+
+          <div class="campo">
+            <label for="competenciaSorteo">Competencia</label>
+            <select id="competenciaSorteo">
+              <option value="">Seleccionar competencia...</option>
+            </select>
+          </div>
+
+          <div class="acciones">
+            <button type="button" id="btnCargarSorteo" class="btn btn-verde">
+              Cargar equipos
+            </button>
+
+            <button type="button" id="btnAbrirPantalla" class="btn btn-dorado">
+              Abrir pantalla pública
+            </button>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h2>Asignar equipo a un grupo</h2>
+
+          <div class="formulario-sorteo">
+            <div class="campo">
+              <label for="equipoSorteo">Equipo habilitado</label>
+              <select id="equipoSorteo">
+                <option value="">Seleccione un equipo...</option>
+              </select>
+            </div>
+
+            <div class="campo">
+              <label for="grupoSorteo">Grupo</label>
+              <select id="grupoSorteo">
+                <option value="">Seleccionar grupo...</option>
+                <option value="A">Grupo A</option>
+                <option value="B">Grupo B</option>
+              </select>
+            </div>
+
+            <div class="campo">
+              <label for="ordenSorteo">Orden de sorteo</label>
+              <input
+                type="number"
+                id="ordenSorteo"
+                min="1"
+                step="1"
+                placeholder="Ej. 1"
+              >
+            </div>
+          </div>
+
+          <div class="acciones">
+            <button type="button" id="btnAsignar" class="btn btn-verde">
+              Guardar asignación
+            </button>
+
+            <button type="button" id="btnActualizarGrupos" class="btn btn-secundario">
+              Actualizar grupos
+            </button>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h2>Grupos del sorteo</h2>
+
+          <div class="grupos">
+            <div class="grupo">
+              <div class="grupo-titulo">
+                <h3>Grupo A</h3>
+                <span id="totalA">0 equipos</span>
+              </div>
+              <div id="listaA" class="lista-equipos">
+                <p class="vacio">Carga los equipos para consultar el grupo.</p>
+              </div>
+            </div>
+
+            <div class="grupo">
+              <div class="grupo-titulo">
+                <h3>Grupo B</h3>
+                <span id="totalB">0 equipos</span>
+              </div>
+              <div id="listaB" class="lista-equipos">
+                <p class="vacio">Carga los equipos para consultar el grupo.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- CONSULTA DE GRUPOS -->
+
+      <section id="seccion-grupos" class="seccion">
+
+        <div class="panel">
+          <h2>Consultar grupos</h2>
+
+          <div class="campo">
+            <label for="competenciaGrupos">Competencia</label>
+            <select id="competenciaGrupos">
+              <option value="">Seleccionar competencia...</option>
+            </select>
+          </div>
+
+          <div class="acciones">
+            <button type="button" id="btnConsultarGrupos" class="btn btn-verde">
+              Consultar grupos
+            </button>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="grupos">
+
+            <div class="grupo">
+              <div class="grupo-titulo">
+                <h3>Grupo A</h3>
+                <span id="consultaTotalA">0 equipos</span>
+              </div>
+              <div id="consultaListaA" class="lista-equipos">
+                <p class="vacio">Selecciona una competencia.</p>
+              </div>
+            </div>
+
+            <div class="grupo">
+              <div class="grupo-titulo">
+                <h3>Grupo B</h3>
+                <span id="consultaTotalB">0 equipos</span>
+              </div>
+              <div id="consultaListaB" class="lista-equipos">
+                <p class="vacio">Selecciona una competencia.</p>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+      </section>
+
+      <!-- GESTIÓN DE PARTIDOS -->
+
+      <section id="seccion-partidos" class="seccion">
+
+        <div class="panel">
+          <h2>Programación de partidos</h2>
+
+          <p class="texto-secundario">
+            Genera los enfrentamientos de la primera fase y organiza
+            los partidos de cada competencia. Selecciona una competencia
+            antes de generar o consultar el calendario.
+          </p>
+
+          <div class="campo">
+            <label for="competenciaPartidos">Competencia</label>
+            <select id="competenciaPartidos">
+              <option value="">Seleccionar competencia...</option>
+            </select>
+          </div>
+
+          <div class="acciones">
+            <button type="button" id="btnCargarPartidos" class="btn btn-verde">
+              Consultar partidos
+            </button>
+
+            <button type="button" id="btnGenerarCalendario" class="btn btn-dorado">
+              Generar calendario
+            </button>
+          </div>
+
+          <p class="texto-secundario">
+            Antes de generar, revisa que los equipos estén correctamente
+            sorteados. Si el calendario ya existe, revisa los partidos
+            antes de volver a intentarlo.
+          </p>
+        </div>
+
+        <div class="tarjetas">
+          <div class="tarjeta">
+            <span>Equipos habilitados</span>
+            <strong id="statEquiposPartidos">0</strong>
+          </div>
+
+          <div class="tarjeta">
+            <span>Equipos sorteados</span>
+            <strong id="statSorteadosPartidos">0</strong>
+          </div>
+
+          <div class="tarjeta">
+            <span>Partidos programados</span>
+            <strong id="statProgramadosPartidos">0</strong>
+          </div>
+
+          <div class="tarjeta">
+            <span>Partidos finalizados</span>
+            <strong id="statFinalizadosPartidos">0</strong>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h2>Calendario de encuentros</h2>
+
+          <p class="texto-secundario">
+            Edita la fecha, la hora, la cancha y el estado de cada
+            encuentro. Pulsa Guardar para registrar cada modificación.
+          </p>
+
+          <div class="tabla-contenedor">
+            <table>
+              <thead>
+                <tr>
+                  <th>Fase / grupo</th>
+                  <th>Equipo local</th>
+                  <th>Equipo visitante</th>
+                  <th>Fecha</th>
+                  <th>Hora</th>
+                  <th>Cancha</th>
+                  <th>Estado</th>
+                  <th>Acción</th>
+                </tr>
+              </thead>
+
+              <tbody id="tablaPartidos">
+                <tr>
+                  <td colspan="8">
+                    Selecciona una competencia y consulta los partidos.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- NÓMINAS DE PARTIDOS -->
+
+      <section id="seccion-nomina" class="seccion">
+        <div class="panel">
+          <h2>Nóminas de partidos</h2>
+          <p class="texto-secundario">
+            Esta sección queda preparada para conectar la selección
+            de jugadores habilitados y la nómina correspondiente
+            a cada encuentro.
+          </p>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- PANTALLA PÚBLICA DEL SORTEO -->
+
+  <section id="pantallaProyeccion" style="display:none">
+    <div class="proy-cabecera">
+      <h1>🏆 OLIMPIADAS JUAN SOLANO 2026</h1>
+      <div id="proyCompetencia">Cargando competencia...</div>
+    </div>
+
+    <div class="proy-columnas">
+
+      <div class="proy-panel">
+        <h2>GRUPO A</h2>
+        <div id="proyListaA">
+          <div class="proy-item">Sin equipos todavía.</div>
+        </div>
+      </div>
+
+      <div class="proy-panel">
+        <div id="proyEquipo">
+          <div class="proy-kicker">EL SORTEO ESTÁ POR COMENZAR</div>
+          <div class="proy-sin-equipo">
+            El primer equipo aparecerá aquí cuando se realice
+            la primera asignación.
+          </div>
+        </div>
+      </div>
+
+      <div class="proy-panel">
+        <h2>GRUPO B</h2>
+        <div id="proyListaB">
+          <div class="proy-item">Sin equipos todavía.</div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="proy-botones">
+      <button type="button" id="btnPantallaCompleta" class="btn btn-dorado">
+        Pantalla completa
+      </button>
+
+      <button type="button" id="btnCerrarPantalla" class="btn btn-secundario">
+        Cerrar pantalla
+      </button>
+    </div>
+
+    <div id="proyActualizado" class="proy-actualizado">
+      Esperando actualización...
+    </div>
+  </section>
+
+  <footer class="pie">
+    Comuna Quilloac | Olimpiadas Juan Solano 2026
+  </footer>
+
+  <script type="module" src="../js/partidos-admin.js"></script>
+
+</body>
+</html>

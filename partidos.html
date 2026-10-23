@@ -1,0 +1,890 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#10291d">
+
+  <title>Partidos | Olimpiadas Juan Solano 2026</title>
+
+  <style>
+    :root {
+      --verde: #176b3a;
+      --verde-oscuro: #10291d;
+      --verde-claro: #e7f5eb;
+      --dorado: #d8ad43;
+      --fondo: #f3f5f3;
+      --texto: #26352c;
+      --borde: #dfe5df;
+      --blanco: #ffffff;
+      --gris: #718075;
+      --rojo: #b42318;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      color: var(--texto);
+      background: var(--fondo);
+    }
+
+    button, select {
+      font: inherit;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    .cabecera {
+      color: white;
+      background: linear-gradient(120deg, #07160e, #205b36);
+      border-bottom: 4px solid var(--dorado);
+    }
+
+    .cabecera-interior {
+      max-width: 1250px;
+      margin: auto;
+      padding: 25px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    .marca {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .marca img {
+      width: 65px;
+      height: 65px;
+      object-fit: contain;
+    }
+
+    .marca h1 {
+      margin: 0 0 7px;
+      font-size: clamp(20px, 3vw, 30px);
+    }
+
+    .marca p {
+      margin: 0;
+      color: #d7e5da;
+      font-size: 13px;
+    }
+
+    .enlace-inicio {
+      color: #fff0bf;
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: bold;
+      padding: 11px 15px;
+      border: 1px solid #ffffff55;
+      border-radius: 8px;
+    }
+
+    .enlace-inicio:hover {
+      background: #ffffff15;
+    }
+
+    .navegacion {
+      background: #0b2015;
+    }
+
+    .navegacion-interior {
+      max-width: 1250px;
+      margin: auto;
+      padding: 0 20px;
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .navegacion a {
+      color: white;
+      text-decoration: none;
+      padding: 14px 13px;
+      font-size: 13px;
+    }
+
+    .navegacion a:hover,
+    .navegacion a.activo {
+      color: var(--dorado);
+      border-bottom: 2px solid var(--dorado);
+    }
+
+    .hero {
+      background: linear-gradient(135deg, #e6f2e8, #ffffff);
+      padding: 38px 20px;
+      text-align: center;
+      border-bottom: 1px solid var(--borde);
+    }
+
+    .hero .etiqueta {
+      color: var(--verde);
+      font-size: 12px;
+      letter-spacing: 3px;
+      font-weight: bold;
+    }
+
+    .hero h2 {
+      margin: 12px 0;
+      color: var(--verde-oscuro);
+      font-size: clamp(27px, 4vw, 42px);
+    }
+
+    .hero p {
+      color: var(--gris);
+      margin: 0;
+      line-height: 1.6;
+    }
+
+    .contenedor {
+      max-width: 1250px;
+      margin: 28px auto;
+      padding: 0 20px;
+    }
+
+    .resumen {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 15px;
+      margin-bottom: 24px;
+    }
+
+    .resumen-card {
+      background: white;
+      border: 1px solid var(--borde);
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 3px 12px #10291d08;
+    }
+
+    .resumen-card span {
+      display: block;
+      color: var(--gris);
+      font-size: 13px;
+      margin-bottom: 10px;
+    }
+
+    .resumen-card strong {
+      display: block;
+      color: var(--verde);
+      font-size: 29px;
+    }
+
+    .filtros {
+      background: white;
+      border: 1px solid var(--borde);
+      border-radius: 13px;
+      padding: 20px;
+      margin-bottom: 24px;
+    }
+
+    .filtros h3 {
+      margin: 0 0 15px;
+      color: var(--verde-oscuro);
+    }
+
+    .filtros-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 13px;
+    }
+
+    .campo label {
+      display: block;
+      font-size: 12px;
+      font-weight: bold;
+      margin-bottom: 7px;
+    }
+
+    .campo select {
+      width: 100%;
+      padding: 11px;
+      min-height: 43px;
+      border: 1px solid #cfd8d0;
+      border-radius: 8px;
+      background: white;
+      color: var(--texto);
+    }
+
+    .acciones-filtros {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 17px;
+    }
+
+    .btn {
+      padding: 11px 16px;
+      border: 0;
+      border-radius: 8px;
+      font-weight: bold;
+      font-size: 13px;
+    }
+
+    .btn-verde {
+      color: white;
+      background: var(--verde);
+    }
+
+    .btn-verde:hover {
+      background: #10532d;
+    }
+
+    .btn-claro {
+      background: #e9eee9;
+      color: #35443a;
+    }
+
+    .actualizacion {
+      font-size: 12px;
+      color: var(--gris);
+    }
+
+    .titulo-listado {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin: 0 0 16px;
+    }
+
+    .titulo-listado h2 {
+      color: var(--verde-oscuro);
+      margin: 0;
+      font-size: 22px;
+    }
+
+    #totalResultados {
+      font-size: 13px;
+      color: var(--gris);
+    }
+
+    .lista-partidos {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .partido {
+      background: white;
+      border: 1px solid var(--borde);
+      border-radius: 13px;
+      overflow: hidden;
+      box-shadow: 0 3px 12px #10291d08;
+    }
+
+    .partido-cabecera {
+      background: var(--verde-oscuro);
+      color: white;
+      padding: 13px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .partido-competencia {
+      font-size: 12px;
+      font-weight: bold;
+      overflow-wrap: anywhere;
+    }
+
+    .estado {
+      display: inline-block;
+      padding: 6px 9px;
+      border-radius: 20px;
+      font-size: 10px;
+      font-weight: bold;
+      white-space: nowrap;
+      background: #e9eee9;
+      color: #35443a;
+    }
+
+    .estado-programado {
+      background: #e8f3ff;
+      color: #1d4e79;
+    }
+
+    .estado-juego {
+      background: #fff0c2;
+      color: #805900;
+    }
+
+    .estado-finalizado {
+      background: #e7f8ec;
+      color: #166534;
+    }
+
+    .estado-suspendido {
+      background: #fff0ef;
+      color: var(--rojo);
+    }
+
+    .partido-cuerpo {
+      padding: 18px;
+    }
+
+    .partido-meta {
+      display: flex;
+      justify-content: center;
+      gap: 13px;
+      flex-wrap: wrap;
+      color: var(--gris);
+      font-size: 12px;
+      margin-bottom: 18px;
+    }
+
+    .enfrentamiento {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+      align-items: center;
+      gap: 12px;
+    }
+
+    .equipo {
+      min-width: 0;
+      text-align: center;
+    }
+
+    .equipo-nombre {
+      font-size: 14px;
+      font-weight: bold;
+      line-height: 1.5;
+      overflow-wrap: anywhere;
+    }
+
+    .equipo-label {
+      font-size: 10px;
+      color: var(--gris);
+      margin-top: 5px;
+    }
+
+    .marcador {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--verde-oscuro);
+      font-size: 26px;
+      font-weight: bold;
+    }
+
+    .marcador .separador {
+      color: #a6b0a8;
+      font-size: 18px;
+    }
+
+    .sin-marcador {
+      color: var(--gris);
+      font-size: 13px;
+      font-weight: bold;
+    }
+
+    .partido-pie {
+      border-top: 1px solid #edf0ed;
+      background: #fafcfa;
+      padding: 12px 16px;
+      font-size: 12px;
+      color: var(--gris);
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .mensaje {
+      grid-column: 1 / -1;
+      text-align: center;
+      padding: 40px 20px;
+      background: white;
+      border: 1px solid var(--borde);
+      border-radius: 13px;
+      color: var(--gris);
+      line-height: 1.7;
+    }
+
+    .mensaje strong {
+      display: block;
+      font-size: 18px;
+      color: var(--verde-oscuro);
+      margin-bottom: 8px;
+    }
+
+    .pie {
+      margin-top: 45px;
+      padding: 25px 20px;
+      text-align: center;
+      background: var(--verde-oscuro);
+      color: #d7e5da;
+      font-size: 12px;
+      line-height: 1.8;
+      border-top: 3px solid var(--dorado);
+    }
+
+    .pie strong {
+      color: var(--dorado);
+    }
+
+    @media (max-width: 850px) {
+      .resumen {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .filtros-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .lista-partidos {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 520px) {
+      .cabecera-interior {
+        padding: 20px 14px;
+      }
+
+      .marca img {
+        width: 48px;
+        height: 48px;
+      }
+
+      .marca p {
+        font-size: 11px;
+      }
+
+      .navegacion-interior {
+        padding: 0 10px;
+      }
+
+      .navegacion a {
+        padding: 12px 8px;
+        font-size: 12px;
+      }
+
+      .contenedor {
+        padding: 0 12px;
+      }
+
+      .resumen-card {
+        padding: 15px;
+      }
+
+      .resumen-card strong {
+        font-size: 25px;
+      }
+
+      .filtros-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .enfrentamiento {
+        gap: 7px;
+      }
+
+      .equipo-nombre {
+        font-size: 12px;
+      }
+
+      .marcador {
+        font-size: 22px;
+        gap: 5px;
+      }
+    }
+
+    
+/* ===== TEMA OLIMPIADAS JUAN SOLANO ===== */
+
+body {
+    background: #050705 !important;
+    color: #f5f5f0;
+}
+
+header, .header, .navbar {
+    background: #050705 !important;
+    border-bottom: 2px solid #d8ad43;
+}
+
+h1, h2, h3, .titulo-principal {
+    color: #e5bd55;
+}
+
+#listaPartidos {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 22px;
+    margin-top: 25px;
+}
+
+.partido-card {
+    background: #0b0d0b !important;
+    color: #f5f5f0;
+    border: 1px solid #856b2b;
+    border-radius: 18px;
+    padding: 20px;
+    box-shadow: 0 8px 25px #000;
+    overflow: hidden;
+    position: relative;
+    transition: .25s ease;
+}
+
+.partido-card::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto;
+    height: 3px;
+    background: linear-gradient(90deg, #13a65c, #e5bd55);
+}
+
+.partido-card:hover {
+    border-color: #e5bd55;
+    transform: translateY(-4px);
+    box-shadow: 0 12px 30px #000, 0 0 15px #d8ad431c;
+}
+
+.partido-disciplina {
+    color: #e5bd55;
+    font-weight: 800;
+    text-transform: uppercase;
+}
+
+.partido-categoria {
+    color: #28d17c;
+    font-weight: 700;
+}
+
+.partido-fase {
+    text-align: center;
+    color: #b9c1b9;
+    margin: 15px 0;
+}
+
+.partido-enfrentamiento {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 44px minmax(0, 1fr);
+    align-items: center;
+    gap: 8px;
+    background: #050605;
+    border: 1px solid #252b25;
+    border-radius: 14px;
+    padding: 18px 8px;
+}
+
+.partido-equipo {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    gap: 10px;
+    min-width: 0;
+}
+
+.logo-equipo-contenedor {
+    width: 82px;
+    height: 82px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.logo-equipo {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    padding: 5px;
+    background: #101410;
+    border: 1px solid #c8a044;
+    border-radius: 50%;
+    filter: drop-shadow(0 0 7px #000);
+}
+
+.logo-equipo-fallback {
+    width: 76px;
+    height: 76px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #e5bd55;
+    background: #142019;
+    border: 2px solid #c8a044;
+    border-radius: 50%;
+    font-size: 1.4rem;
+    font-weight: 900;
+}
+
+.equipo-nombre {
+    color: #fff;
+    font-size: .92rem;
+    font-weight: 800;
+    overflow-wrap: anywhere;
+}
+
+.partido-equipo small {
+    color: #28d17c;
+    font-size: .68rem;
+    letter-spacing: 1px;
+}
+
+.partido-vs {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 42px;
+    height: 42px;
+    color: #080a08;
+    background: linear-gradient(135deg, #ffe8a0, #c99b32);
+    border-radius: 50%;
+    font-weight: 900;
+    font-size: .8rem;
+}
+
+.partido-detalles {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding-top: 16px;
+    margin-top: 16px;
+    border-top: 1px solid #292d29;
+    color: #d2d6d2;
+    font-size: .85rem;
+}
+
+.partido-observacion {
+    margin-top: 12px;
+    padding: 10px;
+    color: #e5bd55;
+    background: #e5bd550d;
+    border-left: 3px solid #e5bd55;
+}
+
+.partido-estado {
+    padding: 5px 10px;
+    border-radius: 30px;
+    font-size: .72rem;
+    font-weight: 800;
+}
+
+.partido-estado.programado {
+    color: #ffe8a0;
+    background: #c99b3220;
+}
+
+.partido-estado.enjuego {
+    color: #fff;
+    background: #087b48;
+}
+
+.partido-estado.finalizado {
+    color: #28d17c;
+    background: #28d17c18;
+}
+
+.partido-estado.suspendido {
+    color: #ffaaa0;
+    background: #8d292920;
+}
+
+.mensaje-partidos {
+    grid-column: 1 / -1;
+    padding: 30px;
+    text-align: center;
+    color: #e5bd55;
+    background: #0b0d0b;
+    border: 1px dashed #856b2b;
+    border-radius: 14px;
+}
+
+select, input {
+    background: #0b0d0b !important;
+    color: #f5f5f0 !important;
+    border: 1px solid #856b2b !important;
+    border-radius: 8px;
+    padding: 10px;
+}
+
+@media (max-width: 480px) {
+    #listaPartidos {
+        grid-template-columns: 1fr;
+    }
+
+    .logo-equipo-contenedor {
+        width: 65px;
+        height: 65px;
+    }
+
+    .logo-equipo-fallback {
+        width: 62px;
+        height: 62px;
+    }
+
+    .equipo-nombre {
+        font-size: .8rem;
+    }
+}
+
+  </style>
+</head>
+
+<body>
+
+  <header class="cabecera">
+    <div class="cabecera-interior">
+      <div class="marca">
+        <img src="./img/logss.png" alt="Logo de Olimpiadas Juan Solano"
+             onerror="this.style.display='none'">
+
+        <div>
+          <h1>Olimpiadas Juan Solano 2026</h1>
+          <p>Información oficial de encuentros y resultados</p>
+        </div>
+      </div>
+
+      <a class="enlace-inicio" href="./index.html">
+        ← Página principal
+      </a>
+    </div>
+
+    <nav class="navegacion">
+      <div class="navegacion-interior">
+        <a href="./index.html">Inicio</a>
+        <a href="./equipos.html">Equipos</a>
+        <a href="./partidos.html" class="activo">Partidos</a>
+        <a href="./tabla.html">Tabla de posiciones</a>
+        <a href="./jugadores.html">Jugadores</a>
+        <a href="./noticias.html">Noticias</a>
+      </div>
+    </nav>
+  </header>
+
+  <section class="hero">
+    <div class="etiqueta">CAMPEONATO 2026</div>
+    <h2>Calendario de partidos</h2>
+    <p>
+      Consulta los enfrentamientos, horarios, canchas y resultados
+      de las competencias de las Olimpiadas Juan Solano.
+    </p>
+  </section>
+
+  <main class="contenedor">
+
+    <section class="resumen">
+      <div class="resumen-card">
+        <span>Partidos encontrados</span>
+        <strong id="statTotal">0</strong>
+      </div>
+
+      <div class="resumen-card">
+        <span>Programados</span>
+        <strong id="statProgramados">0</strong>
+      </div>
+
+      <div class="resumen-card">
+        <span>En juego</span>
+        <strong id="statEnJuego">0</strong>
+      </div>
+
+      <div class="resumen-card">
+        <span>Finalizados</span>
+        <strong id="statFinalizados">0</strong>
+      </div>
+    </section>
+
+    <section class="filtros">
+      <h3>Buscar partidos</h3>
+
+      <div class="filtros-grid">
+        <div class="campo">
+          <label for="filtroDisciplina">Disciplina</label>
+          <select id="filtroDisciplina">
+            <option value="">Todas las disciplinas</option>
+          </select>
+        </div>
+
+        <div class="campo">
+          <label for="filtroCategoria">Categoría</label>
+          <select id="filtroCategoria">
+            <option value="">Todas las categorías</option>
+          </select>
+        </div>
+
+        <div class="campo">
+          <label for="filtroEstado">Estado</label>
+          <select id="filtroEstado">
+            <option value="">Todos los estados</option>
+            <option value="PROGRAMADO">Programados</option>
+            <option value="EN_JUEGO">En juego</option>
+            <option value="FINALIZADO">Finalizados</option>
+            <option value="SUSPENDIDO">Suspendidos</option>
+          </select>
+        </div>
+
+        <div class="campo">
+          <label for="filtroFase">Fase o grupo</label>
+          <select id="filtroFase">
+            <option value="">Todas las fases</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="acciones-filtros">
+        <div>
+          <button type="button" id="btnFiltrar" class="btn btn-verde">
+            Aplicar filtros
+          </button>
+
+          <button type="button" id="btnLimpiar" class="btn btn-claro">
+            Limpiar
+          </button>
+        </div>
+
+        <button type="button" id="btnActualizar" class="btn btn-claro">
+          ↻ Actualizar partidos
+        </button>
+      </div>
+
+      <p id="ultimaActualizacion" class="actualizacion">
+        Esperando información...
+      </p>
+    </section>
+
+    <section>
+      <div class="titulo-listado">
+        <h2>Encuentros deportivos</h2>
+        <span id="totalResultados">Cargando partidos...</span>
+      </div>
+
+      <div id="listaPartidos" class="lista-partidos">
+        <div class="mensaje">
+          <strong>Cargando calendario...</strong>
+          Estamos consultando los partidos disponibles.
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="pie">
+    <strong>Olimpiadas Juan Solano 2026</strong><br>
+    Comuna Quilloac<br>
+    Información de partidos y resultados
+  </footer>
+
+  <script type="module" src="./js/partidos.js"></script>
+
+</body>
+</html>

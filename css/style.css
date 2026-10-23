@@ -1,0 +1,227 @@
+/* =====================================================
+   CORRECCIÓN VISUAL: TARJETAS DE EQUIPOS INSCRITOS
+   ===================================================== */
+
+#listaEquipos {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 24px;
+    align-items: stretch;
+    width: 100%;
+    margin: 22px auto 40px;
+}
+
+/* Tarjeta individual */
+#listaEquipos .tarjeta-equipo-publico {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-width: 0;
+    min-height: 200px;
+    padding: 22px;
+    background: #ffffff;
+    border: 1px solid #dfe8df;
+    border-top: 4px solid #176b38;
+    border-radius: 16px;
+    box-shadow: 0 5px 16px rgba(11, 43, 27, 0.07);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+#listaEquipos .tarjeta-equipo-publico:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 25px rgba(11, 43, 27, 0.13);
+}
+
+/* Logo y datos */
+#listaEquipos .equipo-publico-cabecera {
+    display: flex;
+    align-items: center;
+    gap: 17px;
+    width: 100%;
+    min-width: 0;
+}
+
+#listaEquipos .escudo-equipo-publico,
+#listaEquipos .escudo-equipo-fallback {
+    flex: 0 0 86px;
+    width: 86px;
+    height: 86px;
+    border: 2px solid #e2eadf;
+    border-radius: 14px;
+    background: #f6f8f4;
+    object-fit: contain;
+    padding: 7px;
+}
+
+#listaEquipos .escudo-equipo-fallback {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #0b2b1b, #176b38);
+    color: #ffffff;
+    font-size: 27px;
+    font-weight: 800;
+}
+
+#listaEquipos .equipo-publico-datos {
+    flex: 1;
+    min-width: 0;
+}
+
+#listaEquipos .equipo-publico-datos h3 {
+    margin: 0 0 9px;
+    color: #0b2b1b;
+    font-size: 19px;
+    font-weight: 800;
+    line-height: 1.35;
+    overflow-wrap: anywhere;
+}
+
+#listaEquipos .equipo-publico-competencia {
+    margin: 0;
+    color: #657067;
+    font-size: 13px;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+}
+
+/* Pie de la tarjeta */
+#listaEquipos .equipo-publico-pie {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 22px;
+    padding-top: 14px;
+    border-top: 1px solid #edf0eb;
+}
+
+#listaEquipos .etiqueta-estado {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    max-width: 100%;
+    padding: 7px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 800;
+    line-height: 1.3;
+}
+
+#listaEquipos .estado-aprobado {
+    background: #e0f4e5;
+    color: #176b38;
+}
+
+#listaEquipos .estado-pendiente {
+    background: #fff2ce;
+    color: #805b00;
+}
+
+#listaEquipos .estado-observado {
+    background: #ffeadb;
+    color: #984316;
+}
+
+#listaEquipos .estado-rechazado {
+    background: #fde5e5;
+    color: #a32222;
+}
+
+#listaEquipos .equipo-publico-numero {
+    color: #778078;
+    font-size: 11px;
+    overflow-wrap: anywhere;
+}
+
+/* Mensajes de carga, error o búsqueda vacía */
+#listaEquipos .estado-equipos,
+#listaEquipos .mensaje {
+    grid-column: 1 / -1;
+    width: 100%;
+    padding: 28px 20px;
+    text-align: center;
+    color: #58645a;
+    background: #ffffff;
+    border: 1px solid #e0e8e0;
+    border-radius: 14px;
+    line-height: 1.7;
+}
+
+/* Adaptación a pantallas medianas */
+@media (max-width: 950px) {
+    #listaEquipos {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 18px;
+    }
+}
+
+/* Adaptación a celulares */
+@media (max-width: 600px) {
+    .contenedor {
+        width: 92%;
+        margin-top: 22px;
+    }
+
+    .presentacion h2 {
+        font-size: 25px;
+    }
+
+    .presentacion p {
+        font-size: 14px;
+    }
+
+    .resumen-tarjeta {
+        width: 100%;
+        max-width: 300px;
+    }
+
+    #buscarEquipo {
+        width: 100%;
+        min-width: 0;
+    }
+
+    #listaEquipos {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 15px;
+        margin-top: 16px;
+    }
+
+    #listaEquipos .tarjeta-equipo-publico {
+        min-height: 0;
+        padding: 18px;
+    }
+
+    #listaEquipos .escudo-equipo-publico,
+    #listaEquipos .escudo-equipo-fallback {
+        flex-basis: 72px;
+        width: 72px;
+        height: 72px;
+    }
+
+    #listaEquipos .equipo-publico-datos h3 {
+        font-size: 17px;
+    }
+
+    #listaEquipos .equipo-publico-pie {
+        margin-top: 17px;
+    }
+}
+
+@media (max-width: 360px) {
+    #listaEquipos .equipo-publico-cabecera {
+        gap: 11px;
+    }
+
+    #listaEquipos .escudo-equipo-publico,
+    #listaEquipos .escudo-equipo-fallback {
+        flex-basis: 60px;
+        width: 60px;
+        height: 60px;
+    }
+
+    #listaEquipos .equipo-publico-datos h3 {
+        font-size: 15px;
+    }
+}
