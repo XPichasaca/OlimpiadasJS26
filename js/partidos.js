@@ -1,28 +1,27 @@
-
 import { supabase } from './supabase.js';
 
-console.log('✅ partidos.js público cargado');
+console.log('✅ partidos.js cargado');
 
 // =====================================================
 // ELEMENTOS HTML
 // =====================================================
 
-const filtroDisciplina = document.getElementById('filtroDisciplina');
-const filtroCategoria = document.getElementById('filtroCategoria');
-const filtroEstado = document.getElementById('filtroEstado');
+const filtroEquipo = document.getElementById('filtroEquipo');
 const filtroFase = document.getElementById('filtroFase');
+const filtroGenero = document.getElementById('filtroGenero');
+
+const btnLimpiar = document.getElementById('btnLimpiar');
+const btnActualizar = document.getElementById('btnActualizar');
 
 const listaPartidos = document.getElementById('listaPartidos');
 const totalResultados = document.getElementById('totalResultados');
+const mensajeGeneral = document.getElementById('mensajeGeneral');
+const ultimaActualizacion = document.getElementById('ultimaActualizacion');
 
 const statTotal = document.getElementById('statTotal');
 const statProgramados = document.getElementById('statProgramados');
 const statEnJuego = document.getElementById('statEnJuego');
 const statFinalizados = document.getElementById('statFinalizados');
-
-// =====================================================
-// ESTADO DEL MÓDULO
-// =====================================================
 
 let partidos = [];
 let cargando = false;
@@ -49,6 +48,72 @@ function normalizar(valor) {
         .toUpperCase();
 }
 
+function obtenerRelacion(relacion) {
+    return Array.isArray(relacion) ? relacion[0] : relacion;
+}
+
+function formatearFecha(fecha) {
+    if (!fecha) return 'Fecha por definir';
+
+    const partes = String(fecha).slice(0, 10).split('-');
+
+    if (partes.length !== 3) return String(fecha);
+
+    return `${partes[2]}/${partes[1]}/${partes[0]}`;
+}
+
+function formatearHora(hora) {
+    if (!hora) return 'Hora por definir';
+    return String(hora).slice(0, 5);
+}
+
+function obtenerDiaSemana(fecha) {
+    if (!fecha) return 'SIN_FECHA';
+
+    const partes = String(fecha).slice(0, 10).split('-');
+
+    if (partes.length !== 3) return 'SIN_FECHA';
+
+    const anio = Number(partes[0]);
+    const mes = Number(partes[1]);
+    const dia = Number(partes[2]);
+
+    const fechaLocal = new Date(anio, mes - 1, dia);
+
+    if (
+        Number.isNaN(fechaLocal.getTime()) ||
+        fechaLocal.getFullYear() !== anio ||
+        fechaLocal.getMonth() !== mes - 1 ||
+        fechaLocal.getDate() !== dia
+    ) {
+        return 'SIN_FECHA';
+    }
+
+    return [
+        'DOMINGO',
+        'LUNES',
+        'MARTES',
+        'MIERCOLES',
+        'JUEVES',
+        'VIERNES',
+        'SABADO'
+    ][fechaLocal.getDay()];
+}
+
+function ordenarPorFechaHora(a, b) {
+    const fechaA = a.fecha || '9999-12-31';
+    const fechaB = b.fecha || '9999-12-31';
+
+    const comparacionFecha = fechaA.localeCompare(fechaB);
+
+    if (comparacionFecha !== 0) return comparacionFecha;
+
+    const horaA = a.hora || '23:59:59';
+    const horaB = b.hora || '23:59:59';
+
+    return horaA.localeCompare(horaB);
+}
+
 function textoEstado(estado) {
     const valor = normalizar(estado);
 
@@ -56,12 +121,13 @@ function textoEstado(estado) {
         PROGRAMADO: 'Programado',
         PROGRAMADA: 'Programado',
         PENDIENTE: 'Pendiente',
+        EN_VIVO: 'En vivo',
         EN_JUEGO: 'En juego',
         EN_CURSO: 'En curso',
         FINALIZADO: 'Finalizado',
         FINALIZADA: 'Finalizado',
         SUSPENDIDO: 'Suspendido',
-        APLAZADO: 'Aplazado',
+        SUSPENDIDA: 'Suspendido',
         CANCELADO: 'Cancelado'
     };
 
@@ -75,53 +141,29 @@ function claseEstado(estado) {
         return 'finalizado';
     }
 
-    if (['EN_JUEGO', 'EN_CURSO'].includes(valor)) {
+    if (['EN_VIVO', 'EN_JUEGO', 'EN_CURSO'].includes(valor)) {
         return 'enjuego';
     }
 
-    if (['SUSPENDIDO', 'CANCELADO'].includes(valor)) {
+    if (['SUSPENDIDO', 'SUSPENDIDA', 'CANCELADO'].includes(valor)) {
         return 'suspendido';
     }
 
     return 'programado';
 }
 
-function formatearFecha(fecha) {
-    if (!fecha) return 'Fecha por definir';
-
-    const partes = String(fecha).split('-');
-
-    if (partes.length !== 3) {
-        return escaparHTML(fecha);
-    }
-
-    return `${partes[2]}/${partes[1]}/${partes[0]}`;
-}
-
-function formatearHora(hora) {
-    if (!hora) return 'Hora por definir';
-
-    return String(hora).slice(0, 5);
-}
-
 // =====================================================
-// OBTENER INFORMACIÓN DE LOS EQUIPOS
+// EQUIPOS Y ESCUDOS
 // =====================================================
 
 function obtenerEquipo(inscripcion) {
     if (!inscripcion) return null;
-
-    return Array.isArray(inscripcion.equipo)
-        ? inscripcion.equipo[0]
-        : inscripcion.equipo;
+    return obtenerRelacion(inscripcion.equipo);
 }
 
 function nombreEquipo(inscripcion) {
-    const equipo = obtenerEquipo(inscripcion);
-
-    return equipo?.nombre || 'Equipo por definir';
+    return obtenerEquipo(inscripcion)?.nombre || 'Equipo por definir';
 }
-
 
 function logoEquipo(inscripcion) {
     const equipo = obtenerEquipo(inscripcion);
@@ -149,10 +191,12 @@ function logoEquipo(inscripcion) {
             <img
                 class="logo-equipo"
                 src="${escaparHTML(logo)}"
-                alt="Escudo ${escaparHTML(nombre)}"
+                alt="Escudo de ${escaparHTML(nombre)}"
                 loading="lazy"
-                onerror="this.hidden=true;
-                    this.nextElementSibling.hidden=false;"
+                onerror="
+                    this.hidden=true;
+                    this.nextElementSibling.hidden=false;
+                "
             >
             <div class="logo-equipo-fallback" hidden>
                 ${escaparHTML(iniciales || 'E')}
@@ -161,41 +205,60 @@ function logoEquipo(inscripcion) {
     `;
 }
 
-
 // =====================================================
-// OBTENER INFORMACIÓN DE FASE Y COMPETENCIA
+// COMPETENCIA, CATEGORÍA Y GÉNERO
 // =====================================================
 
-function obtenerNombreFase(partido) {
-    const fase = Array.isArray(partido.fase)
-        ? partido.fase[0]
-        : partido.fase;
-
-    return fase?.nombre || 'Fase por definir';
+function obtenerCompetencia(partido) {
+    return obtenerRelacion(partido.competencia);
 }
 
 function obtenerDisciplina(partido) {
-    const competencia = partido.competencia;
-
-    const disciplina = Array.isArray(competencia?.disciplina)
-        ? competencia.disciplina[0]
-        : competencia?.disciplina;
+    const competencia = obtenerCompetencia(partido);
+    const disciplina = obtenerRelacion(competencia?.disciplina);
 
     return disciplina?.nombre || 'Disciplina';
 }
 
 function obtenerCategoria(partido) {
-    const competencia = partido.competencia;
-
-    const categoria = Array.isArray(competencia?.categoria)
-        ? competencia.categoria[0]
-        : competencia?.categoria;
+    const competencia = obtenerCompetencia(partido);
+    const categoria = obtenerRelacion(competencia?.categoria);
 
     return categoria?.nombre || 'Categoría';
 }
 
+function obtenerNombreFase(partido) {
+    const fase = obtenerRelacion(partido.fase);
+    return fase?.nombre || 'Fase por definir';
+}
+
+function obtenerGenero(partido) {
+    const competencia = obtenerCompetencia(partido);
+    const genero = obtenerRelacion(competencia?.genero);
+    const nombre = normalizar(genero?.nombre);
+
+    if (['FEMENINO', 'FEMENINA', 'FEM'].includes(nombre)) {
+        return 'FEMENINO';
+    }
+
+    if (['MASCULINO', 'MASCULINA', 'MASC'].includes(nombre)) {
+        return 'MASCULINO';
+    }
+
+    return 'SIN_GENERO';
+}
+
+function textoGenero(partido) {
+    const genero = obtenerGenero(partido);
+
+    if (genero === 'FEMENINO') return 'Femenino';
+    if (genero === 'MASCULINO') return 'Masculino';
+
+    return 'Género por verificar';
+}
+
 // =====================================================
-// CARGAR PARTIDOS DESDE SUPABASE
+// CONSULTAR PARTIDOS EN SUPABASE
 // =====================================================
 
 async function cargarPartidos() {
@@ -203,16 +266,15 @@ async function cargarPartidos() {
 
     cargando = true;
 
-    try {
-        if (listaPartidos && partidos.length === 0) {
-            listaPartidos.innerHTML = `
-                <div class="mensaje-partidos">
-                    Cargando partidos...
-                </div>
-            `;
-        }
+    if (btnActualizar) {
+        btnActualizar.disabled = true;
+        btnActualizar.textContent = 'Actualizando...';
+    }
 
-        // 1. Cargar fases existentes.
+    try {
+        mostrarMensaje('Consultando calendario...');
+
+        // 1. Consultar las fases.
         const { data: fases, error: errorFases } = await supabase
             .from('fase')
             .select('id, competencia_id, nombre, tipo, orden')
@@ -220,16 +282,17 @@ async function cargarPartidos() {
 
         if (errorFases) throw errorFases;
 
-        if (!fases || fases.length === 0) {
+        if (!fases?.length) {
             partidos = [];
             actualizarFiltros();
             mostrarPartidos();
+            actualizarHoraCarga();
             return;
         }
 
         const idsFases = fases.map(fase => fase.id);
 
-        // 2. Cargar partidos de esas fases.
+        // 2. Consultar los partidos.
         const { data: partidosDB, error: errorPartidos } = await supabase
             .from('partido')
             .select(`
@@ -243,36 +306,33 @@ async function cargarPartidos() {
                 estado,
                 observacion
             `)
-            .in('fase_id', idsFases)
-            .order('fecha', { ascending: true });
+            .in('fase_id', idsFases);
 
         if (errorPartidos) throw errorPartidos;
 
-        const listaBase = partidosDB || [];
+        const partidosDBLista = partidosDB || [];
 
-        // Si todavía no existen partidos, mostrar la página vacía.
-        if (listaBase.length === 0) {
+        if (!partidosDBLista.length) {
             partidos = [];
             actualizarFiltros();
             mostrarPartidos();
+            actualizarHoraCarga();
             return;
         }
 
-        // 3. Obtener IDs de las inscripciones participantes.
-        // Los IDs de los partidos corresponden a inscripcion_equipo.
+        // 3. Obtener inscripciones de los equipos.
         const idsInscripciones = [
             ...new Set(
-                listaBase.flatMap(partido => [
+                partidosDBLista.flatMap(partido => [
                     partido.equipo_local_id,
                     partido.equipo_visitante_id
                 ]).filter(id => id !== null && id !== undefined)
             )
         ];
 
-        // 4. Cargar nombres y logos de los equipos.
         let inscripciones = [];
 
-        if (idsInscripciones.length > 0) {
+        if (idsInscripciones.length) {
             const { data, error } = await supabase
                 .from('inscripcion_equipo')
                 .select(`
@@ -292,7 +352,7 @@ async function cargarPartidos() {
             inscripciones = data || [];
         }
 
-        // 5. Obtener las competencias de las fases.
+        // 4. Obtener competencias, disciplinas, categorías y géneros.
         const idsCompetencias = [
             ...new Set(
                 fases
@@ -303,16 +363,21 @@ async function cargarPartidos() {
 
         let competencias = [];
 
-        if (idsCompetencias.length > 0) {
+        if (idsCompetencias.length) {
             const { data, error } = await supabase
                 .from('competencia')
                 .select(`
                     id,
+                    nombre,
                     disciplina:disciplina_id (
                         id,
                         nombre
                     ),
                     categoria:categoria_id (
+                        id,
+                        nombre
+                    ),
+                    genero:genero_id (
                         id,
                         nombre
                     )
@@ -324,7 +389,7 @@ async function cargarPartidos() {
             competencias = data || [];
         }
 
-        // 6. Crear mapas para relacionar los datos.
+        // 5. Crear mapas para relacionar los datos.
         const mapaFases = new Map(
             fases.map(fase => [String(fase.id), fase])
         );
@@ -343,8 +408,8 @@ async function cargarPartidos() {
             ])
         );
 
-        // 7. Combinar información de partidos, fases y equipos.
-        partidos = listaBase.map(partido => {
+        // 6. Unir cada partido con sus relaciones.
+        partidos = partidosDBLista.map(partido => {
             const fase = mapaFases.get(String(partido.fase_id));
 
             const competencia = fase
@@ -364,45 +429,43 @@ async function cargarPartidos() {
                         String(partido.equipo_visitante_id)
                     ) || null
             };
-        });
+        }).sort(ordenarPorFechaHora);
 
         actualizarFiltros();
         mostrarPartidos();
+        actualizarHoraCarga();
 
-        console.log(`✅ Se cargaron ${partidos.length} partidos públicos`);
+        console.log('✅ Partidos consultados:', partidos.length);
 
     } catch (error) {
         console.error('❌ Error al cargar partidos:', error);
 
-        if (listaPartidos) {
-            listaPartidos.innerHTML = `
-                <div class="mensaje-partidos error">
-                    <h3>No se pudieron cargar los partidos</h3>
-                    <p>
-                        Comprueba la conexión con Supabase
-                        y los permisos de lectura de las tablas.
-                    </p>
-                </div>
-            `;
-        }
+        if (listaPartidos) listaPartidos.innerHTML = '';
 
-        if (totalResultados) {
-            totalResultados.textContent = 'Error al cargar los resultados';
+        if (mensajeGeneral) {
+            mensajeGeneral.hidden = false;
+            mensajeGeneral.textContent =
+                'No se pudo cargar el calendario. Revisa la conexión con Supabase y los permisos de lectura.';
         }
 
     } finally {
         cargando = false;
+
+        if (btnActualizar) {
+            btnActualizar.disabled = false;
+            btnActualizar.textContent = '↻ Actualizar partidos';
+        }
     }
 }
 
 // =====================================================
-// LLENAR FILTROS
+// FILTROS AUTOMÁTICOS
 // =====================================================
 
 function llenarFiltro(elemento, valores, textoInicial) {
     if (!elemento) return;
 
-    const seleccionActual = elemento.value;
+    const seleccionado = elemento.value;
 
     const valoresUnicos = [...new Set(
         valores.filter(Boolean)
@@ -417,90 +480,161 @@ function llenarFiltro(elemento, valores, textoInicial) {
         `).join('')}
     `;
 
-    if (
-        [...elemento.options].some(
-            opcion => opcion.value === seleccionActual
-        )
-    ) {
-        elemento.value = seleccionActual;
+    if ([...elemento.options].some(
+        opcion => opcion.value === seleccionado
+    )) {
+        elemento.value = seleccionado;
     }
 }
 
 function actualizarFiltros() {
     llenarFiltro(
-        filtroDisciplina,
-        partidos.map(partido => obtenerDisciplina(partido)),
-        'Todas las disciplinas'
-    );
-
-    llenarFiltro(
-        filtroCategoria,
-        partidos.map(partido => obtenerCategoria(partido)),
-        'Todas las categorías'
-    );
-
-    llenarFiltro(
         filtroFase,
-        partidos.map(partido => obtenerNombreFase(partido)),
-        'Todas las fases'
+        partidos.map(obtenerNombreFase),
+        'Todos los grupos'
     );
 }
-
-// =====================================================
-// FILTRAR PARTIDOS
-// =====================================================
 
 function obtenerPartidosFiltrados() {
-    const disciplinaSeleccionada = normalizar(
-        filtroDisciplina?.value
-    );
-
-    const categoriaSeleccionada = normalizar(
-        filtroCategoria?.value
-    );
-
-    const estadoSeleccionado = normalizar(
-        filtroEstado?.value
-    );
-
-    const faseSeleccionada = normalizar(
-        filtroFase?.value
-    );
+    const equipoBuscado = normalizar(filtroEquipo?.value);
+    const fase = normalizar(filtroFase?.value);
+    const genero = normalizar(filtroGenero?.value);
 
     return partidos.filter(partido => {
-        const coincideDisciplina =
-            !disciplinaSeleccionada ||
-            normalizar(obtenerDisciplina(partido)) ===
-                disciplinaSeleccionada;
+        const nombresEquipos = normalizar(
+            `${nombreEquipo(partido.inscripcionLocal)} ${nombreEquipo(partido.inscripcionVisitante)}`
+        );
 
-        const coincideCategoria =
-            !categoriaSeleccionada ||
-            normalizar(obtenerCategoria(partido)) ===
-                categoriaSeleccionada;
-
-        const coincideEstado =
-            !estadoSeleccionado ||
-            normalizar(partido.estado) === estadoSeleccionado;
+        const coincideEquipo =
+            !equipoBuscado || nombresEquipos.includes(equipoBuscado);
 
         const coincideFase =
-            !faseSeleccionada ||
-            normalizar(obtenerNombreFase(partido)) ===
-                faseSeleccionada;
+            !fase || normalizar(obtenerNombreFase(partido)) === fase;
 
-        return coincideDisciplina &&
-            coincideCategoria &&
-            coincideEstado &&
-            coincideFase;
-    });
+        const generoPartido = obtenerGenero(partido);
+        const coincideGenero = !genero || generoPartido === genero;
+
+        return coincideEquipo && coincideFase && coincideGenero;
+    }).sort(ordenarPorFechaHora);
 }
 
 // =====================================================
-// MOSTRAR PARTIDOS
+// CREAR TARJETA DEL PARTIDO
+// =====================================================
+
+function crearTarjetaPartido(partido) {
+    const local = nombreEquipo(partido.inscripcionLocal);
+    const visitante = nombreEquipo(partido.inscripcionVisitante);
+
+    const estado = textoEstado(partido.estado);
+    const clase = claseEstado(partido.estado);
+
+    const disciplina = obtenerDisciplina(partido);
+    const categoria = obtenerCategoria(partido);
+    const fase = obtenerNombreFase(partido);
+    const genero = textoGenero(partido);
+
+    return `
+        <article class="partido-card">
+            <div class="partido-cabecera">
+                <span class="partido-disciplina">
+                    ${escaparHTML(disciplina)}
+                </span>
+
+                <span class="partido-categoria">
+                    ${escaparHTML(categoria)}
+                </span>
+
+                <span class="partido-genero ${normalizar(genero).toLowerCase()}">
+                    ${escaparHTML(genero)}
+                </span>
+
+                <span class="partido-estado ${clase}">
+                    ${escaparHTML(estado)}
+                </span>
+            </div>
+
+            <div class="partido-fase">
+                ${escaparHTML(fase)}
+            </div>
+
+            <div class="partido-enfrentamiento">
+                <div class="partido-equipo local">
+                    ${logoEquipo(partido.inscripcionLocal)}
+
+                    <span class="equipo-nombre">
+                        ${escaparHTML(local)}
+                    </span>
+
+                    <small>LOCAL</small>
+                </div>
+
+                <div class="partido-vs">VS</div>
+
+                <div class="partido-equipo visitante">
+                    ${logoEquipo(partido.inscripcionVisitante)}
+
+                    <span class="equipo-nombre">
+                        ${escaparHTML(visitante)}
+                    </span>
+
+                    <small>VISITANTE</small>
+                </div>
+            </div>
+
+            <div class="partido-detalles">
+                <span>
+                    📅 ${escaparHTML(formatearFecha(partido.fecha))}
+                </span>
+
+                <span>
+                    🕒 ${escaparHTML(formatearHora(partido.hora))}
+                </span>
+
+                <span>
+                    📍 ${escaparHTML(partido.cancha || 'Cancha por definir')}
+                </span>
+            </div>
+
+            ${partido.observacion ? `
+                <div class="partido-observacion">
+                    ${escaparHTML(partido.observacion)}
+                </div>
+            ` : ''}
+        </article>
+    `;
+}
+
+// =====================================================
+// MENSAJES Y ACTUALIZACIÓN
+// =====================================================
+
+function mostrarMensaje(texto) {
+    if (!mensajeGeneral) return;
+
+    mensajeGeneral.hidden = false;
+    mensajeGeneral.textContent = texto;
+}
+
+function ocultarMensaje() {
+    if (mensajeGeneral) mensajeGeneral.hidden = true;
+}
+
+function actualizarHoraCarga() {
+    if (!ultimaActualizacion) return;
+
+    ultimaActualizacion.textContent =
+        `Última actualización: ${new Date().toLocaleTimeString('es-EC', {
+            hour: '2-digit',
+            minute: '2-digit'
+        })}`;
+}
+
+// =====================================================
+// MOSTRAR CALENDARIO AGRUPADO POR DÍA
 // =====================================================
 
 function mostrarPartidos() {
-    if (!listaPartidos) return;
-
     const filtrados = obtenerPartidosFiltrados();
 
     actualizarEstadisticas(filtrados);
@@ -510,161 +644,144 @@ function mostrarPartidos() {
             `${filtrados.length} partido${filtrados.length === 1 ? '' : 's'}`;
     }
 
-    if (filtrados.length === 0) {
-        listaPartidos.innerHTML = `
-            <div class="mensaje-partidos">
-                <h3>No hay partidos disponibles</h3>
-                <p>
-                    Prueba con otros filtros o vuelve más tarde.
-                </p>
-            </div>
-        `;
+    if (!listaPartidos) return;
+
+    if (!filtrados.length) {
+        listaPartidos.innerHTML = '';
+        mostrarMensaje(
+            'No hay partidos que coincidan con los filtros seleccionados.'
+        );
         return;
     }
 
-    listaPartidos.innerHTML = filtrados.map(partido => {
-        const local = nombreEquipo(partido.inscripcionLocal);
-        const visitante = nombreEquipo(partido.inscripcionVisitante);
+    // Agrupar por fecha real para mostrar el día encima de sus partidos.
+    const gruposPorDia = new Map();
 
-        const estado = textoEstado(partido.estado);
-        const clase = claseEstado(partido.estado);
+    filtrados.forEach(partido => {
+        const clave = partido.fecha
+            ? String(partido.fecha).slice(0, 10)
+            : 'SIN_FECHA';
 
-        const fase = obtenerNombreFase(partido);
-        const disciplina = obtenerDisciplina(partido);
-        const categoria = obtenerCategoria(partido);
+        if (!gruposPorDia.has(clave)) {
+            gruposPorDia.set(clave, []);
+        }
 
-        return `
-            <article class="partido-card">
+        gruposPorDia.get(clave).push(partido);
+    });
 
-                <div class="partido-cabecera">
-                    <span class="partido-disciplina">
-                        ${escaparHTML(disciplina)}
-                    </span>
+    const nombresDias = {
+        DOMINGO: 'DOMINGO',
+        LUNES: 'LUNES',
+        MARTES: 'MARTES',
+        MIERCOLES: 'MIÉRCOLES',
+        JUEVES: 'JUEVES',
+        VIERNES: 'VIERNES',
+        SABADO: 'SÁBADO',
+        SIN_FECHA: 'FECHA POR DEFINIR'
+    };
 
-                    <span class="partido-categoria">
-                        ${escaparHTML(categoria)}
-                    </span>
+    listaPartidos.innerHTML = [...gruposPorDia.entries()]
+        .map(([fecha, encuentros]) => {
+            const dia = fecha === 'SIN_FECHA'
+                ? 'SIN_FECHA'
+                : obtenerDiaSemana(fecha);
 
-                    <span class="partido-estado ${clase}">
-                        ${escaparHTML(estado)}
-                    </span>
-                </div>
+            const fechaTexto = fecha === 'SIN_FECHA'
+                ? ''
+                : formatearFecha(fecha);
 
-                <div class="partido-fase">
-                    ${escaparHTML(fase)}
-                </div>
+            const titulo = nombresDias[dia] || 'ENCUENTROS DEPORTIVOS';
 
-                <div class="partido-enfrentamiento">
+            return `
+                <section class="jornada">
+                    <h3 class="jornada-titulo">
+                        <span>📅</span>
+                        ${escaparHTML(titulo)}
+                        ${fechaTexto
+                            ? `<small class="fecha-jornada">${escaparHTML(fechaTexto)}</small>`
+                            : ''}
+                    </h3>
 
-                    <div class="partido-equipo local">
-                        ${logoEquipo(partido.inscripcionLocal)}
-
-                        <span class="equipo-nombre">
-                            ${escaparHTML(local)}
-                        </span>
-
-                        <small>LOCAL</small>
+                    <div class="partidos-jornada">
+                        ${[...encuentros]
+                            .sort(ordenarPorFechaHora)
+                            .map(crearTarjetaPartido)
+                            .join('')}
                     </div>
+                </section>
+            `;
+        }).join('');
 
-                    <div class="partido-vs">VS</div>
-
-                    <div class="partido-equipo visitante">
-                        ${logoEquipo(partido.inscripcionVisitante)}
-
-                        <span class="equipo-nombre">
-                            ${escaparHTML(visitante)}
-                        </span>
-
-                        <small>VISITANTE</small>
-                    </div>
-
-                </div>
-
-                <div class="partido-detalles">
-                    <span>
-                        📅 ${escaparHTML(formatearFecha(partido.fecha))}
-                    </span>
-
-                    <span>
-                        🕒 ${escaparHTML(formatearHora(partido.hora))}
-                    </span>
-
-                    <span>
-                        📍 ${escaparHTML(
-                            partido.cancha || 'Cancha por definir'
-                        )}
-                    </span>
-                </div>
-
-                ${partido.observacion ? `
-                    <div class="partido-observacion">
-                        ${escaparHTML(partido.observacion)}
-                    </div>
-                ` : ''}
-
-            </article>
-        `;
-    }).join('');
+    ocultarMensaje();
 }
 
 // =====================================================
 // ESTADÍSTICAS
 // =====================================================
 
-function actualizarEstadisticas(filtrados = obtenerPartidosFiltrados()) {
+function actualizarEstadisticas(datos) {
     if (statTotal) {
-        statTotal.textContent = filtrados.length;
+        statTotal.textContent = datos.length;
     }
 
     if (statProgramados) {
-        statProgramados.textContent = filtrados.filter(partido =>
-            [
-                'PROGRAMADO',
-                'PROGRAMADA',
-                'PENDIENTE'
-            ].includes(normalizar(partido.estado))
+        statProgramados.textContent = datos.filter(partido =>
+            normalizar(partido.estado) === 'PROGRAMADO'
         ).length;
     }
 
     if (statEnJuego) {
-        statEnJuego.textContent = filtrados.filter(partido =>
-            [
-                'EN_JUEGO',
-                'EN_CURSO'
-            ].includes(normalizar(partido.estado))
+        statEnJuego.textContent = datos.filter(partido =>
+            ['EN_VIVO', 'EN_JUEGO', 'EN_CURSO'].includes(
+                normalizar(partido.estado)
+            )
         ).length;
     }
 
     if (statFinalizados) {
-        statFinalizados.textContent = filtrados.filter(partido =>
-            [
-                'FINALIZADO',
-                'FINALIZADA'
-            ].includes(normalizar(partido.estado))
+        statFinalizados.textContent = datos.filter(partido =>
+            normalizar(partido.estado) === 'FINALIZADO'
         ).length;
     }
 }
 
 // =====================================================
-// EVENTOS DE FILTROS
+// EVENTOS DE LOS FILTROS
 // =====================================================
 
-[
-    filtroDisciplina,
-    filtroCategoria,
-    filtroEstado,
-    filtroFase
-].forEach(filtro => {
+if (btnLimpiar) {
+    btnLimpiar.addEventListener('click', () => {
+        if (filtroEquipo) filtroEquipo.value = '';
+        if (filtroFase) filtroFase.value = '';
+        if (filtroGenero) filtroGenero.value = '';
+
+        mostrarPartidos();
+    });
+}
+
+if (btnActualizar) {
+    btnActualizar.addEventListener('click', cargarPartidos);
+}
+
+if (filtroEquipo) {
+    filtroEquipo.addEventListener('input', mostrarPartidos);
+}
+
+[filtroFase, filtroGenero].forEach(filtro => {
     if (filtro) {
         filtro.addEventListener('change', mostrarPartidos);
     }
 });
 
 // =====================================================
-// INICIO Y ACTUALIZACIÓN AUTOMÁTICA
+// INICIAR
 // =====================================================
 
 cargarPartidos();
 
-// Actualizar cada 30 segundos sin recargar toda la página.
-setInterval(cargarPartidos, 30000);
+// Actualizar automáticamente cada 30 segundos.
+setInterval(() => {
+    if (!document.hidden) {
+        cargarPartidos();
+    }
+}, 30000);
