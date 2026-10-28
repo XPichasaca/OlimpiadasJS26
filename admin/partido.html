@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -318,7 +317,9 @@
       padding: 14px 17px;
       display: flex;
       justify-content: space-between;
-      align-items: center;
+
+
+            align-items: center;
       gap: 10px;
     }
 
@@ -608,6 +609,74 @@
         padding: 16px;
       }
     }
+
+
+    /* ESTILOS DE NÓMINA Y CONTROL DEL ENCUENTRO */
+    .oculto { display: none !important; }
+    #seccion-nomina .subtitulo { color:#6b776e; margin:0 0 17px; font-size:13px; line-height:1.6; }
+    #seccion-nomina .filtros-nomina { display:grid; grid-template-columns:150px 150px minmax(150px,.7fr) minmax(250px,2fr); gap:12px; align-items:end; }
+    #seccion-nomina .campo-nomina { min-width:0; margin:0; }
+    #seccion-nomina .campo-nomina label { display:block; font-weight:700; margin-bottom:5px; }
+    #seccion-nomina .campo-nomina input,
+    #seccion-nomina .campo-nomina select,
+    #seccion-nomina .campo-nomina textarea { width:100%; min-width:0; padding:10px 11px; border:1px solid #cbd5d1; border-radius:8px; background:white; color:var(--texto); font:inherit; }
+    #seccion-nomina .mensaje { display:none; padding:12px 14px; margin:15px 0; border-radius:8px; overflow-wrap:anywhere; white-space:pre-wrap; }
+    #seccion-nomina .mensaje:not(:empty) { display:block; }
+    #seccion-nomina .mensaje.info { background:#eff6ff; color:#1e40af; }
+    #seccion-nomina .mensaje.ok { background:#e7f8ec; color:#166534; }
+    #seccion-nomina .mensaje.error { background:#fff0ef; color:#991b1b; }
+    #seccion-nomina .pestanas { display:flex; gap:7px; flex-wrap:wrap; border-bottom:1px solid var(--borde); margin-bottom:18px; padding-bottom:10px; }
+    #seccion-nomina .pestana { background:#edf2ee; color:#34483a; padding:11px 17px; border:0; border-radius:8px; font-weight:700; }
+    #seccion-nomina .pestana.activa { background:var(--verde); color:white; }
+    #seccion-nomina .partido-destacado { display:grid; grid-template-columns:minmax(0,1fr) auto minmax(0,1fr); align-items:center; gap:18px; text-align:center; background:var(--verde-claro); border:1px solid #bbf7d0; border-radius:12px; padding:22px 16px; margin-bottom:18px; }
+    #seccion-nomina .nombre-equipo { font-size:clamp(15px,2vw,21px); font-weight:800; overflow-wrap:anywhere; }
+    #seccion-nomina .marcador { font-size:clamp(25px,4vw,36px); font-weight:900; white-space:nowrap; color:var(--verde); }
+    #seccion-nomina .barra-herramientas { display:grid; grid-template-columns:minmax(200px,1fr) minmax(160px,.6fr) auto; align-items:end; gap:12px; margin-bottom:17px; }
+    #seccion-nomina .estadisticas { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; margin-bottom:18px; }
+    #seccion-nomina .estadistica { background:#f8faf9; border:1px solid var(--borde); border-radius:11px; padding:15px; }
+    #seccion-nomina .estadistica span { display:block; color:#6b776e; font-size:12px; }
+    #seccion-nomina .estadistica strong { display:block; margin-top:5px; font-size:26px; color:var(--verde); }
+    #seccion-nomina .contador { color:var(--verde); font-weight:700; margin:10px 0 14px; }
+    #seccion-nomina .jugadores-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
+    #seccion-nomina .jugador { display:flex; align-items:flex-start; gap:12px; min-width:0; padding:15px; border:1px solid var(--borde); border-radius:10px; background:white; }
+
+        #seccion-nomina .jugador input[type="checkbox"] { width:19px; height:19px; flex-shrink:0; margin-top:3px; accent-color:var(--verde); }
+    #seccion-nomina .jugador-info { min-width:0; width:100%; }
+    #seccion-nomina .jugador-nombre { font-weight:800; font-size:14px; overflow-wrap:anywhere; }
+    #seccion-nomina .jugador-detalle { color:#64748b; font-size:12px; margin:4px 0 8px; overflow-wrap:anywhere; }
+    #seccion-nomina .estado { display:inline-block; background:#dcfce7; color:#166534; font-size:10px; font-weight:800; border-radius:20px; padding:3px 8px; margin-bottom:9px; }
+    #seccion-nomina .selector-titular { display:block; max-width:190px; padding:7px 9px; font-size:12px; border:1px solid #cfd8d0; border-radius:6px; }
+    #seccion-nomina .seccion-formulario { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; }
+    #seccion-nomina .seccion-formulario .ancho-completo { grid-column:1 / -1; }
+    #seccion-nomina .campo-marcador { border:1px solid var(--borde); border-radius:12px; padding:17px; text-align:center; }
+    #seccion-nomina .campo-marcador label { display:block; font-weight:700; margin-bottom:12px; }
+    #seccion-nomina .campo-marcador input { max-width:170px; text-align:center; font-size:30px; font-weight:800; }
+    #seccion-nomina .lista-eventos { display:grid; gap:10px; }
+    #seccion-nomina .evento { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:13px 14px; border:1px solid var(--borde); border-radius:9px; background:white; }
+    #seccion-nomina .evento strong, #seccion-nomina .evento small { display:block; }
+    #seccion-nomina .evento small { color:#64748b; overflow-wrap:anywhere; }
+    #seccion-nomina .vacio { color:#64748b; text-align:center; padding:25px 12px; background:#f8faf9; border-radius:9px; grid-column:1 / -1; }
+    #seccion-nomina .separador { border:0; border-top:1px solid var(--borde); margin:20px 0; }
+    @media (max-width:950px) {
+      #seccion-nomina .filtros-nomina { grid-template-columns:repeat(2,minmax(0,1fr)); }
+      #seccion-nomina .barra-herramientas { grid-template-columns:repeat(2,minmax(0,1fr)); }
+      #seccion-nomina .barra-herramientas .campo-nomina:first-child { grid-column:1 / -1; }
+      #seccion-nomina .jugadores-grid { grid-template-columns:1fr; }
+    }
+    @media (max-width:650px) {
+      #seccion-nomina .filtros-nomina,
+      #seccion-nomina .barra-herramientas,
+      #seccion-nomina .estadisticas,
+      #seccion-nomina .seccion-formulario { grid-template-columns:1fr; }
+      #seccion-nomina .barra-herramientas .campo-nomina:first-child,
+      #seccion-nomina .seccion-formulario .ancho-completo { grid-column:auto; }
+      #seccion-nomina .partido-destacado { gap:7px; padding:16px 8px; }
+      #seccion-nomina .nombre-equipo { font-size:13px; }
+      #seccion-nomina .marcador { font-size:25px; }
+      #seccion-nomina .pestana { flex:1 1 30%; padding:10px 7px; font-size:12px; }
+      #seccion-nomina .evento { align-items:flex-start; }
+    }
+
   </style>
 </head>
 
@@ -649,9 +718,13 @@
           ⚽ Gestión de partidos
         </button>
 
-        <button type="button" data-seccion="nomina">
-          ☑ Nóminas de partidos
-        </button>
+      <button
+  type="button"
+  data-seccion="nomina"
+  onclick="event.stopPropagation(); window.open('/admin/nomina-partido.html', '_self');"
+>
+  ☑ Nóminas de partidos
+</button>
 
         <button type="button" id="btnVolver">
           ← Volver al administrador
@@ -663,7 +736,7 @@
 
       <div class="encabezado-contenido">
         <h2 id="tituloSeccion">Dashboard deportivo</h2>
-        <button type="button" class="btn btn-secundario" id="btnAbrirPantalla">
+        <button type="button" class="btn btn-secundario" id="btnAbrirPantallaEncabezado">
           Abrir pantalla de sorteo
         </button>
       </div>
@@ -891,7 +964,8 @@
 
           <div class="campo">
             <label for="competenciaPartidos">Competencia</label>
-            <select id="competenciaPartidos">
+
+                        <select id="competenciaPartidos">
               <option value="">Seleccionar competencia...</option>
             </select>
           </div>
@@ -977,10 +1051,102 @@
         <div class="panel">
           <h2>Nóminas de partidos</h2>
           <p class="texto-secundario">
-            Esta sección queda preparada para conectar la selección
-            de jugadores habilitados y la nómina correspondiente
-            a cada encuentro.
+            Seleccione un encuentro para administrar sus convocados, titulares, suplentes,
+            marcador, goles, tarjetas y resumen. Las tres pestañas corresponden al mismo partido.
           </p>
+          <div class="filtros-nomina">
+            <div class="campo-nomina">
+              <label for="fechaDesde">Fecha desde</label>
+              <input type="date" id="fechaDesde">
+            </div>
+            <div class="campo-nomina">
+              <label for="fechaHasta">Fecha hasta</label>
+              <input type="date" id="fechaHasta">
+            </div>
+            <div class="campo-nomina">
+              <label for="filtroGenero">Género</label>
+              <select id="filtroGenero"><option value="">Todos</option></select>
+            </div>
+            <div class="campo-nomina">
+              <label for="filtroPartido">Partido</label>
+              <select id="filtroPartido"><option value="">Cargando partidos...</option></select>
+            </div>
+          </div>
+          <div id="mensaje" class="mensaje" role="status" aria-live="polite"></div>
+          <div class="acciones">
+            <button type="button" id="btnRecargar" class="btn btn-secundario">↻ Actualizar datos</button>
+          </div>
+        </div>
+
+        <div class="panel">
+          <nav class="pestanas" aria-label="Secciones de gestión de nómina">
+            <button type="button" class="pestana activa" data-pestana="nomina" aria-pressed="true">☑ Nómina</button>
+            <button type="button" class="pestana" data-pestana="gestion" aria-pressed="false">⚽ Gestión del partido</button>
+            <button type="button" class="pestana" data-pestana="resumen" aria-pressed="false">▤ Resumen</button>
+          </nav>
+
+          <section id="panel-nomina">
+            <h2>Nómina del encuentro</h2>
+            <p class="subtitulo">Seleccione los jugadores habilitados y determine quiénes serán titulares o suplentes.</p>
+            <div id="partidoNomina" class="partido-destacado">
+              <div class="nombre-equipo">Equipo local</div><div class="marcador">VS</div><div class="nombre-equipo">Equipo visitante</div>
+            </div>
+            <div class="barra-herramientas">
+              <div class="campo-nomina"><label for="buscarJugador">Buscar jugador</label><input id="buscarJugador" type="search" placeholder="Nombre, apellido, posición o camiseta"></div>
+              <div class="campo-nomina"><label for="filtroEquipoNomina">Filtrar equipo</label><select id="filtroEquipoNomina"><option value="">Local y visitante</option><option value="local">Equipo local</option><option value="visitante">Equipo visitante</option></select></div>
+              <button type="button" class="btn btn-secundario" id="btnCargarJugadores">Aplicar filtros</button>
+            </div>
+            <div id="contadorNomina" class="contador">Ningún jugador seleccionado.</div>
+            <div id="jugadoresNomina" class="jugadores-grid"><div class="vacio">Seleccione un partido para cargar sus jugadores.</div></div>
+            <div class="acciones"><button type="button" id="btnGuardarNomina" class="btn btn-verde">Guardar nómina</button></div>
+          </section>
+
+          <section id="panel-gestion" class="oculto">
+            <h2>Gestión del partido</h2>
+            <p class="subtitulo">Actualice el marcador y registre goles o tarjetas de los jugadores convocados.</p>
+            <div id="partidoGestion" class="partido-destacado">
+              <div class="nombre-equipo">Equipo local</div><div class="marcador">VS</div><div class="nombre-equipo">Equipo visitante</div>
+            </div>
+            <h3>Marcador</h3>
+            <div class="seccion-formulario">
+              <div class="campo-marcador"><label id="labelGolesLocal" for="golesLocal">Goles del equipo local</label><input id="golesLocal" type="number" min="0" step="1" value="0"></div>
+              <div class="campo-marcador"><label id="labelGolesVisitante" for="golesVisitante">Goles del equipo visitante</label><input id="golesVisitante" type="number" min="0" step="1" value="0"></div>
+            </div>
+            <p id="resultadoTexto" class="contador">Seleccione un partido para consultar el resultado.</p>
+            <div class="acciones"><button type="button" id="btnGuardarMarcador" class="btn btn-verde">Guardar marcador</button></div>
+            <hr class="separador">
+            <h3>Registrar goles y tarjetas</h3>
+            <div class="seccion-formulario">
+              <div class="campo-nomina"><label for="equipoEvento">Equipo</label><select id="equipoEvento"><option value="local">Equipo local</option><option value="visitante">Equipo visitante</option></select></div>
+              <div class="campo-nomina"><label for="jugadorEvento">Jugador convocado</label><select id="jugadorEvento"><option value="">Seleccione un partido</option></select></div>
+              <div class="campo-nomina"><label for="tipoEvento">Tipo de evento</label><select id="tipoEvento"><option value="GOL">Gol</option><option value="AMARILLA">Tarjeta amarilla</option><option value="ROJA_DIRECTA">Tarjeta roja directa</option><option value="ROJA_DOBLE_AMARILLA">Roja por doble amarilla</option></select></div>
+              <div class="campo-nomina"><label for="minutoEvento">Minuto</label><input id="minutoEvento" type="number" min="0" max="200" placeholder="Ej. 35"></div>
+              <div class="campo-nomina"><label for="periodoEvento">Periodo</label><select id="periodoEvento"><option value="REGLAMENTARIO">Tiempo reglamentario</option><option value="TIEMPO_EXTRA">Tiempo extra</option></select></div>
+              <div class="campo-nomina ancho-completo"><label for="observacionEvento">Observación (opcional)</label><textarea id="observacionEvento" rows="2" maxlength="250" placeholder="Detalle adicional del evento"></textarea></div>
+            </div>
+            <div class="acciones"><button type="button" id="btnGuardarEvento" class="btn btn-verde">Registrar evento</button></div>
+            <hr class="separador">
+            <h3>Eventos registrados</h3>
+            <div id="listaEventos" class="lista-eventos"><div class="vacio">Seleccione un partido.</div></div>
+          </section>
+
+          <section id="panel-resumen" class="oculto">
+            <h2>Resumen del encuentro</h2>
+            <p class="subtitulo">Consulte el marcador, los convocados, los titulares y los eventos registrados.</p>
+            <div id="partidoResumen" class="partido-destacado">
+              <div class="nombre-equipo">Equipo local</div><div class="marcador">VS</div><div class="nombre-equipo">Equipo visitante</div>
+            </div>
+            <div class="estadisticas">
+              <div class="estadistica"><span>Jugadores convocados</span><strong id="totalConvocados">0</strong></div>
+              <div class="estadistica"><span>Titulares</span><strong id="totalTitulares">0</strong></div>
+              <div class="estadistica"><span>Goles registrados</span><strong id="totalGoles">0</strong></div>
+              <div class="estadistica"><span>Eventos registrados</span><strong id="totalEventos">0</strong></div>
+            </div>
+            <div class="acciones"><button type="button" id="btnActualizarResumen" class="btn btn-secundario">Actualizar resumen</button></div>
+            <hr class="separador">
+            <h3>Detalle de eventos</h3>
+            <div id="resumenEventos" class="lista-eventos"><div class="vacio">Seleccione un partido.</div></div>
+          </section>
         </div>
       </section>
 
@@ -1043,6 +1209,7 @@
   </footer>
 
   <script type="module" src="../js/partidos-admin.js"></script>
+  <script type="module" src="../js/nomina-partido.js"></script>
 
 </body>
 </html>

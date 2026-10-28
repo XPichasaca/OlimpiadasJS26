@@ -1,3 +1,4 @@
+
 import { supabase } from './supabase.js';
 
 console.log('✅ partidos.js cargado');
@@ -292,7 +293,7 @@ async function cargarPartidos() {
 
         const idsFases = fases.map(fase => fase.id);
 
-        // 2. Consultar los partidos.
+        // 2. Consultar partidos, incluyendo los resultados.
         const { data: partidosDB, error: errorPartidos } = await supabase
             .from('partido')
             .select(`
@@ -304,7 +305,9 @@ async function cargarPartidos() {
                 hora,
                 cancha,
                 estado,
-                observacion
+                observacion,
+                goles_local,
+                goles_visitante
             `)
             .in('fase_id', idsFases);
 
@@ -436,6 +439,12 @@ async function cargarPartidos() {
         actualizarHoraCarga();
 
         console.log('✅ Partidos consultados:', partidos.length);
+        console.log('📊 Resultados cargados:', partidos.map(p => ({
+            id: p.id,
+            local: p.goles_local,
+            visitante: p.goles_visitante,
+            estado: p.estado
+        })));
 
     } catch (error) {
         console.error('❌ Error al cargar partidos:', error);
@@ -519,6 +528,47 @@ function obtenerPartidosFiltrados() {
 }
 
 // =====================================================
+// MARCADOR
+// =====================================================
+
+function tieneMarcador(partido) {
+    return partido.goles_local !== null &&
+        partido.goles_local !== undefined &&
+        partido.goles_visitante !== null &&
+        partido.goles_visitante !== undefined;
+}
+
+function crearMarcador(partido) {
+    if (!tieneMarcador(partido)) {
+        return '<div class="partido-vs">VS</div>';
+    }
+
+    const local = Number(partido.goles_local);
+    const visitante = Number(partido.goles_visitante);
+
+    const estado = normalizar(partido.estado);
+
+    const etiqueta = ['FINALIZADO', 'FINALIZADA'].includes(estado)
+        ? 'RESULTADO FINAL'
+        : ['EN_VIVO', 'EN_JUEGO', 'EN_CURSO'].includes(estado)
+            ? 'EN JUEGO'
+            : 'MARCADOR';
+
+    return `
+        <div class="marcador-contenedor">
+            <div class="marcador-resultado">
+                <span class="marcador-gol">${escaparHTML(local)}</span>
+                <span class="marcador-separador">:</span>
+                <span class="marcador-gol">${escaparHTML(visitante)}</span>
+            </div>
+            <div class="marcador-etiqueta">
+                ${etiqueta}
+            </div>
+        </div>
+    `;
+}
+
+// =====================================================
 // CREAR TARJETA DEL PARTIDO
 // =====================================================
 
@@ -569,7 +619,7 @@ function crearTarjetaPartido(partido) {
                     <small>LOCAL</small>
                 </div>
 
-                <div class="partido-vs">VS</div>
+                ${crearMarcador(partido)}
 
                 <div class="partido-equipo visitante">
                     ${logoEquipo(partido.inscripcionVisitante)}
@@ -654,7 +704,6 @@ function mostrarPartidos() {
         return;
     }
 
-    // Agrupar por fecha real para mostrar el día encima de sus partidos.
     const gruposPorDia = new Map();
 
     filtrados.forEach(partido => {
@@ -740,7 +789,9 @@ function actualizarEstadisticas(datos) {
 
     if (statFinalizados) {
         statFinalizados.textContent = datos.filter(partido =>
-            normalizar(partido.estado) === 'FINALIZADO'
+            ['FINALIZADO', 'FINALIZADA'].includes(
+                normalizar(partido.estado)
+            )
         ).length;
     }
 }

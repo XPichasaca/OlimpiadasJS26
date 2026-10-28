@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#14251b">
+  <title>Nómina y gestión de partidos | Olimpiadas Juan Solano 2026</title>
+
+  <style>
+    :root {
+      --verde: #166534;
+      --verde-oscuro: #14251b;
+      --verde-claro: #f0fdf4;
+      --fondo: #f3f6f4;
+      --borde: #dce5de;
+      --texto: #26352b;
+      --gris: #64748b;
+      --sombra: 0 4px 15px #173a2510;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: var(--fondo);
+      color: var(--texto);
+      font: 14px/1.5 Arial, sans-serif;
+    }
+
+    header {
+      background: var(--verde-oscuro);
+      color: white;
+      padding: 23px clamp(16px, 4vw, 42px);
+    }
+
+    .encabezado {
+      max-width: 1400px;
+      margin: auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+    }
+
+    header h1 {
+      font-size: clamp(21px, 3vw, 29px);
+      margin: 0 0 5px;
+    }
+
+    header p {
+      color: #d1e7d6;
+      margin: 0;
+    }
+
+    main {
+      max-width: 1400px;
+      margin: 22px auto;
+      padding: 0 16px 40px;
+    }
+
+    .panel {
+      background: white;
+      border: 1px solid var(--borde);
+      border-radius: 13px;
+      padding: 20px;
+      margin-bottom: 18px;
+      box-shadow: var(--sombra);
+      min-width: 0;
+    }
+
+    .panel h2 {
+      margin: 0 0 5px;
+      font-size: 20px;
+    }
+
+    .subtitulo {
+      color: var(--gris);
+      margin: 0 0 17px;
+    }
+
+    .filtros {
+      display: grid;
+      grid-template-columns: 150px 150px minmax(150px, .7fr) minmax(300px, 2fr);
+      gap: 12px;
+      align-items: end;
+    }
+
+    .campo { min-width: 0; }
+
+    .campo label {
+      display: block;
+      font-weight: 700;
+      margin-bottom: 5px;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      min-width: 0;
+      padding: 10px 11px;
+      border: 1px solid #cbd5d1;
+      border-radius: 8px;
+      background: white;
+      color: var(--texto);
+      font: inherit;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      outline: 2px solid #86efac;
+      border-color: var(--verde);
+    }
+
+    button {
+      padding: 10px 15px;
+      border: 0;
+      border-radius: 8px;
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+      transition: .15s;
+    }
+
+    button:disabled {
+      opacity: .5;
+      cursor: not-allowed;
+    }
+
+    .btn {
+      background: var(--verde);
+      color: white;
+    }
+
+    .btn:hover:not(:disabled) {
+      background: #14532d;
+    }
+
+    .btn-secundario {
+      background: #e7eee9;
+      color: #23412d;
+    }
+
+    .acciones {
+      display: flex;
+      gap: 9px;
+      flex-wrap: wrap;
+      margin-top: 15px;
+    }
+
+    .mensaje {
+      display: none;
+      padding: 12px 14px;
+      margin-top: 15px;
+      border-radius: 8px;
+      overflow-wrap: anywhere;
+      white-space: pre-wrap;
+    }
+
+    .mensaje:not(:empty) { display: block; }
+
+    .mensaje.info {
+      background: #eff6ff;
+      color: #1e40af;
+    }
+
+    .mensaje.ok {
+      background: var(--verde-claro);
+      color: #166534;
+    }
+
+    .mensaje.error {
+      background: #fef2f2;
+      color: #991b1b;
+    }
+
+    .partido-destacado {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+      align-items: center;
+      gap: 18px;
+      text-align: center;
+      background: var(--verde-claro);
+      border: 1px solid #bbf7d0;
+      border-radius: 12px;
+      padding: 22px 16px;
+      margin-bottom: 18px;
+    }
+
+    .nombre-equipo {
+      font-size: clamp(15px, 2vw, 21px);
+      font-weight: 800;
+      overflow-wrap: anywhere;
+    }
+
+    .marcador {
+      font-size: clamp(25px, 4vw, 36px);
+      font-weight: 900;
+      white-space: nowrap;
+      color: var(--verde);
+    }
+
+    .fecha-partido {
+      color: var(--gris);
+      font-size: 12px;
+      margin-top: 5px;
+    }
+
+    .vs {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--gris);
+    }
+
+    .pestanas {
+      display: flex;
+      gap: 7px;
+      flex-wrap: wrap;
+      border-bottom: 1px solid var(--borde);
+      margin-bottom: 18px;
+      padding-bottom: 10px;
+    }
+
+    .pestana {
+      background: #edf2ee;
+      color: #34483a;
+      padding: 11px 17px;
+    }
+
+    .pestana.activa {
+      background: var(--verde);
+      color: white;
+    }
+
+    .oculto { display: none !important; }
+
+    .barra-herramientas {
+      display: grid;
+      grid-template-columns: minmax(200px, 1fr) minmax(160px, .6fr) auto;
+      align-items: end;
+      gap: 12px;
+      margin-bottom: 17px;
+    }
+
+    .estadisticas {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .estadistica {
+      background: #f8faf9;
+      border: 1px solid var(--borde);
+      border-radius: 11px;
+      padding: 15px;
+    }
+
+    .estadistica span {
+      display: block;
+      color: var(--gris);
+      font-size: 12px;
+    }
+
+    .estadistica strong {
+      display: block;
+      margin-top: 5px;
+      font-size: 26px;
+      color: var(--verde);
+    }
+
+    .contador {
+      color: var(--verde);
+      font-weight: 700;
+      margin: 10px 0 14px;
+    }
+
+    .jugadores-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .jugador {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      min-width: 0;
+      padding: 15px;
+      border: 1px solid var(--borde);
+      border-radius: 10px;
+      background: white;
+    }
+
+    .jugador input[type="checkbox"] {
+      width: 19px;
+      height: 19px;
+      flex-shrink: 0;
+      margin-top: 3px;
+      accent-color: var(--verde);
+    }
+
+    .jugador-info {
+      min-width: 0;
+      width: 100%;
+    }
+
+    .jugador-nombre {
+      font-weight: 800;
+      font-size: 14px;
+      overflow-wrap: anywhere;
+    }
+
+    .jugador-detalle {
+      color: var(--gris);
+      font-size: 12px;
+      margin: 4px 0 8px;
+      overflow-wrap: anywhere;
+    }
+
+    .estado {
+      display: inline-block;
+      background: #dcfce7;
+      color: #166534;
+      font-size: 10px;
+      font-weight: 800;
+      border-radius: 20px;
+      padding: 3px 8px;
+      margin-bottom: 9px;
+    }
+
+    .selector-titular {
+      display: block;
+      max-width: 190px;
+      padding: 7px 9px;
+      font-size: 12px;
+    }
+
+    .selector-titular:disabled {
+      background: #f1f5f9;
+      cursor: not-allowed;
+    }
+
+    .seccion-formulario {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .seccion-formulario .ancho-completo {
+      grid-column: 1 / -1;
+    }
+
+    .campo-marcador {
+      border: 1px solid var(--borde);
+      border-radius: 12px;
+      padding: 17px;
+      text-align: center;
+    }
+
+    .campo-marcador label {
+      display: block;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+
+    .campo-marcador input {
+      max-width: 170px;
+      text-align: center;
+      font-size: 30px;
+      font-weight: 800;
+    }
+
+    .lista-eventos {
+      display: grid;
+      gap: 10px;
+    }
+
+    .evento {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 13px 14px;
+      border: 1px solid var(--borde);
+      border-radius: 9px;
+      background: white;
+    }
+
+    .evento strong { display: block; }
+
+    .evento small {
+      display: block;
+      color: var(--gris);
+      overflow-wrap: anywhere;
+    }
+
+    .vacio {
+      color: var(--gris);
+      text-align: center;
+      padding: 25px 12px;
+      background: #f8faf9;
+      border-radius: 9px;
+      grid-column: 1 / -1;
+    }
+
+    .separador {
+      border: 0;
+      border-top: 1px solid var(--borde);
+      margin: 20px 0;
+    }
+
+    footer {
+      text-align: center;
+      padding: 20px 15px;
+      color: var(--gris);
+      font-size: 12px;
+    }
+
+    @media (max-width: 950px) {
+      .filtros {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .barra-herramientas {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .barra-herramientas .campo:first-child {
+        grid-column: 1 / -1;
+      }
+
+      .jugadores-grid { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 600px) {
+      header { padding: 18px 14px; }
+      main { padding: 0 10px 25px; margin-top: 12px; }
+      .panel { padding: 14px; }
+
+      .filtros,
+      .barra-herramientas,
+      .estadisticas,
+      .seccion-formulario {
+        grid-template-columns: 1fr;
+      }
+
+      .barra-herramientas .campo:first-child,
+      .seccion-formulario .ancho-completo {
+        grid-column: auto;
+      }
+
+      .partido-destacado {
+        gap: 7px;
+        padding: 16px 8px;
+      }
+
+      .nombre-equipo { font-size: 13px; }
+      .marcador { font-size: 25px; }
+
+      .pestana {
+        flex: 1 1 30%;
+        padding: 10px 7px;
+        font-size: 12px;
+      }
+
+      .estadisticas { gap: 8px; }
+      .estadistica { padding: 12px; }
+      .estadistica strong { font-size: 23px; }
+      .evento { align-items: flex-start; }
+      .acciones button { flex: 1 1 auto; }
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <div class="encabezado">
+      <div>
+        <h1>Olimpiadas Juan Solano 2026</h1>
+        <p>Administración de nóminas, marcadores, goles y tarjetas</p>
+      </div>
+
+      <button id="btnRecargar" class="btn-secundario" type="button">
+        ↻ Actualizar datos
+      </button>
+    </div>
+  </header>
+
+  <main>
+    <section class="panel">
+      <h2>Buscar partido</h2>
+      <p class="subtitulo">
+        Filtre por fecha y género. Los equipos y la competencia se muestran automáticamente.
+      </p>
+
+      <div class="filtros">
+        <div class="campo">
+          <label for="fechaDesde">Fecha desde</label>
+          <input type="date" id="fechaDesde">
+        </div>
+
+        <div class="campo">
+          <label for="fechaHasta">Fecha hasta</label>
+          <input type="date" id="fechaHasta">
+        </div>
+
+        <div class="campo">
+          <label for="filtroGenero">Género</label>
+          <select id="filtroGenero">
+            <option value="">Todos</option>
+          </select>
+        </div>
+
+        <div class="campo">
+          <label for="filtroPartido">Partido</label>
+          <select id="filtroPartido">
+            <option value="">Cargando partidos...</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="mensaje" class="mensaje" role="status" aria-live="polite"></div>
+    </section>
+
+    <section class="panel">
+      <nav class="pestanas" aria-label="Secciones de gestión">
+        <button type="button" class="pestana activa"
+          data-pestana="nomina" aria-pressed="true">
+          Nómina
+        </button>
+
+        <button type="button" class="pestana"
+          data-pestana="gestion" aria-pressed="false">
+          Gestión del partido
+        </button>
+
+        <button type="button" class="pestana"
+          data-pestana="resumen" aria-pressed="false">
+          Resumen
+        </button>
+      </nav>
+
+      <section id="panel-nomina">
+        <h2>Nómina del encuentro</h2>
+        <p class="subtitulo">
+          Seleccione los jugadores habilitados y determine quiénes serán titulares o suplentes.
+        </p>
+
+        <div id="partidoNomina" class="partido-destacado">
+          <div class="nombre-equipo">Equipo local</div>
+          <div class="marcador">VS</div>
+          <div class="nombre-equipo">Equipo visitante</div>
+        </div>
+
+        <div class="barra-herramientas">
+          <div class="campo">
+            <label for="buscarJugador">Buscar jugador</label>
+            <input id="buscarJugador" type="search"
+              placeholder="Nombre, apellido, posición o camiseta">
+          </div>
+
+          <div class="campo">
+            <label for="filtroEquipoNomina">Filtrar equipo</label>
+            <select id="filtroEquipoNomina">
+              <option value="">Local y visitante</option>
+              <option value="local">Equipo local</option>
+              <option value="visitante">Equipo visitante</option>
+            </select>
+          </div>
+
+          <button type="button" class="btn-secundario" id="btnCargarJugadores">
+            Aplicar filtros
+          </button>
+        </div>
+
+        <div id="contadorNomina" class="contador">
+          Ningún jugador seleccionado.
+        </div>
+
+        <div id="jugadoresNomina" class="jugadores-grid">
+          <div class="vacio">Seleccione un partido para cargar sus jugadores.</div>
+        </div>
+
+        <div class="acciones">
+          <button type="button" id="btnGuardarNomina" class="btn">
+            Guardar nómina
+          </button>
+        </div>
+      </section>
+
+      <section id="panel-gestion" class="oculto">
+        <h2>Gestión del partido</h2>
+        <p class="subtitulo">
+          Actualice el marcador y registre goles o tarjetas de los jugadores convocados.
+        </p>
+
+        <div id="partidoGestion" class="partido-destacado">
+          <div class="nombre-equipo">Equipo local</div>
+          <div class="marcador">VS</div>
+          <div class="nombre-equipo">Equipo visitante</div>
+        </div>
+
+        <h3>Marcador</h3>
+
+        <div class="seccion-formulario">
+          <div class="campo-marcador">
+            <label id="labelGolesLocal" for="golesLocal">Goles del equipo local</label>
+            <input id="golesLocal" type="number" min="0" step="1" value="0">
+          </div>
+
+          <div class="campo-marcador">
+            <label id="labelGolesVisitante" for="golesVisitante">Goles del equipo visitante</label>
+            <input id="golesVisitante" type="number" min="0" step="1" value="0">
+          </div>
+        </div>
+
+        <p id="resultadoTexto" class="contador">
+          Seleccione un partido para consultar el resultado.
+        </p>
+
+        <div class="acciones">
+          <button type="button" id="btnGuardarMarcador" class="btn">
+            Guardar marcador
+          </button>
+        </div>
+
+        <hr class="separador">
+
+        <h3>Registrar goles y tarjetas</h3>
+
+        <div class="seccion-formulario">
+          <div class="campo">
+            <label for="equipoEvento">Equipo</label>
+            <select id="equipoEvento">
+              <option value="local">Equipo local</option>
+              <option value="visitante">Equipo visitante</option>
+            </select>
+          </div>
+
+          <div class="campo">
+            <label for="jugadorEvento">Jugador convocado</label>
+            <select id="jugadorEvento">
+              <option value="">Seleccione un partido</option>
+            </select>
+          </div>
+
+          <div class="campo">
+            <label for="tipoEvento">Tipo de evento</label>
+            <select id="tipoEvento">
+              <option value="GOL">Gol</option>
+              <option value="AMARILLA">Tarjeta amarilla</option>
+              <option value="ROJA_DIRECTA">Tarjeta roja directa</option>
+              <option value="ROJA_DOBLE_AMARILLA">Roja por doble amarilla</option>
+            </select>
+          </div>
+
+          <div class="campo">
+            <label for="minutoEvento">Minuto</label>
+            <input id="minutoEvento" type="number" min="0" max="200" placeholder="Ej. 35">
+          </div>
+
+          <div class="campo">
+            <label for="periodoEvento">Periodo</label>
+            <select id="periodoEvento">
+              <option value="REGLAMENTARIO">Tiempo reglamentario</option>
+              <option value="TIEMPO_EXTRA">Tiempo extra</option>
+            </select>
+          </div>
+
+          <div class="campo ancho-completo">
+            <label for="observacionEvento">Observación (opcional)</label>
+            <textarea id="observacionEvento" rows="2" maxlength="250"
+              placeholder="Detalle adicional del evento"></textarea>
+          </div>
+        </div>
+
+        <div class="acciones">
+          <button type="button" id="btnGuardarEvento" class="btn">
+            Registrar evento
+          </button>
+        </div>
+
+        <hr class="separador">
+
+        <h3>Eventos registrados</h3>
+        <div id="listaEventos" class="lista-eventos">
+          <div class="vacio">Seleccione un partido.</div>
+        </div>
+      </section>
+
+      <section id="panel-resumen" class="oculto">
+        <h2>Resumen del encuentro</h2>
+        <p class="subtitulo">
+          Consulte el marcador, los convocados, los titulares y los eventos registrados.
+        </p>
+
+        <div id="partidoResumen" class="partido-destacado">
+          <div class="nombre-equipo">Equipo local</div>
+          <div class="marcador">VS</div>
+          <div class="nombre-equipo">Equipo visitante</div>
+        </div>
+
+        <div class="estadisticas">
+          <div class="estadistica">
+            <span>Jugadores convocados</span>
+            <strong id="totalConvocados">0</strong>
+          </div>
+
+          <div class="estadistica">
+            <span>Titulares</span>
+            <strong id="totalTitulares">0</strong>
+          </div>
+
+          <div class="estadistica">
+            <span>Goles registrados</span>
+            <strong id="totalGoles">0</strong>
+          </div>
+
+          <div class="estadistica">
+            <span>Eventos registrados</span>
+            <strong id="totalEventos">0</strong>
+          </div>
+        </div>
+
+        <div class="acciones">
+          <button type="button" id="btnActualizarResumen" class="btn-secundario">
+            Actualizar resumen
+          </button>
+        </div>
+
+        <hr class="separador">
+
+        <h3>Detalle de eventos</h3>
+        <div id="resumenEventos" class="lista-eventos">
+          <div class="vacio">Seleccione un partido.</div>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <footer>
+    Olimpiadas Juan Solano 2026 · Administración deportiva
+  </footer>
+
+  <script type="module" src="../js/nomina-partido.js"></script>
+</body>
+</html>

@@ -545,6 +545,82 @@
         height: 55px;
       }
     }
+
+    
+/* Marcador del partido */
+.marcador-resultado {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin: 10px 0;
+  padding: 8px;
+  background: #0b0d0b;
+  border: 1px solid var(--dorado);
+  border-radius: 9px;
+}
+
+.marcador-gol {
+  color: var(--dorado);
+  font-size: 1.7rem;
+  font-weight: bold;
+  min-width: 24px;
+  text-align: center;
+}
+
+.marcador-separador {
+  color: var(--suave);
+  font-weight: bold;
+}
+
+.marcador-etiqueta {
+  color: #8de3a5;
+  font-size: .7rem;
+  font-weight: bold;
+  text-align: center;
+}
+
+.partido-equipo .equipo-nombre {
+  overflow-wrap: anywhere;
+}
+
+
+.marcador-contenedor {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-width: 58px;
+    gap: 3px;
+}
+
+.marcador-resultado {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    color: var(--dorado);
+    font-size: 1.6rem;
+    font-weight: bold;
+}
+
+.marcador-gol {
+    min-width: 20px;
+    text-align: center;
+}
+
+.marcador-separador {
+    color: var(--suave);
+}
+
+.marcador-etiqueta {
+    color: #8de3a5;
+    font-size: .55rem;
+    font-weight: bold;
+    text-align: center;
+    white-space: nowrap;
+}
+
   </style>
 </head>
 

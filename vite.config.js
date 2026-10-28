@@ -20,6 +20,7 @@ const paginas = [
   "admin/perfiles.html",
   "admin/usuarios.html",
   "admin/partido.html",
+  "admin/nomina-partido.html",
   "admin/prueba-funcion.html"
 ];
 

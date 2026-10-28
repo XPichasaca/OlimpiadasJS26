@@ -1,0 +1,415 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gestión rápida - Olimpiadas Juan Solano 2026</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#f1f5f9;color:#172033;font:15px Arial,sans-serif}
+header{background:#153e75;color:white;padding:18px}
+header h1{margin:0}
+main{max-width:1100px;margin:18px auto;padding:12px}
+.card{background:white;padding:16px;border-radius:12px;margin-bottom:14px;box-shadow:0 2px 8px #0001}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+.field{flex:1;min-width:200px}
+label{display:block;font-weight:bold;margin:8px 0 5px}
+select,input,button{width:100%;padding:11px;border:1px solid #cbd5e1;border-radius:8px;font-size:15px}
+button{background:#174ea6;color:white;border:0;font-weight:bold;cursor:pointer}
+button:disabled{opacity:.5}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.tabs button{width:auto;background:#e2e8f0;color:#172033}
+.tabs button.active{background:#174ea6;color:white}
+.tab{display:none}.tab.active{display:block}
+.scroller{overflow-x:auto}
+table{border-collapse:collapse;width:100%;min-width:570px}
+th,td{text-align:left;padding:9px;border-bottom:1px solid #e2e8f0}
+th{background:#f8fafc}
+#msg{padding:11px;background:#eff6ff;border-radius:8px;margin-top:12px}
+.error{background:#fff1f2!important;color:#9f1239}
+.success{background:#ecfdf5!important;color:#065f46}
+@media(max-width:600px){.field{min-width:100%}main{padding:8px}}
+</style>
+</head>
+<body>
+<header>
+  <h1>Olimpiadas Juan Solano 2026</h1>
+  <p>Goles · Tarjetas · Posiciones</p>
+</header>
+
+<main>
+<section class="card">
+  <label>Competencia (masculino o femenino)</label>
+  <select id="competencia">
+    <option value="">Cargando competencias...</option>
+  </select>
+  <div id="msg">Conectando con Supabase...</div>
+</section>
+
+<div class="tabs">
+  <button class="active" data-tab="registro">Registrar evento</button>
+  <button data-tab="goleadores">Goleadores</button>
+  <button data-tab="tarjetas">Tarjetas</button>
+  <button data-tab="posiciones">Posiciones</button>
+</div>
+
+<section class="card tab active" id="registro">
+  <h2>Registrar gol o tarjeta</h2>
+  <label>Partido</label>
+  <select id="partido"><option value="">Seleccione partido</option></select>
+
+  <label>Jugador del partido</label>
+  <select id="jugador"><option value="">Seleccione primero el partido</option></select>
+
+  <div class="row">
+    <div class="field">
+      <label>Evento</label>
+      <select id="tipo">
+        <option value="GOL">Gol</option>
+        <option value="AMARILLA">Tarjeta amarilla</option>
+        <option value="ROJA_DIRECTA">Tarjeta roja directa</option>
+        <option value="ROJA_DOBLE_AMARILLA">Roja por doble amarilla</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Minuto</label>
+      <input id="minuto" type="number" min="0" max="150" placeholder="Ej. 35">
+    </div>
+    <div class="field">
+      <label>Periodo</label>
+      <select id="periodo">
+        <option value="REGLAMENTARIO">Reglamentario</option>
+        <option value="TIEMPO_EXTRA">Tiempo extra</option>
+      </select>
+    </div>
+  </div>
+
+  <label>Observación</label>
+  <input id="observacion" placeholder="Opcional">
+  <br><br>
+  <button id="guardar">Guardar registro</button>
+</section>
+
+<section class="card tab" id="goleadores">
+  <h2>Tabla de goleadores</h2>
+  <div class="scroller">
+    <table>
+      <thead><tr><th>#</th><th>Jugador</th><th>Equipo</th><th>Goles</th></tr></thead>
+      <tbody id="golesBody"></tbody>
+    </table>
+  </div>
+</section>
+
+<section class="card tab" id="tarjetas">
+  <h2>Control de tarjetas</h2>
+  <div class="scroller">
+    <table>
+      <thead><tr><th>#</th><th>Jugador</th><th>Equipo</th><th>Amarillas</th><th>Rojas</th></tr></thead>
+      <tbody id="tarjetasBody"></tbody>
+    </table>
+  </div>
+</section>
+
+<section class="card tab" id="posiciones">
+  <h2>Tabla de posiciones</h2>
+  <div class="scroller">
+    <table>
+      <thead>
+        <tr><th>Pos.</th><th>Equipo</th><th>PJ</th><th>G</th><th>E</th><th>P</th><th>GF</th><th>GC</th><th>DG</th><th>Pts</th></tr>
+      </thead>
+      <tbody id="posBody"></tbody>
+    </table>
+  </div>
+</section>
+</main>
+
+<script type="module">
+import { supabase } from '../js/supabase.js';
+
+const $ = id => document.getElementById(id);
+let equipos = [];
+let partidos = [];
+
+function escapar(v) {
+  return String(v ?? '').replace(/[&<>"']/g, c => ({
+    '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'
+  }[c]));
+}
+
+function mensaje(texto, tipo='') {
+  $('msg').textContent = texto;
+  $('msg').className = tipo;
+}
+
+document.querySelectorAll('[data-tab]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('[data-tab]').forEach(b =>
+      b.classList.toggle('active', b === btn));
+    document.querySelectorAll('.tab').forEach(t =>
+      t.classList.toggle('active', t.id === btn.dataset.tab));
+  });
+});
+
+function nombreEquipo(id) {
+  return equipos.find(e => String(e.id) === String(id))?.equipo?.nombre || 'Equipo';
+}
+
+async function cargarCompetencias() {
+  const {data,error} = await supabase
+    .from('competencia').select('id,nombre').order('nombre');
+
+  if(error) throw error;
+
+  $('competencia').innerHTML =
+    '<option value="">Seleccione competencia</option>';
+
+  (data || []).forEach(c => {
+    $('competencia').insertAdjacentHTML('beforeend',
+      `<option value="${escapar(c.id)}">${escapar(c.nombre)}</option>`);
+  });
+}
+
+async function cargarTodo() {
+  const id = $('competencia').value;
+  $('partido').innerHTML = '<option value="">Seleccione partido</option>';
+  $('jugador').innerHTML = '<option value="">Seleccione partido primero</option>';
+
+  if(!id) return;
+
+  const [er,pr] = await Promise.all([
+    supabase.from('inscripcion_equipo')
+      .select('id,equipo_id,competencia_id,equipo!inner(id,nombre)')
+      .eq('competencia_id',id),
+    supabase.from('partido')
+      .select('id,fecha,hora,estado,goles_local,goles_visitante,equipo_local_id,equipo_visitante_id,fase!inner(competencia_id)')
+      .eq('fase.competencia_id',id)
+      .order('fecha')
+  ]);
+
+  if(er.error) throw er.error;
+  if(pr.error) throw pr.error;
+
+  equipos = er.data || [];
+  partidos = pr.data || [];
+
+  partidos.forEach(p => {
+    const texto = `${p.fecha || ''} ${p.hora || ''} | ${nombreEquipo(p.equipo_local_id)} vs ${nombreEquipo(p.equipo_visitante_id)} | ${p.estado || ''}`;
+    $('partido').insertAdjacentHTML('beforeend',
+      `<option value="${escapar(p.id)}">${escapar(texto)}</option>`);
+  });
+
+  await Promise.all([
+    cargarGoleadores(id),
+    cargarTarjetas(id),
+    cargarPosiciones(id)
+  ]);
+}
+
+async function cargarJugadores() {
+  const p = partidos.find(x => String(x.id) === $('partido').value);
+  $('jugador').innerHTML = '<option value="">Seleccione jugador</option>';
+  if(!p) return;
+
+  const {data,error} = await supabase.from('nomina_partido')
+    .select('inscripcion_jugador_id,inscripcion_jugador!inner(id,numero,inscripcion_equipo_id,jugador!inner(nombres,apellidos))')
+    .eq('partido_id',p.id);
+
+  if(error) throw error;
+
+  let filas = data || [];
+
+  // Si el partido no tiene nómina cargada, se buscan jugadores inscritos
+  // en los dos equipos participantes.
+  if(!filas.length) {
+    const {data:alternos,error:e2} = await supabase
+      .from('inscripcion_jugador')
+      .select('id,numero,inscripcion_equipo_id,jugador!inner(nombres,apellidos)')
+      .in('inscripcion_equipo_id',[p.equipo_local_id,p.equipo_visitante_id]);
+
+    if(e2) throw e2;
+    filas = (alternos || []).map(x => ({inscripcion_jugador:x}));
+  }
+
+  filas.forEach(f => {
+    const ij = f.inscripcion_jugador;
+    const j = ij.jugador || {};
+    const nombre = `${j.nombres || ''} ${j.apellidos || ''}`.trim();
+    $('jugador').insertAdjacentHTML('beforeend',
+      `<option value="${escapar(ij.id)}">${escapar(nombre)}${ij.numero != null ? ' (#'+escapar(ij.numero)+')' : ''} — ${escapar(nombreEquipo(ij.inscripcion_equipo_id))}</option>`);
+  });
+}
+
+async function guardarEvento() {
+  const partidoId = $('partido').value;
+  const jugadorId = $('jugador').value;
+  const tipo = $('tipo').value;
+
+  if(!partidoId || !jugadorId) {
+    mensaje('Seleccione un partido y un jugador.','error');
+    return;
+  }
+
+  $('guardar').disabled = true;
+
+  try {
+    const {error} = await supabase.from('evento_partido').insert({
+      partido_id: partidoId,
+      inscripcion_jugador_id: jugadorId,
+      tipo,
+      minuto: $('minuto').value === '' ? null : Number($('minuto').value),
+      periodo: $('periodo').value,
+      observacion: $('observacion').value.trim() || null
+    });
+
+    if(error) throw error;
+
+    // Actualizar marcador al registrar gol.
+    // Si falla esta actualización, el evento ya pudo haberse guardado.
+    if(tipo === 'GOL') {
+      const p = partidos.find(x => String(x.id) === String(partidoId));
+      const {data:ij,error:e2} = await supabase
+        .from('inscripcion_jugador')
+        .select('inscripcion_equipo_id').eq('id',jugadorId).single();
+
+      if(e2) throw e2;
+
+      const local = String(ij.inscripcion_equipo_id) === String(p.equipo_local_id);
+      const columna = local ? 'goles_local' : 'goles_visitante';
+      const actual = Number(local ? p.goles_local : p.goles_visitante) || 0;
+
+      const {error:e3} = await supabase.from('partido')
+        .update({[columna]:actual+1}).eq('id',partidoId);
+
+      if(e3) console.error('No se actualizó el marcador:',e3);
+    }
+
+    $('minuto').value = '';
+    $('observacion').value = '';
+    mensaje('Registro guardado.','success');
+    await cargarTodo();
+    await cargarJugadores();
+  } catch(e) {
+    console.error(e);
+    mensaje('Error: ' + e.message,'error');
+  } finally {
+    $('guardar').disabled = false;
+  }
+}
+
+async function cargarGoleadores(id) {
+  const {data,error} = await supabase.from('evento_partido')
+    .select('tipo,partido!inner(fase!inner(competencia_id)),inscripcion_jugador!inner(id,jugador!inner(nombres,apellidos),inscripcion_equipo!inner(equipo!inner(nombre)))')
+    .eq('tipo','GOL')
+    .eq('partido.fase.competencia_id',id);
+
+  if(error) throw error;
+
+  const m = new Map();
+  (data || []).forEach(e => {
+    const ij = e.inscripcion_jugador;
+    if(!m.has(ij.id)) m.set(ij.id,{
+      nombre: `${ij.jugador.nombres || ''} ${ij.jugador.apellidos || ''}`.trim(),
+      equipo: ij.inscripcion_equipo.equipo.nombre,
+      goles: 0
+    });
+    m.get(ij.id).goles++;
+  });
+
+  const r = [...m.values()].sort((a,b) => b.goles-a.goles);
+  $('golesBody').innerHTML = r.length
+    ? r.map((x,i)=>`<tr><td>${i+1}</td><td>${escapar(x.nombre)}</td><td>${escapar(x.equipo)}</td><td>${x.goles}</td></tr>`).join('')
+    : '<tr><td colspan="4">Sin goles registrados.</td></tr>';
+}
+
+async function cargarTarjetas(id) {
+  const {data,error} = await supabase.from('evento_partido')
+    .select('tipo,partido!inner(fase!inner(competencia_id)),inscripcion_jugador!inner(id,jugador!inner(nombres,apellidos),inscripcion_equipo!inner(equipo!inner(nombre)))')
+    .in('tipo',['AMARILLA','ROJA_DIRECTA','ROJA_DOBLE_AMARILLA'])
+    .eq('partido.fase.competencia_id',id);
+
+  if(error) throw error;
+
+  const m = new Map();
+  (data || []).forEach(e => {
+    const ij = e.inscripcion_jugador;
+    if(!m.has(ij.id)) m.set(ij.id,{
+      nombre: `${ij.jugador.nombres || ''} ${ij.jugador.apellidos || ''}`.trim(),
+      equipo: ij.inscripcion_equipo.equipo.nombre,
+      amarillas: 0, rojas: 0
+    });
+    if(e.tipo === 'AMARILLA') m.get(ij.id).amarillas++;
+    else m.get(ij.id).rojas++;
+  });
+
+  const r = [...m.values()].sort((a,b)=>b.rojas-a.rojas || b.amarillas-a.amarillas);
+  $('tarjetasBody').innerHTML = r.length
+    ? r.map((x,i)=>`<tr><td>${i+1}</td><td>${escapar(x.nombre)}</td><td>${escapar(x.equipo)}</td><td>${x.amarillas}</td><td>${x.rojas}</td></tr>`).join('')
+    : '<tr><td colspan="5">Sin tarjetas registradas.</td></tr>';
+}
+
+async function cargarPosiciones(id) {
+  const {data,error} = await supabase.from('partido')
+    .select('equipo_local_id,equipo_visitante_id,goles_local,goles_visitante,estado,fase!inner(competencia_id)')
+    .eq('fase.competencia_id',id)
+    .eq('estado','FINALIZADO');
+
+  if(error) throw error;
+
+  const tabla = new Map();
+  equipos.forEach(t => tabla.set(String(t.id),{
+    nombre:t.equipo.nombre,pj:0,g:0,e:0,p:0,gf:0,gc:0,pts:0
+  }));
+
+  (data || []).forEach(p => {
+    if(p.goles_local == null || p.goles_visitante == null) return;
+    const l = tabla.get(String(p.equipo_local_id));
+    const v = tabla.get(String(p.equipo_visitante_id));
+    if(!l || !v) return;
+
+    const gl = Number(p.goles_local), gv = Number(p.goles_visitante);
+    l.pj++; v.pj++;
+    l.gf+=gl; l.gc+=gv; v.gf+=gv; v.gc+=gl;
+
+    if(gl>gv){l.g++;l.pts+=3;v.p++;}
+    else if(gv>gl){v.g++;v.pts+=3;l.p++;}
+    else{l.e++;v.e++;l.pts++;v.pts++;}
+  });
+
+  const r = [...tabla.values()].sort((a,b)=>
+    b.pts-a.pts || (b.gf-b.gc)-(a.gf-a.gc) || b.gf-a.gf
+  );
+
+  $('posBody').innerHTML = r.length
+    ? r.map((x,i)=>`<tr><td>${i+1}</td><td>${escapar(x.nombre)}</td><td>${x.pj}</td><td>${x.g}</td><td>${x.e}</td><td>${x.p}</td><td>${x.gf}</td><td>${x.gc}</td><td>${x.gf-x.gc}</td><td><b>${x.pts}</b></td></tr>`).join('')
+    : '<tr><td colspan="10">Sin equipos inscritos.</td></tr>';
+}
+
+$('competencia').addEventListener('change', async () => {
+  try {
+    mensaje('Cargando datos...');
+    await cargarTodo();
+    mensaje('Datos cargados.','success');
+  } catch(e) {
+    console.error(e);
+    mensaje('Error al cargar: '+e.message,'error');
+  }
+});
+
+$('partido').addEventListener('change', async () => {
+  try { await cargarJugadores(); }
+  catch(e) { console.error(e); mensaje('Error al buscar jugadores: '+e.message,'error'); }
+});
+
+$('guardar').addEventListener('click',guardarEvento);
+
+try {
+  await cargarCompetencias();
+  mensaje('Seleccione una competencia.');
+} catch(e) {
+  console.error(e);
+  mensaje('No se pudo conectar a Supabase: '+e.message,'error');
+}
+</script>
+</body>
+</html>

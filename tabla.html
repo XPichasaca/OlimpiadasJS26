@@ -1,0 +1,307 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#101510">
+    <title>Tabla de posiciones | Olimpiadas Juan Solano 2026</title>
+
+    <style>
+        :root {
+            --fondo: #101510;
+            --panel: #191f19;
+            --panel2: #222a22;
+            --dorado: #e3bd56;
+            --verde: #16864b;
+            --texto: #f5f5ed;
+            --suave: #b9c1b8;
+            --borde: #3a4538;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            background: var(--fondo);
+            color: var(--texto);
+            font-family: Arial, Helvetica, sans-serif;
+            line-height: 1.5;
+        }
+
+        a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        .cabecera {
+            background: #090c09;
+            border-bottom: 2px solid var(--dorado);
+        }
+
+        .cabecera-interior,
+        .navegacion-interior,
+        .contenedor,
+        .pie-interior {
+            width: min(1400px, 94%);
+            margin: 0 auto;
+        }
+
+        .cabecera-interior {
+            min-height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+            padding: 15px 0;
+        }
+
+        .marca {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .marca img {
+            width: 72px;
+            height: 72px;
+            object-fit: contain;
+            border-radius: 12px;
+        }
+
+        .marca h1 {
+            margin: 0;
+            color: var(--dorado);
+            font-size: clamp(1.15rem, 3vw, 1.8rem);
+        }
+
+        .marca p {
+            margin: 4px 0 0;
+            color: var(--suave);
+            font-size: .9rem;
+        }
+
+        .enlace-inicio {
+            padding: 10px 14px;
+            border: 1px solid var(--borde);
+            border-radius: 9px;
+            white-space: nowrap;
+            font-size: .9rem;
+        }
+
+        .enlace-inicio:hover {
+            background: var(--panel2);
+            border-color: var(--dorado);
+        }
+
+        .navegacion {
+            background: #151a15;
+            border-top: 1px solid #242b24;
+        }
+
+        .navegacion-interior {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            padding: 10px 0;
+        }
+
+        .navegacion a {
+            display: inline-block;
+            padding: 9px 13px;
+            border-radius: 7px;
+            color: #dce2d9;
+            font-size: .92rem;
+        }
+
+        .navegacion a:hover,
+        .navegacion a.activo {
+            background: var(--verde);
+            color: white;
+        }
+
+        .hero {
+            background:
+                radial-gradient(ellipse at top right, #285a35 0, transparent 45%),
+                linear-gradient(135deg, #1b281b, #101510 75%);
+            border-bottom: 1px solid var(--borde);
+        }
+
+        .hero-interior {
+            width: min(1400px, 94%);
+            margin: auto;
+            padding: 35px 0;
+        }
+
+        .etiqueta {
+            display: inline-block;
+            color: var(--dorado);
+            border: 1px solid #8c7130;
+            border-radius: 30px;
+            padding: 5px 12px;
+            font-weight: bold;
+            font-size: .78rem;
+            letter-spacing: 1px;
+        }
+
+        .hero h2 {
+            margin: 15px 0 8px;
+            font-size: clamp(1.8rem, 5vw, 2.8rem);
+        }
+
+        .hero p {
+            max-width: 700px;
+            margin: 0;
+            color: var(--suave);
+        }
+
+        .contenedor {
+            padding: 25px 0 50px;
+        }
+
+        .barra-acciones {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .barra-acciones p {
+            color: var(--suave);
+            margin: 0;
+            font-size: .9rem;
+        }
+
+        .boton {
+            padding: 10px 15px;
+            background: var(--panel2);
+            color: var(--texto);
+            border: 1px solid #485348;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .boton:hover {
+            border-color: var(--dorado);
+        }
+
+        .mensaje {
+            padding: 20px;
+            background: var(--panel);
+            border: 1px solid var(--borde);
+            border-radius: 12px;
+            color: var(--suave);
+        }
+
+        .pie {
+            padding: 25px 0;
+            text-align: center;
+            color: var(--suave);
+            background: #090c09;
+            border-top: 1px solid var(--borde);
+            font-size: .85rem;
+        }
+
+        .pie strong {
+            display: block;
+            margin-bottom: 5px;
+            color: var(--dorado);
+        }
+
+        @media (max-width: 600px) {
+            .cabecera-interior {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            .marca img {
+                width: 55px;
+                height: 55px;
+            }
+
+            .navegacion-interior {
+                gap: 2px;
+            }
+
+            .navegacion a {
+                padding: 8px;
+                font-size: .82rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header class="cabecera">
+        <div class="cabecera-interior">
+            <div class="marca">
+                <img
+                    src="./img/logss.png"
+                    alt="Logo Olimpiadas Juan Solano"
+                    onerror="this.style.display='none'"
+                >
+
+                <div>
+                    <h1>Olimpiadas Juan Solano 2026</h1>
+                    <p>Resultados y clasificación de los equipos</p>
+                </div>
+            </div>
+
+            <a class="enlace-inicio" href="./index.html">
+                ← Página principal
+            </a>
+        </div>
+
+        <nav class="navegacion">
+            <div class="navegacion-interior">
+                <a href="./index.html">Inicio</a>
+                <a href="./equipos.html">Equipos</a>
+                <a href="./partidos.html">Partidos</a>
+                <a href="./tabla.html" class="activo">Tabla de posiciones</a>
+                <a href="./jugadores.html">Jugadores</a>
+                <a href="./noticias.html">Noticias</a>
+            </div>
+        </nav>
+    </header>
+
+    <section class="hero">
+        <div class="hero-interior">
+            <span class="etiqueta">CAMPEONATO 2026</span>
+            <h2>Tabla de posiciones</h2>
+            <p>
+                Consulte los partidos jugados, victorias, empates,
+                derrotas, goles y puntos de cada equipo.
+            </p>
+        </div>
+    </section>
+
+    <main class="contenedor">
+        <div class="barra-acciones">
+            <p id="estadoTabla">Consultando posiciones...</p>
+
+            <button id="btnActualizarTabla" class="boton" type="button">
+                ↻ Actualizar posiciones
+            </button>
+        </div>
+
+        <div id="listaTablas">
+            <div class="mensaje">
+                Cargando la tabla de posiciones...
+            </div>
+        </div>
+    </main>
+
+    <footer class="pie">
+        <div class="pie-interior">
+            <strong>Olimpiadas Juan Solano 2026</strong>
+            Comuna Quilloac<br>
+            Información oficial del campeonato
+        </div>
+    </footer>
+
+    <script type="module" src="./js/tabla.js"></script>
+</body>
+</html>
