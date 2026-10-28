@@ -1,4 +1,5 @@
 
+
 import { supabase } from './supabase.js';
 
 console.log('✅ tabla.js cargado');
@@ -616,3 +617,4 @@ insertarEstilos();
 btnActualizar?.addEventListener('click', cargarTabla);
 
 cargarTabla();
+
