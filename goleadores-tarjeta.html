@@ -1,0 +1,394 @@
+```html
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#10291d">
+  <title>Goleadores y Tarjetas | Olimpiadas Juan Solano 2026</title>
+
+  <style>
+    :root {
+      --verde: #10291d;
+      --verde2: #1c4933;
+      --dorado: #d7ad45;
+      --fondo: #f3f5f3;
+      --blanco: #ffffff;
+      --texto: #243329;
+      --borde: #dce4dd;
+      --rojo: #c83b3b;
+      --amarillo: #e9bd36;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: var(--fondo);
+      color: var(--texto);
+    }
+
+    header {
+      background: var(--verde);
+      color: white;
+      padding: 20px 15px;
+      border-bottom: 4px solid var(--dorado);
+    }
+
+    .encabezado {
+      max-width: 1150px;
+      margin: auto;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .logo {
+      width: 65px;
+      height: 65px;
+      object-fit: contain;
+      background: white;
+      border-radius: 50%;
+      padding: 4px;
+    }
+
+    header h1 {
+      font-size: 24px;
+      margin: 0 0 7px;
+    }
+
+    header p {
+      margin: 0;
+      color: #e8dfc5;
+      font-size: 14px;
+    }
+
+    main {
+      max-width: 1150px;
+      margin: 25px auto;
+      padding: 0 15px;
+    }
+
+    .volver {
+      display: inline-block;
+      color: var(--verde2);
+      text-decoration: none;
+      font-weight: bold;
+      margin-bottom: 20px;
+    }
+
+    .filtros {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      padding: 17px;
+      background: white;
+      border: 1px solid var(--borde);
+      border-radius: 12px;
+      margin-bottom: 22px;
+    }
+
+    .filtros label {
+      font-size: 13px;
+      font-weight: bold;
+      display: block;
+      margin-bottom: 7px;
+    }
+
+    select {
+      width: 100%;
+      padding: 11px;
+      border: 1px solid #cbd5cd;
+      border-radius: 7px;
+      background: white;
+      font-size: 14px;
+    }
+
+    .resumen {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 13px;
+      margin-bottom: 22px;
+    }
+
+    .indicador {
+      background: white;
+      border: 1px solid var(--borde);
+      border-radius: 12px;
+      padding: 18px;
+      text-align: center;
+    }
+
+    .indicador .numero {
+      display: block;
+      font-size: 30px;
+      font-weight: 800;
+      color: var(--verde2);
+      margin-bottom: 6px;
+    }
+
+    .indicador .nombre {
+      font-size: 13px;
+      color: #617067;
+    }
+
+    .seccion {
+      background: white;
+      border: 1px solid var(--borde);
+      border-radius: 12px;
+      overflow: hidden;
+      margin-bottom: 22px;
+    }
+
+    .seccion-titulo {
+      padding: 16px 18px;
+      background: var(--verde);
+      color: white;
+      border-bottom: 3px solid var(--dorado);
+      font-size: 18px;
+      font-weight: bold;
+    }
+
+    .tabla-contenedor {
+      width: 100%;
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 450px;
+    }
+
+    th, td {
+      text-align: left;
+      padding: 12px 14px;
+      border-bottom: 1px solid #e8ede9;
+      font-size: 14px;
+    }
+
+    th {
+      background: #edf2ee;
+      color: var(--verde);
+      font-size: 12px;
+      text-transform: uppercase;
+    }
+
+    td.centro, th.centro {
+      text-align: center;
+    }
+
+    .puesto {
+      font-weight: bold;
+      color: #67776b;
+      text-align: center;
+      width: 55px;
+    }
+
+    .cantidad {
+      font-size: 18px;
+      font-weight: bold;
+      color: var(--verde2);
+      text-align: center;
+    }
+
+    .amarilla {
+      display: inline-block;
+      width: 15px;
+      height: 20px;
+      background: var(--amarillo);
+      border: 1px solid #c8a12b;
+      border-radius: 3px;
+      vertical-align: middle;
+    }
+
+    .roja {
+      display: inline-block;
+      width: 15px;
+      height: 20px;
+      background: var(--rojo);
+      border-radius: 3px;
+      vertical-align: middle;
+    }
+
+    .estado {
+      padding: 18px;
+      text-align: center;
+      color: #68766c;
+      font-size: 14px;
+    }
+
+    .error {
+      color: #a32121;
+      background: #fff0f0;
+      padding: 14px;
+      border-radius: 8px;
+      margin-bottom: 18px;
+      overflow-wrap: anywhere;
+    }
+
+    footer {
+      background: var(--verde);
+      color: white;
+      text-align: center;
+      padding: 20px 12px;
+      font-size: 12px;
+      margin-top: 35px;
+    }
+
+    @media (max-width: 600px) {
+      header h1 {
+        font-size: 19px;
+      }
+
+      .logo {
+        width: 52px;
+        height: 52px;
+      }
+
+      .resumen {
+        gap: 7px;
+      }
+
+      .indicador {
+        padding: 13px 5px;
+      }
+
+      .indicador .numero {
+        font-size: 25px;
+      }
+
+      .indicador .nombre {
+        font-size: 11px;
+      }
+
+      .filtros {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <div class="encabezado">
+      <img class="logo" src="img/Quilloac.jpg"
+           alt="Escudo de la comunidad"
+           onerror="this.style.display='none'">
+
+      <div>
+        <h1>Goleadores y Tarjetas</h1>
+        <p>Olimpiadas Juan Solano 2026</p>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <a class="volver" href="index.html">← Volver al inicio</a>
+
+    <div id="mensajeError" role="alert" hidden></div>
+
+    <section class="filtros">
+      <div>
+        <label for="filtroCompetencia">Competencia</label>
+        <select id="filtroCompetencia">
+          <option value="">Cargando competencias...</option>
+        </select>
+      </div>
+
+      <div>
+        <label for="filtroEquipo">Equipo</label>
+        <select id="filtroEquipo">
+          <option value="">Todos los equipos</option>
+        </select>
+      </div>
+    </section>
+
+    <section class="resumen">
+      <div class="indicador">
+        <span class="numero" id="totalGoles">0</span>
+        <span class="nombre">Goles registrados</span>
+      </div>
+
+      <div class="indicador">
+        <span class="numero" id="totalAmarillas">0</span>
+        <span class="nombre">Tarjetas amarillas</span>
+      </div>
+
+      <div class="indicador">
+        <span class="numero" id="totalRojas">0</span>
+        <span class="nombre">Tarjetas rojas</span>
+      </div>
+    </section>
+
+    <section class="seccion">
+      <div class="seccion-titulo">⚽ Tabla de goleadores</div>
+      <div class="tabla-contenedor">
+        <table>
+          <thead>
+            <tr>
+              <th class="centro">Pos.</th>
+              <th>Jugador</th>
+              <th>Equipo</th>
+              <th class="centro">Goles</th>
+            </tr>
+          </thead>
+          <tbody id="tablaGoleadores">
+            <tr><td colspan="4" class="estado">Cargando goleadores...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="seccion">
+      <div class="seccion-titulo">
+        <span class="amarilla"></span> Tarjetas amarillas
+      </div>
+      <div class="tabla-contenedor">
+        <table>
+          <thead>
+            <tr>
+              <th>Jugador</th>
+              <th>Equipo</th>
+              <th class="centro">Tarjetas</th>
+            </tr>
+          </thead>
+          <tbody id="tablaAmarillas">
+            <tr><td colspan="3" class="estado">Cargando tarjetas...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="seccion">
+      <div class="seccion-titulo">
+        <span class="roja"></span> Tarjetas rojas
+      </div>
+      <div class="tabla-contenedor">
+        <table>
+          <thead>
+            <tr>
+              <th>Jugador</th>
+              <th>Equipo</th>
+              <th class="centro">Tarjetas</th>
+            </tr>
+          </thead>
+          <tbody id="tablaRojas">
+            <tr><td colspan="3" class="estado">Cargando tarjetas...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    Comuna Quilloac | Olimpiadas Juan Solano 2026
+  </footer>
+
+  <script type="module" src="./js/goleadores-tarjeta.js"></script>
+</body>
+</html>
+```

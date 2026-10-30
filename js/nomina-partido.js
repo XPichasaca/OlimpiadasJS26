@@ -1,1510 +1,1630 @@
+
 import { supabase } from "./supabase.js";
 
-/*
- * OLIMPIADAS JUAN SOLANO 2026
- * Gestión de partidos de FÚTBOL:
- * - Nómina de titulares y suplentes.
- * - Marcador y estado del partido.
- * - Registro de goles y tarjetas.
- * - Historial y resumen.
- * - Suscripción Supabase Realtime.
- *
- * Archivo HTML: admin/nomina-partido.html
- * Este archivo: js/nomina-partido.js
- */
+/* =========================================================
+   OLIMPIADAS JUAN SOLANO 2026
+   Gestión de nóminas, marcador y eventos de fútbol
+   ========================================================= */
 
 const $ = (id) => document.getElementById(id);
 
-const el = {
-  fechaDesde: $("fechaDesde"),
-  fechaHasta: $("fechaHasta"),
-  filtroGenero: $("filtroGenero"),
-  filtroPartido: $("filtroPartido"),
-  mensaje: $("mensaje"),
-  btnRecargar: $("btnRecargar"),
-  partidoNomina: $("partidoNomina"),
-  partidoGestion: $("partidoGestion"),
-  partidoResumen: $("partidoResumen"),
-  buscarJugador: $("buscarJugador"),
-  filtroEquipoNomina: $("filtroEquipoNomina"),
-  btnCargarJugadores: $("btnCargarJugadores"),
-  contadorNomina: $("contadorNomina"),
-  jugadoresNomina: $("jugadoresNomina"),
-  btnGuardarNomina: $("btnGuardarNomina"),
-  golesLocal: $("golesLocal"),
-  golesVisitante: $("golesVisitante"),
-  resultadoTexto: $("resultadoTexto"),
-  btnGuardarMarcador: $("btnGuardarMarcador"),
-  equipoEvento: $("equipoEvento"),
-  jugadorEvento: $("jugadorEvento"),
-  tipoEvento: $("tipoEvento"),
-  minutoEvento: $("minutoEvento"),
-  periodoEvento: $("periodoEvento"),
-  observacionEvento: $("observacionEvento"),
-  btnGuardarEvento: $("btnGuardarEvento"),
-  listaEventos: $("listaEventos"),
-  totalConvocados: $("totalConvocados"),
-  totalTitulares: $("totalTitulares"),
-  totalGoles: $("totalGoles"),
-  totalEventos: $("totalEventos"),
-  btnActualizarResumen: $("btnActualizarResumen"),
-  resumenEventos: $("resumenEventos"),
-  labelGolesLocal: $("labelGolesLocal"),
-  labelGolesVisitante: $("labelGolesVisitante")
+const estado = {
+  partidos: [],
+  partido: null,
+  fases: new Map(),
+  competencias: new Map(),
+  categorias: new Map(),
+  equipos: new Map(),
+  inscripciones: [],
+  jugadores: new Map(),
+  jugadoresLocal: [],
+  jugadoresVisitante: [],
+  inscripcionLocal: null,
+  inscripcionVisitante: null,
+  nominaLocal: new Map(),
+  nominaVisitante: new Map(),
+  eventos: [],
+  canal: null,
+  cargando: false
 };
 
-let partidos = [];
-let partidoActual = null;
-let jugadoresPartido = [];
-let nominaActual = [];
-let eventosActuales = [];
-let inscripcionesEquipo = new Map();
-let canalRealtime = null;
-let cargando = false;
-
-const EVENTOS_PERMITIDOS = [
-  "GOL",
-  "AMARILLA",
-  "ROJA_DIRECTA",
-  "ROJA_DOBLE_AMARILLA"
-];
+const MAX_CONVOCADOS = 22;
+const MAX_TITULARES = 11;
 
 function escapar(valor) {
-  return String(valor ?? "").replace(/[&<>"']/g, (c) => ({
+  return String(valor ?? "").replace(/[&<>"']/g, (caracter) => ({
     "&": "&amp;",
     "<": "&lt;",
     ">": "&gt;",
     '"': "&quot;",
     "'": "&#39;"
-  })[c]);
+  })[caracter]);
 }
 
 function mostrarMensaje(texto, tipo = "info") {
-  if (!el.mensaje) return;
-  el.mensaje.className = `mensaje ${tipo}`;
-  el.mensaje.textContent = texto || "";
+  const elemento = $("mensaje");
+  if (!elemento) return;
+
+  elemento.textContent = texto;
+  elemento.className = `mensaje ${tipo}`;
+
+  if (texto) {
+    elemento.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }
 }
 
-function bloquearBotones(bloquear) {
-  [
-    el.btnRecargar,
-    el.btnCargarJugadores,
-    el.btnGuardarNomina,
-    el.btnGuardarMarcador,
-    el.btnGuardarEvento,
-    el.btnActualizarResumen
-  ].forEach((b) => {
-    if (b) b.disabled = bloquear;
+function limpiarMensaje() {
+  const elemento = $("mensaje");
+  if (elemento) {
+    elemento.textContent = "";
+    elemento.className = "mensaje";
+  }
+}
+
+function nombreDeEquipo(equipo) {
+  if (!equipo) return "Equipo sin nombre";
+
+  return (
+    equipo.nombre_equipo ||
+    equipo.nombre ||
+    equipo.denominacion ||
+    equipo.nombre_completo ||
+    equipo.descripcion ||
+    `Equipo ${equipo.id}`
+  );
+}
+
+function nombreDeJugador(jugador) {
+  if (!jugador) return "Jugador sin nombre";
+
+  const nombreCompleto = [
+    jugador.nombres,
+    jugador.apellidos
+  ].filter(Boolean).join(" ").trim();
+
+  return (
+    nombreCompleto ||
+    jugador.nombre_completo ||
+    jugador.nombre ||
+    jugador.apellidos ||
+    `Jugador ${jugador.id}`
+  );
+}
+
+function fechaLegible(fecha) {
+  if (!fecha) return "Fecha pendiente";
+
+  const fechaSolo = String(fecha).slice(0, 10);
+  const partes = fechaSolo.split("-");
+
+  if (partes.length === 3) {
+    return `${partes[2]}/${partes[1]}/${partes[0]}`;
+  }
+
+  return fechaSolo;
+}
+
+function horaLegible(hora) {
+  if (!hora) return "";
+  return String(hora).slice(0, 5);
+}
+
+function obtenerError(error, contexto) {
+  console.error(contexto, error);
+  return error?.message || error?.details || contexto;
+}
+
+async function consultarTabla(tabla) {
+  const { data, error } = await supabase
+    .from(tabla)
+    .select("*");
+
+  if (error) throw error;
+  return data || [];
+}
+
+async function consultarPorIds(tabla, columna, ids) {
+  const valores = [...new Set(
+    (ids || [])
+      .filter((id) => id !== null && id !== undefined)
+      .map(String)
+  )];
+
+  if (!valores.length) return [];
+
+  const { data, error } = await supabase
+    .from(tabla)
+    .select("*")
+    .in(columna, valores);
+
+  if (error) throw error;
+  return data || [];
+}
+
+function obtenerFase(partido) {
+  return estado.fases.get(String(partido?.fase_id)) || null;
+}
+
+function obtenerCompetencia(partido) {
+  const fase = obtenerFase(partido);
+  return estado.competencias.get(String(fase?.competencia_id)) || null;
+}
+
+function obtenerCategoria(partido) {
+  const competencia = obtenerCompetencia(partido);
+  if (!competencia) return "Sin categoría";
+
+  const categoria = estado.categorias.get(
+    String(competencia.categoria_id)
+  );
+
+  return (
+    categoria?.nombre ||
+    categoria?.nombre_categoria ||
+    categoria?.descripcion ||
+    competencia.nombre ||
+    "Sin categoría"
+  );
+}
+
+function buscarEquipo(id) {
+  return estado.equipos.get(String(id)) || null;
+}
+
+function buscarInscripcionPorId(id) {
+  return estado.inscripciones.find(
+    (inscripcion) => String(inscripcion.id) === String(id)
+  ) || null;
+}
+
+/*
+ * Los campos equipo_local_id y equipo_visitante_id pueden referirse
+ * a equipo.id o, según cómo se generó el sorteo, a
+ * inscripcion_equipo.id. Se contemplan ambas posibilidades.
+ */
+function resolverEquipoYInscripcion(idPartido, partido) {
+  const competencia = obtenerCompetencia(partido);
+  const competenciaId = competencia?.id;
+
+  const inscripcionDirecta = buscarInscripcionPorId(idPartido);
+
+  if (
+    inscripcionDirecta &&
+    (
+      competenciaId == null ||
+      String(inscripcionDirecta.competencia_id) === String(competenciaId)
+    )
+  ) {
+    const equipoInscrito = buscarEquipo(inscripcionDirecta.equipo_id);
+
+    return {
+      equipo: equipoInscrito,
+      inscripcion: inscripcionDirecta
+    };
+  }
+
+  const equipo = buscarEquipo(idPartido);
+
+  let inscripcion = estado.inscripciones.find((item) => {
+    if (String(item.equipo_id) !== String(idPartido)) return false;
+
+    return (
+      competenciaId == null ||
+      String(item.competencia_id) === String(competenciaId)
+    );
   });
+
+  if (!inscripcion && equipo) {
+    inscripcion = estado.inscripciones.find((item) => {
+      if (String(item.equipo_id) !== String(equipo.id)) return false;
+
+      return (
+        competenciaId == null ||
+        String(item.competencia_id) === String(competenciaId)
+      );
+    });
+  }
+
+  return { equipo, inscripcion: inscripcion || null };
 }
 
-function nombreCompleto(j) {
-  return [j?.nombres, j?.apellidos]
-    .filter(Boolean)
-    .join(" ")
-    .trim() || "Jugador sin nombre";
+function obtenerJugadorDesdeInscripcion(inscripcionJugador) {
+  const id = inscripcionJugador?.jugador_id;
+  return estado.jugadores.get(String(id)) || null;
 }
 
-function nombreEquipoDeInscripcion(inscripcionId) {
-  const ins = inscripcionesEquipo.get(Number(inscripcionId));
-  return ins?.equipo?.nombre ||
-    ins?.nombre_equipo ||
-    `Equipo ${inscripcionId}`;
+function jugadorHabilitado(inscripcionJugador) {
+  const estadoJugador = String(inscripcionJugador?.estado || "")
+    .trim()
+    .toUpperCase();
+
+  return [
+    "HABILITADO",
+    "APROBADO",
+    "APROBADA",
+    "ACTIVO",
+    "CONFIRMADO"
+  ].includes(estadoJugador);
 }
 
-function nombreLocal(p = partidoActual) {
-  return p
-    ? nombreEquipoDeInscripcion(p.equipo_local_id)
-    : "Equipo local";
+function obtenerIdJugadorNomina(registro) {
+  return String(registro.inscripcion_jugador_id);
 }
 
-function nombreVisitante(p = partidoActual) {
-  return p
-    ? nombreEquipoDeInscripcion(p.equipo_visitante_id)
-    : "Equipo visitante";
-}
+function nombreEstadoPartido(estadoPartido) {
+  const valor = String(estadoPartido || "").toUpperCase();
 
-function textoEstado(estado) {
-  return ({
+  const nombres = {
     PROGRAMADO: "Programado",
-    EN_VIVO: "EN VIVO",
+    EN_VIVO: "En vivo",
     FINALIZADO: "Finalizado",
-    SUSPENDIDO: "Suspendido"
-  })[estado] || estado || "Sin estado";
+    SUSPENDIDO: "Suspendido",
+    APLAZADO: "Aplazado"
+  };
+
+  return nombres[valor] || estadoPartido || "Sin estado";
 }
 
-function fechaHoraPartido(p) {
-  const fecha = p?.fecha || "";
-  const hora = p?.hora ? String(p.hora).slice(0, 5) : "";
-  return [fecha, hora].filter(Boolean).join(" · ");
+function obtenerTextoPartido(partido) {
+  if (!partido) return "Seleccione un partido";
+
+  const local = resolverEquipoYInscripcion(
+    partido.equipo_local_id,
+    partido
+  );
+
+  const visitante = resolverEquipoYInscripcion(
+    partido.equipo_visitante_id,
+    partido
+  );
+
+  return [
+    `${nombreDeEquipo(local.equipo)} vs ${nombreDeEquipo(visitante.equipo)}`,
+    obtenerCategoria(partido),
+    fechaLegible(partido.fecha),
+    horaLegible(partido.hora)
+  ].filter(Boolean).join(" · ");
 }
 
-function htmlMarcador(p) {
-  if (!p) {
-    return `
-      <div class="nombre-equipo">Equipo local</div>
-      <div class="marcador">VS</div>
-      <div class="nombre-equipo">Equipo visitante</div>`;
+/* =========================================================
+   CARGA INICIAL
+   ========================================================= */
+
+async function cargarDatosBase() {
+  mostrarMensaje("⏳ Cargando partidos y equipos...", "info");
+
+  const [partidos, fases, competencias, equipos, inscripciones] =
+    await Promise.all([
+      consultarTabla("partido"),
+      consultarTabla("fase"),
+      consultarTabla("competencia"),
+      consultarTabla("equipo"),
+      consultarTabla("inscripcion_equipo")
+    ]);
+
+  estado.fases = new Map(
+    fases.map((fila) => [String(fila.id), fila])
+  );
+
+  estado.competencias = new Map(
+    competencias.map((fila) => [String(fila.id), fila])
+  );
+
+  estado.equipos = new Map(
+    equipos.map((fila) => [String(fila.id), fila])
+  );
+
+  estado.inscripciones = inscripciones;
+
+  estado.partidos = partidos.map((partido) => ({
+    ...partido,
+    categoriaTexto: obtenerCategoriaConDatos(partido),
+    texto: obtenerTextoConDatos(partido)
+  }));
+
+  /*
+   * La tabla categoria se consulta por separado para evitar
+   * depender de una relación automática de Supabase.
+   */
+  try {
+    const categorias = await consultarTabla("categoria");
+
+    estado.categorias = new Map(
+      categorias.map((fila) => [String(fila.id), fila])
+    );
+  } catch (error) {
+    console.warn(
+      "No se pudo consultar la tabla categoria. Se usarán los nombres de competencia.",
+      error
+    );
+    estado.categorias = new Map();
   }
 
-  return `
-    <div>
-      <div class="nombre-equipo">${escapar(nombreLocal(p))}</div>
-      <div class="fecha-partido">LOCAL</div>
-    </div>
+  estado.partidos = partidos.map((partido) => ({
+    ...partido,
+    categoriaTexto: obtenerCategoria(partido),
+    texto: obtenerTextoPartido(partido)
+  }));
 
-    <div>
-      <div class="marcador">
-        ${Number(p.goles_local || 0)} -
-        ${Number(p.goles_visitante || 0)}
-      </div>
-      <div class="fecha-partido">
-        ${escapar(textoEstado(p.estado))}
-        · ${escapar(fechaHoraPartido(p))}
-      </div>
-    </div>
-
-    <div>
-      <div class="nombre-equipo">${escapar(nombreVisitante(p))}</div>
-      <div class="fecha-partido">VISITANTE</div>
-    </div>`;
+  llenarFiltroCategorias();
+  llenarSelectorPartidos();
 }
 
-function pintarMarcadores() {
-  [
-    el.partidoNomina,
-    el.partidoGestion,
-    el.partidoResumen
-  ].forEach((n) => {
-    if (n) n.innerHTML = htmlMarcador(partidoActual);
+function obtenerCategoriaConDatos(partido) {
+  const fase = estado.fases.get(String(partido.fase_id));
+  const competencia = estado.competencias.get(
+    String(fase?.competencia_id)
+  );
+
+  return competencia?.nombre || "Sin categoría";
+}
+
+function obtenerTextoConDatos(partido) {
+  const local = resolverEquipoYInscripcion(
+    partido.equipo_local_id,
+    partido
+  );
+
+  const visitante = resolverEquipoYInscripcion(
+    partido.equipo_visitante_id,
+    partido
+  );
+
+  return `${nombreDeEquipo(local.equipo)} vs ${nombreDeEquipo(visitante.equipo)}`;
+}
+
+function llenarFiltroCategorias() {
+  const selector = $("filtroGenero");
+  if (!selector) return;
+
+  const seleccionAnterior = selector.value;
+
+  const categorias = [
+    ...new Set(
+      estado.partidos
+        .map((partido) => obtenerCategoria(partido))
+        .filter((nombre) => nombre && nombre !== "Sin categoría")
+    )
+  ].sort((a, b) => a.localeCompare(b, "es"));
+
+  selector.innerHTML =
+    '<option value="">Todas las categorías</option>' +
+    categorias.map((categoria) =>
+      `<option value="${escapar(categoria)}">${escapar(categoria)}</option>`
+    ).join("");
+
+  if (categorias.includes(seleccionAnterior)) {
+    selector.value = seleccionAnterior;
+  }
+}
+
+function partidoPasaFiltros(partido) {
+  const desde = $("fechaDesde")?.value || "";
+  const hasta = $("fechaHasta")?.value || "";
+  const categoriaSeleccionada = $("filtroGenero")?.value || "";
+
+  const fecha = String(partido.fecha || "").slice(0, 10);
+
+  if (desde && (!fecha || fecha < desde)) return false;
+  if (hasta && (!fecha || fecha > hasta)) return false;
+
+  if (
+    categoriaSeleccionada &&
+    obtenerCategoria(partido) !== categoriaSeleccionada
+  ) {
+    return false;
+  }
+
+  return true;
+}
+
+function llenarSelectorPartidos() {
+  const selector = $("filtroPartido");
+  if (!selector) return;
+
+  const seleccionAnterior = selector.value;
+
+  const partidosFiltrados = estado.partidos
+    .filter(partidoPasaFiltros)
+    .sort((a, b) => {
+      const fechaA = `${a.fecha || ""} ${a.hora || ""}`;
+      const fechaB = `${b.fecha || ""} ${b.hora || ""}`;
+      return fechaA.localeCompare(fechaB);
+    });
+
+  selector.innerHTML = "";
+
+  if (!partidosFiltrados.length) {
+    selector.innerHTML =
+      '<option value="">No hay partidos con esos filtros</option>';
+
+    estado.partido = null;
+    mostrarMensaje(
+      "No se encontraron partidos para las fechas y categoría seleccionadas.",
+      "info"
+    );
+    limpiarPaneles();
+    return;
+  }
+
+  selector.innerHTML = partidosFiltrados.map((partido) => {
+    const local = resolverEquipoYInscripcion(
+      partido.equipo_local_id,
+      partido
+    );
+
+    const visitante = resolverEquipoYInscripcion(
+      partido.equipo_visitante_id,
+      partido
+    );
+
+    const etiqueta = [
+      `${nombreDeEquipo(local.equipo)} vs ${nombreDeEquipo(visitante.equipo)}`,
+      obtenerCategoria(partido),
+      fechaLegible(partido.fecha),
+      horaLegible(partido.hora)
+    ].filter(Boolean).join(" · ");
+
+    return `<option value="${escapar(partido.id)}">${escapar(etiqueta)}</option>`;
+  }).join("");
+
+  const conservaSeleccion = partidosFiltrados.some(
+    (partido) => String(partido.id) === seleccionAnterior
+  );
+
+  selector.value = conservaSeleccion
+    ? seleccionAnterior
+    : String(partidosFiltrados[0].id);
+
+  const seleccionado = partidosFiltrados.find(
+    (partido) => String(partido.id) === selector.value
+  );
+
+  if (seleccionado) {
+    seleccionarPartido(seleccionado.id);
+  }
+}
+
+/* =========================================================
+   SELECCIÓN Y JUGADORES
+   ========================================================= */
+
+async function seleccionarPartido(id) {
+  const partido = estado.partidos.find(
+    (fila) => String(fila.id) === String(id)
+  );
+
+  if (!partido) {
+    estado.partido = null;
+    limpiarPaneles();
+    return;
+  }
+
+  estado.partido = partido;
+  estado.inscripcionLocal = null;
+  estado.inscripcionVisitante = null;
+  estado.jugadoresLocal = [];
+  estado.jugadoresVisitante = [];
+  estado.nominaLocal.clear();
+  estado.nominaVisitante.clear();
+
+  mostrarMensaje("⏳ Cargando nóminas del partido...", "info");
+
+  try {
+    const local = resolverEquipoYInscripcion(
+      partido.equipo_local_id,
+      partido
+    );
+
+    const visitante = resolverEquipoYInscripcion(
+      partido.equipo_visitante_id,
+      partido
+    );
+
+    estado.inscripcionLocal = local.inscripcion;
+    estado.inscripcionVisitante = visitante.inscripcion;
+
+    actualizarEncabezados(local.equipo, visitante.equipo);
+    mostrarDatosPartido();
+
+    if (!local.inscripcion || !visitante.inscripcion) {
+      const faltan = [];
+
+      if (!local.inscripcion) {
+        faltan.push(`local: ${nombreDeEquipo(local.equipo)}`);
+      }
+
+      if (!visitante.inscripcion) {
+        faltan.push(`visitante: ${nombreDeEquipo(visitante.equipo)}`);
+      }
+
+      await cargarMarcador();
+      await cargarEventos();
+      actualizarEstadisticas();
+
+      mostrarMensaje(
+        "No se encontró la inscripción de " + faltan.join(" y ") +
+        " para la competencia de este partido. Verifique que los equipos " +
+        "estén inscritos en la misma competencia que la fase del partido.",
+        "error"
+      );
+
+      pintarJugadores("local");
+      pintarJugadores("visitante");
+      return;
+    }
+
+    const [jugadores, nominas] = await Promise.all([
+      cargarJugadoresDeInscripciones([
+        estado.inscripcionLocal.id,
+        estado.inscripcionVisitante.id
+      ]),
+      consultarPorIds("nomina_partido", "partido_id", [partido.id])
+    ]);
+
+    const inscripcionIds = new Set([
+      String(estado.inscripcionLocal.id),
+      String(estado.inscripcionVisitante.id)
+    ]);
+
+    const jugadoresPartido = jugadores.filter((fila) =>
+      inscripcionIds.has(String(fila.inscripcion_equipo_id))
+    );
+
+    estado.jugadoresLocal = jugadoresPartido.filter(
+      (fila) =>
+        String(fila.inscripcion_equipo_id) ===
+        String(estado.inscripcionLocal.id)
+    );
+
+    estado.jugadoresVisitante = jugadoresPartido.filter(
+      (fila) =>
+        String(fila.inscripcion_equipo_id) ===
+        String(estado.inscripcionVisitante.id)
+    );
+
+    estado.nominaLocal.clear();
+    estado.nominaVisitante.clear();
+
+    for (const registro of nominas) {
+      const idJugador = String(registro.inscripcion_jugador_id);
+
+      const localEs = estado.jugadoresLocal.some(
+        (jugador) => String(jugador.id) === idJugador
+      );
+
+      const visitanteEs = estado.jugadoresVisitante.some(
+        (jugador) => String(jugador.id) === idJugador
+      );
+
+      const datos = {
+        convocado: true,
+        titular: Boolean(registro.titular)
+      };
+
+      if (localEs) estado.nominaLocal.set(idJugador, datos);
+      if (visitanteEs) estado.nominaVisitante.set(idJugador, datos);
+    }
+
+    pintarJugadores("local");
+    pintarJugadores("visitante");
+
+    await cargarMarcador();
+    await cargarEventos();
+    actualizarEstadisticas();
+
+    if (!estado.jugadoresLocal.length || !estado.jugadoresVisitante.length) {
+      mostrarMensaje(
+        "Partido cargado. Una o ambas inscripciones no tienen jugadores registrados. Revise inscripcion_jugador.inscripcion_equipo_id y el estado HABILITADO.",
+        "info"
+      );
+    } else {
+      mostrarMensaje("✅ Partido y nóminas cargados correctamente.", "ok");
+    }
+  } catch (error) {
+    mostrarMensaje(
+      "Error al cargar el partido: " + obtenerError(error, "seleccionarPartido"),
+      "error"
+    );
+  }
+}
+
+async function cargarJugadoresDeInscripciones(ids) {
+  const inscripcionIds = [...new Set(ids.map(String))];
+
+  if (!inscripcionIds.length) return [];
+
+  const [inscripcionesJugadores, jugadores] = await Promise.all([
+    consultarPorIds(
+      "inscripcion_jugador",
+      "inscripcion_equipo_id",
+      inscripcionIds
+    ),
+    consultarTabla("jugador")
+  ]);
+
+  estado.jugadores = new Map(
+    jugadores.map((fila) => [String(fila.id), fila])
+  );
+
+  return inscripcionesJugadores
+    .filter(jugadorHabilitado)
+    .map((fila) => ({
+      ...fila,
+      jugador: obtenerJugadorDesdeInscripcion(fila)
+    }))
+    .sort((a, b) => {
+      const numeroA = Number(a.numero || 999);
+      const numeroB = Number(b.numero || 999);
+
+      if (numeroA !== numeroB) return numeroA - numeroB;
+
+      return nombreDeJugador(a.jugador).localeCompare(
+        nombreDeJugador(b.jugador),
+        "es"
+      );
+    });
+}
+
+function actualizarEncabezados(local, visitante) {
+  if ($("nombreEquipoLocal")) {
+    $("nombreEquipoLocal").textContent = nombreDeEquipo(local);
+  }
+
+  if ($("nombreEquipoVisitante")) {
+    $("nombreEquipoVisitante").textContent = nombreDeEquipo(visitante);
+  }
+
+  if ($("labelGolesLocal")) {
+    $("labelGolesLocal").textContent = nombreDeEquipo(local);
+  }
+
+  if ($("labelGolesVisitante")) {
+    $("labelGolesVisitante").textContent = nombreDeEquipo(visitante);
+  }
+}
+
+function mostrarDatosPartido() {
+  const partido = estado.partido;
+  if (!partido) return;
+
+  const local = resolverEquipoYInscripcion(
+    partido.equipo_local_id,
+    partido
+  );
+
+  const visitante = resolverEquipoYInscripcion(
+    partido.equipo_visitante_id,
+    partido
+  );
+
+  const contenido = `
+    <strong>⚽ ${escapar(nombreDeEquipo(local.equipo))}</strong>
+    <span> vs </span>
+    <strong>${escapar(nombreDeEquipo(visitante.equipo))}</strong>
+    <br>
+    <span>🏷️ ${escapar(obtenerCategoria(partido))}</span>
+    <span> · 📅 ${escapar(fechaLegible(partido.fecha))}</span>
+    <span> · ⏰ ${escapar(horaLegible(partido.hora) || "Hora pendiente")}</span>
+    <br>
+    <span>📌 ${escapar(nombreEstadoPartido(partido.estado))}</span>
+    <span> · ID del partido: ${escapar(partido.id)}</span>
+  `;
+
+  if ($("partidoNomina")) $("partidoNomina").innerHTML = contenido;
+  if ($("partidoGestion")) $("partidoGestion").innerHTML = contenido;
+  if ($("partidoResumen")) $("partidoResumen").innerHTML = contenido;
+}
+
+function limpiarPaneles() {
+  for (const id of [
+    "jugadoresNomina",
+    "jugadoresVisitante",
+    "listaEventos",
+    "resumenEventos"
+  ]) {
+    if ($(id)) {
+      $(id).innerHTML = '<div class="vacio">Seleccione un partido.</div>';
+    }
+  }
+
+  if ($("partidoNomina")) $("partidoNomina").textContent = "Seleccione un partido.";
+  if ($("partidoGestion")) $("partidoGestion").textContent = "Seleccione un partido.";
+  if ($("partidoResumen")) $("partidoResumen").textContent = "Seleccione un partido.";
+
+  actualizarEstadisticas();
+}
+
+/* =========================================================
+   PINTAR Y FILTRAR JUGADORES
+   ========================================================= */
+
+function pintarJugadores(lado) {
+  const esLocal = lado === "local";
+  const jugadores = esLocal
+    ? estado.jugadoresLocal
+    : estado.jugadoresVisitante;
+
+  const nomina = esLocal
+    ? estado.nominaLocal
+    : estado.nominaVisitante;
+
+  const contenedor = $(esLocal ? "jugadoresNomina" : "jugadoresVisitante");
+  const contador = $(esLocal ? "contadorNomina" : "contadorVisitante");
+
+  if (!contenedor) return;
+
+  const busqueda = (
+    $(esLocal ? "buscarJugador" : "buscarJugadorVisitante")?.value || ""
+  ).toLocaleLowerCase("es").trim();
+
+  const filtro = $(
+    esLocal ? "filtroEquipoNomina" : "filtroEquipoVisitante"
+  )?.value || "todos";
+
+  const filtrados = jugadores.filter((fila) => {
+    const registro = nomina.get(String(fila.id)) || {
+      convocado: false,
+      titular: false
+    };
+
+    const nombre = nombreDeJugador(fila.jugador).toLocaleLowerCase("es");
+    const numero = String(fila.numero || "");
+
+    if (busqueda && !nombre.includes(busqueda) && !numero.includes(busqueda)) {
+      return false;
+    }
+
+    if (filtro === "titulares" && !(registro.convocado && registro.titular)) {
+      return false;
+    }
+
+    if (filtro === "suplentes" && !(registro.convocado && !registro.titular)) {
+      return false;
+    }
+
+    return true;
   });
 
-  if (el.labelGolesLocal) {
-    el.labelGolesLocal.textContent =
-      `Goles de ${nombreLocal()}`;
+  if (contador) {
+    const convocados = jugadores.filter((fila) =>
+      nomina.get(String(fila.id))?.convocado
+    ).length;
+
+    contador.textContent =
+      `${convocados} convocados · ${jugadores.length} habilitados`;
   }
 
-  if (el.labelGolesVisitante) {
-    el.labelGolesVisitante.textContent =
-      `Goles de ${nombreVisitante()}`;
+  if (!filtrados.length) {
+    contenedor.innerHTML = `
+      <div class="vacio">
+        ${jugadores.length
+          ? "No hay jugadores que coincidan con la búsqueda."
+          : "No se encontraron jugadores habilitados para esta inscripción."}
+      </div>
+    `;
+    return;
   }
 
-  if (el.golesLocal && partidoActual) {
-    el.golesLocal.value = Number(partidoActual.goles_local || 0);
+  contenedor.innerHTML = filtrados.map((fila) => {
+    const id = String(fila.id);
+    const registro = nomina.get(id) || {
+      convocado: false,
+      titular: false
+    };
+
+    const nombre = nombreDeJugador(fila.jugador);
+    const numero = fila.numero ?? "—";
+    const posicion = fila.posicion || "Sin posición";
+
+    return `
+      <article class="jugador">
+        <div class="jugador-principal">
+          <input
+            type="checkbox"
+            class="check-convocado"
+            data-lado="${lado}"
+            data-id="${escapar(id)}"
+            aria-label="Convocar a ${escapar(nombre)}"
+            ${registro.convocado ? "checked" : ""}
+          >
+
+          <div class="jugador-nombre">
+            ${escapar(nombre)}
+            <div class="jugador-detalle">
+              Camiseta: ${escapar(numero)} · ${escapar(posicion)}
+            </div>
+          </div>
+
+          <span class="estado-jugador">HABILITADO</span>
+        </div>
+
+        <label class="jugador-titular">
+          <input
+            type="checkbox"
+            class="check-titular"
+            data-lado="${lado}"
+            data-id="${escapar(id)}"
+            ${registro.titular ? "checked" : ""}
+            ${registro.convocado ? "" : "disabled"}
+          >
+          ⭐ Titular
+          <span style="margin-left:auto;color:#718078">
+            ${registro.titular ? "Inicialista" : "Suplente"}
+          </span>
+        </label>
+      </article>
+    `;
+  }).join("");
+
+  contenedor.querySelectorAll(".check-convocado").forEach((check) => {
+    check.addEventListener("change", manejarCambioJugador);
+  });
+
+  contenedor.querySelectorAll(".check-titular").forEach((check) => {
+    check.addEventListener("change", manejarCambioJugador);
+  });
+}
+
+function manejarCambioJugador(evento) {
+  const check = evento.currentTarget;
+  const lado = check.dataset.lado;
+  const id = String(check.dataset.id);
+
+  const nomina = lado === "local"
+    ? estado.nominaLocal
+    : estado.nominaVisitante;
+
+  const registro = nomina.get(id) || {
+    convocado: false,
+    titular: false
+  };
+
+  if (check.classList.contains("check-convocado")) {
+    if (check.checked) {
+      const total = [...nomina.values()].filter(
+        (item) => item.convocado
+      ).length;
+
+      if (total >= MAX_CONVOCADOS) {
+        check.checked = false;
+        mostrarMensaje(
+          `Cada equipo puede tener hasta ${MAX_CONVOCADOS} convocados.`,
+          "error"
+        );
+        return;
+      }
+
+      registro.convocado = true;
+    } else {
+      registro.convocado = false;
+      registro.titular = false;
+    }
+  } else if (check.classList.contains("check-titular")) {
+    if (check.checked) {
+      if (!registro.convocado) {
+        mostrarMensaje("Primero debe convocar al jugador.", "error");
+        check.checked = false;
+        return;
+      }
+
+      const titulares = [...nomina.values()].filter(
+        (item) => item.convocado && item.titular
+      ).length;
+
+      if (titulares >= MAX_TITULARES) {
+        check.checked = false;
+        mostrarMensaje(
+          `Cada equipo puede tener como máximo ${MAX_TITULARES} titulares.`,
+          "error"
+        );
+        return;
+      }
+
+      registro.titular = true;
+    } else {
+      registro.titular = false;
+    }
   }
 
-  if (el.golesVisitante && partidoActual) {
-    el.golesVisitante.value =
-      Number(partidoActual.goles_visitante || 0);
+  nomina.set(id, registro);
+  pintarJugadores(lado);
+  actualizarEstadisticas();
+}
+
+/* =========================================================
+   GUARDAR NÓMINAS
+   ========================================================= */
+
+async function guardarNominaLado(lado) {
+  if (!estado.partido) {
+    mostrarMensaje("Seleccione un partido antes de guardar.", "error");
+    return;
+  }
+
+  const esLocal = lado === "local";
+  const jugadores = esLocal
+    ? estado.jugadoresLocal
+    : estado.jugadoresVisitante;
+
+  const inscripcion = esLocal
+    ? estado.inscripcionLocal
+    : estado.inscripcionVisitante;
+
+  const nomina = esLocal
+    ? estado.nominaLocal
+    : estado.nominaVisitante;
+
+  if (!inscripcion) {
+    mostrarMensaje(
+      `No se encontró la inscripción del equipo ${lado}.`,
+      "error"
+    );
+    return;
+  }
+
+  const convocados = jugadores.filter(
+    (fila) => nomina.get(String(fila.id))?.convocado
+  );
+
+  const titulares = convocados.filter(
+    (fila) => nomina.get(String(fila.id))?.titular
+  );
+
+  if (convocados.length > MAX_CONVOCADOS) {
+    mostrarMensaje(
+      `La nómina no puede superar ${MAX_CONVOCADOS} convocados.`,
+      "error"
+    );
+    return;
+  }
+
+  if (titulares.length > MAX_TITULARES) {
+    mostrarMensaje(
+      `La nómina no puede superar ${MAX_TITULARES} titulares.`,
+      "error"
+    );
+    return;
+  }
+
+  const boton = $(esLocal ? "btnGuardarNomina" : "btnGuardarNominaVisitante");
+
+  if (boton) boton.disabled = true;
+
+  try {
+    /*
+     * Se eliminan únicamente los registros correspondientes a los
+     * jugadores de la inscripción del lado seleccionado. La nómina
+     * del otro equipo no se modifica.
+     */
+    const idsJugadores = jugadores.map((fila) => String(fila.id));
+
+    if (idsJugadores.length) {
+      const { error: errorEliminar } = await supabase
+        .from("nomina_partido")
+        .delete()
+        .eq("partido_id", estado.partido.id)
+        .in("inscripcion_jugador_id", idsJugadores);
+
+      if (errorEliminar) throw errorEliminar;
+    }
+
+    if (convocados.length) {
+      const filas = convocados.map((fila) => ({
+        partido_id: estado.partido.id,
+        inscripcion_jugador_id: fila.id,
+        titular: Boolean(nomina.get(String(fila.id))?.titular)
+      }));
+
+      const { error: errorInsertar } = await supabase
+        .from("nomina_partido")
+        .insert(filas);
+
+      if (errorInsertar) throw errorInsertar;
+    }
+
+    mostrarMensaje(
+      `✅ Nómina ${lado} guardada. Convocados: ${convocados.length}; titulares: ${titulares.length}.`,
+      "ok"
+    );
+
+    actualizarEstadisticas();
+    await cargarEventos();
+  } catch (error) {
+    mostrarMensaje(
+      "No se pudo guardar la nómina: " +
+      obtenerError(error, "guardarNominaLado"),
+      "error"
+    );
+  } finally {
+    if (boton) boton.disabled = false;
+  }
+}
+
+/* =========================================================
+   MARCADOR
+   ========================================================= */
+
+async function cargarMarcador() {
+  const partido = estado.partido;
+  if (!partido) return;
+
+  if ($("golesLocal")) {
+    $("golesLocal").value = partido.goles_local ?? 0;
+  }
+
+  if ($("golesVisitante")) {
+    $("golesVisitante").value = partido.goles_visitante ?? 0;
   }
 
   actualizarTextoResultado();
 }
 
 function actualizarTextoResultado() {
-  if (!el.resultadoTexto) return;
+  const local = Number($("golesLocal")?.value || 0);
+  const visitante = Number($("golesVisitante")?.value || 0);
 
-  if (!partidoActual) {
-    el.resultadoTexto.textContent =
-      "Seleccione un partido para consultar el resultado.";
-    return;
+  let texto = "Empate";
+
+  if (local > visitante) texto = "Ventaja del equipo local";
+  if (visitante > local) texto = "Ventaja del equipo visitante";
+
+  if ($("resultadoTexto")) {
+    $("resultadoTexto").textContent = `${texto} · ${local} - ${visitante}`;
   }
-
-  const a = Number(
-    el.golesLocal?.value ?? partidoActual.goles_local ?? 0
-  );
-
-  const b = Number(
-    el.golesVisitante?.value ??
-    partidoActual.goles_visitante ??
-    0
-  );
-
-  const resultado = a === b
-    ? "Empate"
-    : a > b
-      ? `Ventaja de ${nombreLocal()}`
-      : `Ventaja de ${nombreVisitante()}`;
-
-  el.resultadoTexto.textContent =
-    `${nombreLocal()} ${a} - ${b} ${nombreVisitante()} · ${resultado}`;
-}
-
-function partidoEsFutbol(p) {
-  const nombre = String(
-    p?.competencia?.disciplina?.nombre ||
-    p?.disciplina_nombre ||
-    ""
-  ).toLowerCase();
-
-  return nombre.includes("fútbol") ||
-    nombre.includes("futbol") ||
-    nombre.includes("football");
-}
-
-async function cargarPartidos() {
-  mostrarMensaje("Cargando partidos de fútbol…", "info");
-
-  const { data: partidosBase, error: errorPartidos } =
-    await supabase
-      .from("partido")
-      .select(`
-        id,
-        fase_id,
-        equipo_local_id,
-        equipo_visitante_id,
-        fecha,
-        hora,
-        cancha,
-        estado,
-        tipo_resultado,
-        tiempo_extra_jugado,
-        iniciado_en,
-        finalizado_en,
-        observacion,
-        goles_local,
-        goles_visitante,
-        fase(
-          competencia_id,
-          nombre,
-          tipo,
-          orden
-        )
-      `)
-      .order("fecha", {
-        ascending: true,
-        nullsFirst: false
-      })
-      .order("hora", {
-        ascending: true,
-        nullsFirst: false
-      });
-
-  if (errorPartidos) throw errorPartidos;
-
-  const idsCompetencia = [
-    ...new Set(
-      (partidosBase || [])
-        .map(p => p.fase?.competencia_id)
-        .filter(Boolean)
-        .map(Number)
-    )
-  ];
-
-  let competencias = [];
-
-  if (idsCompetencia.length) {
-    const { data, error } = await supabase
-      .from("competencia")
-      .select(`
-        id,
-        nombre,
-        estado,
-        disciplina_id,
-        categoria_id,
-        genero_id,
-        disciplina(id,nombre),
-        categoria(id,nombre),
-        genero(id,nombre)
-      `)
-      .in("id", idsCompetencia);
-
-    if (error) throw error;
-    competencias = data || [];
-  }
-
-  const compMap = new Map(
-    competencias.map(c => [Number(c.id), c])
-  );
-
-  let todos = (partidosBase || []).map(p => ({
-    ...p,
-    competencia:
-      compMap.get(Number(p.fase?.competencia_id)) || null
-  }));
-
-  todos = todos.filter(partidoEsFutbol);
-
-  const idsInscripcion = [
-    ...new Set(
-      todos.flatMap(p => [
-        p.equipo_local_id,
-        p.equipo_visitante_id
-      ])
-      .filter(Boolean)
-      .map(Number)
-    )
-  ];
-
-  inscripcionesEquipo = new Map();
-
-  if (idsInscripcion.length) {
-    const { data: inscripciones, error } = await supabase
-      .from("inscripcion_equipo")
-      .select(`
-        id,
-        equipo_id,
-        competencia_id,
-        estado,
-        equipo(id,nombre,logo)
-      `)
-      .in("id", idsInscripcion);
-
-    if (error) throw error;
-
-    (inscripciones || []).forEach(i => {
-      inscripcionesEquipo.set(Number(i.id), i);
-    });
-  }
-
-  partidos = todos;
-  llenarFiltroGenero();
-  await aplicarFiltrosPartidos(true);
-
-  mostrarMensaje(
-    `Se cargaron ${partidos.length} partidos de fútbol.`,
-    "ok"
-  );
-}
-
-function llenarFiltroGenero() {
-  if (!el.filtroGenero) return;
-
-  const seleccionado = el.filtroGenero.value;
-  const generos = new Map();
-
-  partidos.forEach(p => {
-    const g = p.competencia?.genero;
-    if (g?.id != null) {
-      generos.set(String(g.id), g.nombre);
-    }
-  });
-
-  el.filtroGenero.innerHTML =
-    `<option value="">Todos los géneros</option>` +
-    [...generos.entries()].map(([id, nombre]) =>
-      `<option value="${escapar(id)}">${escapar(nombre)}</option>`
-    ).join("");
-
-  if ([...generos.keys()].includes(seleccionado)) {
-    el.filtroGenero.value = seleccionado;
-  }
-}
-
-async function aplicarFiltrosPartidos(seleccionarPrimero = true) {
-  const desde = el.fechaDesde?.value || "";
-  const hasta = el.fechaHasta?.value || "";
-  const genero = el.filtroGenero?.value || "";
-
-  const filtrados = partidos.filter(p => {
-    if (desde && p.fecha && p.fecha < desde) return false;
-    if (hasta && p.fecha && p.fecha > hasta) return false;
-
-    if (
-      genero &&
-      String(p.competencia?.genero?.id || "") !== genero
-    ) return false;
-
-    return true;
-  });
-
-  const previo = el.filtroPartido?.value;
-
-  if (el.filtroPartido) {
-    el.filtroPartido.innerHTML =
-      `<option value="">Seleccione un partido</option>` +
-      filtrados.map(p => {
-        const label =
-          `#${p.id} · ${nombreLocal(p)} ` +
-          `${p.goles_local}-${p.goles_visitante} ` +
-          `${nombreVisitante(p)} · ` +
-          `${p.competencia?.nombre || "Fútbol"} · ` +
-          `${fechaHoraPartido(p)} · ${textoEstado(p.estado)}`;
-
-        return `<option value="${p.id}">${escapar(label)}</option>`;
-      }).join("");
-
-    if (filtrados.some(p => String(p.id) === previo)) {
-      el.filtroPartido.value = previo;
-    } else if (seleccionarPrimero && filtrados.length) {
-      el.filtroPartido.value = String(filtrados[0].id);
-    }
-  }
-
-  const id = el.filtroPartido?.value;
-
-  if (id) {
-    await seleccionarPartido(Number(id));
-  } else if (!filtrados.length) {
-    limpiarPartido("No hay partidos de fútbol con esos filtros.");
-  } else {
-    limpiarPartido("Seleccione un partido.");
-  }
-}
-
-function limpiarPartido(texto) {
-  partidoActual = null;
-  jugadoresPartido = [];
-  nominaActual = [];
-  eventosActuales = [];
-
-  pintarMarcadores();
-
-  if (el.jugadoresNomina) {
-    el.jugadoresNomina.innerHTML =
-      `<div class="vacio">${escapar(texto)}</div>`;
-  }
-
-  if (el.listaEventos) {
-    el.listaEventos.innerHTML =
-      `<div class="vacio">${escapar(texto)}</div>`;
-  }
-
-  if (el.resumenEventos) {
-    el.resumenEventos.innerHTML =
-      `<div class="vacio">${escapar(texto)}</div>`;
-  }
-
-  if (el.jugadorEvento) {
-    el.jugadorEvento.innerHTML =
-      `<option value="">Seleccione un partido</option>`;
-  }
-
-  if (el.contadorNomina) {
-    el.contadorNomina.textContent =
-      "Ningún jugador seleccionado.";
-  }
-
-  actualizarEstadisticas();
-  detenerRealtime();
-}
-
-async function seleccionarPartido(id) {
-  partidoActual =
-    partidos.find(p => Number(p.id) === Number(id)) || null;
-
-  if (!partidoActual) {
-    limpiarPartido("No se encontró el partido seleccionado.");
-    return;
-  }
-
-  pintarMarcadores();
-  await cargarNomina();
-  await cargarEventos();
-  activarRealtime();
-  actualizarResumen();
-}
-
-async function cargarNomina() {
-  if (!partidoActual) return;
-
-  const { data: nomina, error: errorNomina } = await supabase
-    .from("nomina_partido")
-    .select("id,partido_id,inscripcion_jugador_id,titular")
-    .eq("partido_id", partidoActual.id);
-
-  if (errorNomina) throw errorNomina;
-  nominaActual = nomina || [];
-
-  const idsInscripcionesEquipo = [
-    Number(partidoActual.equipo_local_id),
-    Number(partidoActual.equipo_visitante_id)
-  ];
-
-  const { data: jugadores, error: errorJugadores } =
-    await supabase
-      .from("inscripcion_jugador")
-      .select(`
-        id,
-        inscripcion_equipo_id,
-        jugador_id,
-        numero,
-        posicion,
-        estado,
-        jugador(id,nombres,apellidos,activo)
-      `)
-      .in("inscripcion_equipo_id", idsInscripcionesEquipo)
-      .eq("estado", "HABILITADO");
-
-  if (errorJugadores) throw errorJugadores;
-
-  jugadoresPartido = (jugadores || []).map(j => {
-    const n = nominaActual.find(
-      x => Number(x.inscripcion_jugador_id) === Number(j.id)
-    );
-
-    return {
-      ...j,
-      convocado: Boolean(n),
-      nomina_id: n?.id || null,
-      titular: Boolean(n?.titular)
-    };
-  });
-
-  pintarJugadores();
-  llenarSelectorJugadorEvento();
-  actualizarEstadisticas();
-}
-
-function pintarJugadores() {
-  if (!el.jugadoresNomina) return;
-
-  if (!partidoActual) {
-    el.jugadoresNomina.innerHTML =
-      `<div class="vacio">Seleccione un partido.</div>`;
-    return;
-  }
-
-  const busqueda =
-    (el.buscarJugador?.value || "").trim().toLowerCase();
-
-  const filtroEquipo = el.filtroEquipoNomina?.value || "";
-
-  const lista = jugadoresPartido.filter(j => {
-    const esLocal =
-      Number(j.inscripcion_equipo_id) ===
-      Number(partidoActual.equipo_local_id);
-
-    if (filtroEquipo === "local" && !esLocal) return false;
-    if (filtroEquipo === "visitante" && esLocal) return false;
-
-    const texto =
-      `${nombreCompleto(j.jugador)} ${j.posicion || ""} ${j.numero || ""}`
-      .toLowerCase();
-
-    return !busqueda || texto.includes(busqueda);
-  });
-
-  if (!lista.length) {
-    el.jugadoresNomina.innerHTML =
-      `<div class="vacio">No hay jugadores habilitados que coincidan con el filtro.</div>`;
-    actualizarContadorNomina();
-    return;
-  }
-
-  el.jugadoresNomina.innerHTML = lista.map(j => {
-    const equipo =
-      Number(j.inscripcion_equipo_id) ===
-      Number(partidoActual.equipo_local_id)
-        ? nombreLocal()
-        : nombreVisitante();
-
-    return `
-      <article class="jugador">
-        <input
-          type="checkbox"
-          class="chk-convocado"
-          data-id="${j.id}"
-          ${j.convocado ? "checked" : ""}
-          aria-label="Convocar a ${escapar(nombreCompleto(j.jugador))}">
-
-        <div class="jugador-info">
-          <div class="jugador-nombre">
-            ${escapar(nombreCompleto(j.jugador))}
-          </div>
-
-          <div class="jugador-detalle">
-            ${escapar(equipo)} · Camiseta ${escapar(j.numero ?? "—")}
-            · ${escapar(j.posicion || "Sin posición")}
-          </div>
-
-          <span class="estado">
-            ${j.convocado
-              ? (j.titular ? "TITULAR" : "SUPLENTE")
-              : "NO CONVOCADO"}
-          </span>
-
-          <select
-            class="selector-titular"
-            data-titular-id="${j.id}"
-            ${j.convocado ? "" : "disabled"}>
-            <option value="false" ${!j.titular ? "selected" : ""}>
-              Suplente
-            </option>
-            <option value="true" ${j.titular ? "selected" : ""}>
-              Titular
-            </option>
-          </select>
-        </div>
-      </article>`;
-  }).join("");
-
-  el.jugadoresNomina
-    .querySelectorAll(".chk-convocado")
-    .forEach(chk => {
-      chk.addEventListener("change", () => {
-        const j = jugadoresPartido.find(
-          x => Number(x.id) === Number(chk.dataset.id)
-        );
-
-        if (!j) return;
-
-        j.convocado = chk.checked;
-        if (!j.convocado) j.titular = false;
-
-        pintarJugadores();
-        llenarSelectorJugadorEvento();
-        actualizarEstadisticas();
-      });
-    });
-
-  el.jugadoresNomina
-    .querySelectorAll("[data-titular-id]")
-    .forEach(sel => {
-      sel.addEventListener("change", () => {
-        const j = jugadoresPartido.find(
-          x => Number(x.id) === Number(sel.dataset.titularId)
-        );
-
-        if (j) j.titular = sel.value === "true";
-
-        pintarJugadores();
-        actualizarEstadisticas();
-      });
-    });
-
-  actualizarContadorNomina();
-}
-
-function actualizarContadorNomina() {
-  if (!el.contadorNomina) return;
-
-  const convocados = jugadoresPartido.filter(j => j.convocado);
-  const titulares = convocados.filter(j => j.titular);
-
-  el.contadorNomina.textContent =
-    `${convocados.length} convocados · ${titulares.length} titulares · ` +
-    `${convocados.length - titulares.length} suplentes`;
-}
-
-function llenarSelectorJugadorEvento() {
-  if (!el.jugadorEvento) return;
-
-  const lado = el.equipoEvento?.value || "local";
-
-  const inscripcionId = lado === "local"
-    ? Number(partidoActual?.equipo_local_id)
-    : Number(partidoActual?.equipo_visitante_id);
-
-  const convocados = jugadoresPartido.filter(j =>
-    j.convocado &&
-    Number(j.inscripcion_equipo_id) === inscripcionId
-  );
-
-  el.jugadorEvento.innerHTML =
-    `<option value="">Seleccione jugador</option>` +
-    convocados.map(j =>
-      `<option value="${j.id}">` +
-      `${escapar(j.numero ? `#${j.numero} ` : "")}` +
-      `${escapar(nombreCompleto(j.jugador))}` +
-      `</option>`
-    ).join("");
-}
-
-async function guardarNomina() {
-  if (!partidoActual) {
-    throw new Error("Seleccione un partido.");
-  }
-
-  const seleccionados = jugadoresPartido.filter(j => j.convocado);
-
-  if (!seleccionados.length) {
-    throw new Error("Seleccione al menos un jugador para la nómina.");
-  }
-
-  const titulares = seleccionados.filter(j => j.titular);
-
-  if (titulares.length > 22) {
-    throw new Error("No puede registrar más de 22 titulares en total.");
-  }
-
-  const idsLocales = seleccionados.filter(j =>
-    Number(j.inscripcion_equipo_id) ===
-    Number(partidoActual.equipo_local_id)
-  );
-
-  const idsVisitantes = seleccionados.filter(j =>
-    Number(j.inscripcion_equipo_id) ===
-    Number(partidoActual.equipo_visitante_id)
-  );
-
-  if (
-    idsLocales.filter(j => j.titular).length > 11 ||
-    idsVisitantes.filter(j => j.titular).length > 11
-  ) {
-    throw new Error("Cada equipo puede tener como máximo 11 titulares.");
-  }
-
-  const actuales = new Map(
-    nominaActual.map(n => [Number(n.inscripcion_jugador_id), n])
-  );
-
-  const seleccionadosIds = new Set(
-    seleccionados.map(j => Number(j.id))
-  );
-
-  const quitar = nominaActual
-    .filter(n => !seleccionadosIds.has(Number(n.inscripcion_jugador_id)))
-    .map(n => n.id);
-
-  if (quitar.length) {
-    const { error } = await supabase
-      .from("nomina_partido")
-      .delete()
-      .in("id", quitar);
-
-    if (error) throw error;
-  }
-
-  const insertar = [];
-
-  for (const j of seleccionados) {
-    const existente = actuales.get(Number(j.id));
-
-    if (existente) {
-      if (Boolean(existente.titular) !== Boolean(j.titular)) {
-        const { error } = await supabase
-          .from("nomina_partido")
-          .update({ titular: Boolean(j.titular) })
-          .eq("id", existente.id);
-
-        if (error) throw error;
-      }
-    } else {
-      insertar.push({
-        partido_id: Number(partidoActual.id),
-        inscripcion_jugador_id: Number(j.id),
-        titular: Boolean(j.titular)
-      });
-    }
-  }
-
-  if (insertar.length) {
-    const { error } = await supabase
-      .from("nomina_partido")
-      .insert(insertar);
-
-    if (error) throw error;
-  }
-
-  await cargarNomina();
-  mostrarMensaje("Nómina guardada correctamente.", "ok");
 }
 
 async function guardarMarcador() {
-  if (!partidoActual) {
-    throw new Error("Seleccione un partido.");
+  if (!estado.partido) {
+    mostrarMensaje("Seleccione un partido.", "error");
+    return;
   }
 
-  const local = Number(el.golesLocal?.value);
-  const visitante = Number(el.golesVisitante?.value);
+  const localTexto = $("golesLocal")?.value ?? "";
+  const visitanteTexto = $("golesVisitante")?.value ?? "";
+
+  const local = Number(localTexto);
+  const visitante = Number(visitanteTexto);
 
   if (
-    !Number.isInteger(local) || local < 0 ||
-    !Number.isInteger(visitante) || visitante < 0
+    localTexto.trim() === "" ||
+    visitanteTexto.trim() === "" ||
+    !Number.isInteger(local) ||
+    !Number.isInteger(visitante) ||
+    local < 0 ||
+    visitante < 0
   ) {
-    throw new Error(
-      "Los goles deben ser números enteros iguales o mayores que cero."
-    );
+    mostrarMensaje("Ingrese goles válidos para ambos equipos.", "error");
+    return;
   }
 
-  const { data, error } = await supabase
-    .from("partido")
-    .update({
-      goles_local: local,
-      goles_visitante: visitante
-    })
-    .eq("id", partidoActual.id)
-    .select("id,goles_local,goles_visitante")
-    .single();
-
-  if (error) throw error;
-
-  partidoActual.goles_local = data.goles_local;
-  partidoActual.goles_visitante = data.goles_visitante;
-
-  actualizarPartidoEnLista();
-  pintarMarcadores();
-
-  mostrarMensaje("Marcador guardado correctamente.", "ok");
-}
-
-function actualizarPartidoEnLista() {
-  if (!partidoActual) return;
-
-  const i = partidos.findIndex(
-    p => Number(p.id) === Number(partidoActual.id)
-  );
-
-  if (i >= 0) {
-    partidos[i] = { ...partidos[i], ...partidoActual };
-  }
-
-  if (el.filtroPartido) {
-    const seleccionado = String(partidoActual.id);
-    const opciones = [...el.filtroPartido.options];
-    const opcion = opciones.find(o => o.value === seleccionado);
-
-    if (opcion) {
-      opcion.textContent =
-        `#${partidoActual.id} · ${nombreLocal()} ` +
-        `${partidoActual.goles_local}-${partidoActual.goles_visitante} ` +
-        `${nombreVisitante()} · ${partidoActual.competencia?.nombre || "Fútbol"} ` +
-        `· ${fechaHoraPartido(partidoActual)} · ${textoEstado(partidoActual.estado)}`;
-    }
-
-    el.filtroPartido.value = seleccionado;
-  }
-}
-
-async function registrarEvento() {
-  if (!partidoActual) {
-    throw new Error("Seleccione un partido.");
-  }
-
-  const tipo = el.tipoEvento?.value;
-  const jugadorId = Number(el.jugadorEvento?.value);
-  const minutoRaw = el.minutoEvento?.value;
-  const minuto = minutoRaw === "" ? null : Number(minutoRaw);
-
-  if (!EVENTOS_PERMITIDOS.includes(tipo)) {
-    throw new Error("Tipo de evento no permitido.");
-  }
-
-  if (!jugadorId) {
-    throw new Error("Seleccione el jugador que registra el evento.");
-  }
-
-  if (
-    minuto !== null &&
-    (!Number.isInteger(minuto) || minuto < 0 || minuto > 200)
-  ) {
-    throw new Error("Ingrese un minuto válido entre 0 y 200.");
-  }
-
-  const jugador = jugadoresPartido.find(
-    j => Number(j.id) === jugadorId
-  );
-
-  if (!jugador || !jugador.convocado) {
-    throw new Error(
-      "El jugador debe estar convocado en la nómina de este partido."
-    );
-  }
-
-  const lado =
-    Number(jugador.inscripcion_equipo_id) ===
-    Number(partidoActual.equipo_local_id)
-      ? "local"
-      : Number(jugador.inscripcion_equipo_id) ===
-        Number(partidoActual.equipo_visitante_id)
-        ? "visitante"
-        : null;
-
-  if (!lado) {
-    throw new Error(
-      "El jugador no pertenece a uno de los equipos de este partido."
-    );
-  }
-
-  const payload = {
-    partido_id: Number(partidoActual.id),
-    inscripcion_jugador_id: jugadorId,
-    tipo,
-    minuto,
-    periodo: el.periodoEvento?.value || "REGLAMENTARIO",
-    observacion: (el.observacionEvento?.value || "").trim() || null
-  };
-
-  const { error } = await supabase
-    .from("evento_partido")
-    .insert(payload);
-
-  if (error) throw error;
-
-  if (tipo === "GOL") {
-    const campo = lado === "local"
-      ? "goles_local"
-      : "goles_visitante";
-
-    const nuevoValor =
-      Number(partidoActual[campo] || 0) + 1;
-
-    const { error: errorMarcador } = await supabase
-      .from("partido")
-      .update({ [campo]: nuevoValor })
-      .eq("id", partidoActual.id);
-
-    if (errorMarcador) {
-      mostrarMensaje(
-        "El evento se registró, pero no se pudo actualizar el marcador. Use «Guardar marcador» para corregirlo.",
-        "error"
-      );
-      throw errorMarcador;
-    }
-
-    partidoActual[campo] = nuevoValor;
-    actualizarPartidoEnLista();
-    pintarMarcadores();
-  }
-
-  if (el.observacionEvento) {
-    el.observacionEvento.value = "";
-  }
-
-  if (el.minutoEvento) {
-    el.minutoEvento.value = "";
-  }
-
-  await cargarEventos();
-  actualizarResumen();
-
-  const mensaje = tipo === "GOL"
-    ? "Gol registrado correctamente."
-    : tipo === "AMARILLA"
-      ? "Tarjeta amarilla registrada correctamente."
-      : "Tarjeta roja registrada correctamente.";
-
-  mostrarMensaje(mensaje, "ok");
-}
-
-async function cargarEventos() {
-  if (!partidoActual) return;
-
-  const { data, error } = await supabase
-    .from("evento_partido")
-    .select(`
-      id,
-      partido_id,
-      inscripcion_jugador_id,
-      tipo,
-      minuto,
-      periodo,
-      created_at,
-      observacion
-    `)
-    .eq("partido_id", partidoActual.id)
-    .order("created_at", { ascending: false });
-
-  if (error) throw error;
-
-  const eventos = data || [];
-
-  const jugadorIds = [
-    ...new Set(
-      eventos
-        .map(e => e.inscripcion_jugador_id)
-        .filter(Boolean)
-        .map(Number)
-    )
-  ];
-
-  let jugadorMap = new Map();
-
-  if (jugadorIds.length) {
-    const { data: inscripciones, error: errorIns } =
-      await supabase
-        .from("inscripcion_jugador")
-        .select(`
-          id,
-          inscripcion_equipo_id,
-          jugador(id,nombres,apellidos)
-        `)
-        .in("id", jugadorIds);
-
-    if (errorIns) throw errorIns;
-
-    jugadorMap = new Map(
-      (inscripciones || []).map(j => [Number(j.id), j])
-    );
-  }
-
-  eventosActuales = eventos.map(e => {
-    const ins = jugadorMap.get(Number(e.inscripcion_jugador_id));
-
-    const lado =
-      Number(ins?.inscripcion_equipo_id) ===
-      Number(partidoActual.equipo_local_id)
-        ? "local"
-        : Number(ins?.inscripcion_equipo_id) ===
-          Number(partidoActual.equipo_visitante_id)
-          ? "visitante"
-          : "";
-
-    return {
-      ...e,
-      jugador: ins?.jugador || null,
-      inscripcion_equipo_id: ins?.inscripcion_equipo_id,
-      lado
-    };
-  });
-
-  pintarEventos();
-  actualizarEstadisticas();
-}
-
-function etiquetaEvento(tipo) {
-  return ({
-    GOL: "⚽ Gol",
-    AMARILLA: "🟨 Tarjeta amarilla",
-    ROJA_DIRECTA: "🟥 Tarjeta roja directa",
-    ROJA_DOBLE_AMARILLA: "🟥 Roja por doble amarilla"
-  })[tipo] || tipo;
-}
-
-function pintarEventos() {
-  const html = eventosActuales.length
-    ? eventosActuales.map(e => {
-      const equipo = e.lado === "local"
-        ? nombreLocal()
-        : e.lado === "visitante"
-          ? nombreVisitante()
-          : "Equipo no identificado";
-
-      const minuto = e.minuto == null
-        ? "Minuto no indicado"
-        : `${e.minuto}'`;
-
-      return `
-        <article class="evento">
-          <div>
-            <strong>
-              ${escapar(etiquetaEvento(e.tipo))} · ${escapar(minuto)}
-            </strong>
-            <small>
-              ${escapar(nombreCompleto(e.jugador))}
-              · ${escapar(equipo)}
-              · ${escapar(e.periodo || "REGLAMENTARIO")}
-            </small>
-            ${e.observacion
-              ? `<small>${escapar(e.observacion)}</small>`
-              : ""}
-          </div>
-
-          <button
-            type="button"
-            class="btn-secundario btn-eliminar-evento"
-            data-evento-id="${e.id}">
-            Eliminar
-          </button>
-        </article>`;
-    }).join("")
-    : `<div class="vacio">Todavía no hay goles ni tarjetas registrados.</div>`;
-
-  if (el.listaEventos) el.listaEventos.innerHTML = html;
-  if (el.resumenEventos) el.resumenEventos.innerHTML = html;
-
-  document.querySelectorAll(".btn-eliminar-evento").forEach(btn => {
-    btn.addEventListener("click", async () => {
-      const id = Number(btn.dataset.eventoId);
-
-      const evento = eventosActuales.find(
-        e => Number(e.id) === id
-      );
-
-      if (!evento) return;
-
-      const confirmar = confirm(
-        "¿Desea eliminar este evento? Si es un gol, también se descontará del marcador."
-      );
-
-      if (!confirmar) return;
-
-      try {
-        bloquearBotones(true);
-
-        const { error } = await supabase
-          .from("evento_partido")
-          .delete()
-          .eq("id", id)
-          .eq("partido_id", partidoActual.id);
-
-        if (error) throw error;
-
-        if (evento.tipo === "GOL" && evento.lado) {
-          const campo = evento.lado === "local"
-            ? "goles_local"
-            : "goles_visitante";
-
-          const nuevo = Math.max(
-            0,
-            Number(partidoActual[campo] || 0) - 1
-          );
-
-          const { error: errUpdate } = await supabase
-            .from("partido")
-            .update({ [campo]: nuevo })
-            .eq("id", partidoActual.id);
-
-          if (errUpdate) throw errUpdate;
-
-          partidoActual[campo] = nuevo;
-          actualizarPartidoEnLista();
-          pintarMarcadores();
-        }
-
-        await cargarEventos();
-        actualizarResumen();
-
-        mostrarMensaje("Evento eliminado.", "ok");
-      } catch (err) {
-        console.error(err);
-        mostrarMensaje(
-          `No se pudo eliminar el evento: ${err.message || err}`,
-          "error"
-        );
-      } finally {
-        bloquearBotones(false);
-      }
-    });
-  });
-}
-
-function actualizarEstadisticas() {
-  if (el.totalConvocados) {
-    el.totalConvocados.textContent =
-      jugadoresPartido.filter(j => j.convocado).length;
-  }
-
-  if (el.totalTitulares) {
-    el.totalTitulares.textContent =
-      jugadoresPartido.filter(j => j.convocado && j.titular).length;
-  }
-
-  if (el.totalGoles) {
-    el.totalGoles.textContent =
-      eventosActuales.filter(e => e.tipo === "GOL").length;
-  }
-
-  if (el.totalEventos) {
-    el.totalEventos.textContent = eventosActuales.length;
-  }
-
-  actualizarContadorNomina();
-}
-
-function actualizarResumen() {
-  pintarMarcadores();
-  actualizarEstadisticas();
-}
-
-async function cambiarEstado(estado) {
-  if (!partidoActual) {
-    throw new Error("Seleccione un partido.");
-  }
-
-  const cambios = { estado };
-
-  if (estado === "EN_VIVO") {
-    cambios.iniciado_en = new Date().toISOString();
-  }
-
-  if (estado === "FINALIZADO") {
-    cambios.finalizado_en = new Date().toISOString();
-  }
-
-  const { data, error } = await supabase
-    .from("partido")
-    .update(cambios)
-    .eq("id", partidoActual.id)
-    .select("id,estado,iniciado_en,finalizado_en")
-    .single();
-
-  if (error) throw error;
-
-  Object.assign(partidoActual, data);
-
-  actualizarPartidoEnLista();
-  pintarMarcadores();
-
-  mostrarMensaje(
-    `Partido actualizado: ${textoEstado(estado)}.`,
-    "ok"
-  );
-}
-
-function agregarControlesEstado() {
-  const zona = document.querySelector("#panel-gestion h2");
-
-  if (!zona || $("accionesEstadoPartido")) return;
-
-  const cont = document.createElement("div");
-  cont.id = "accionesEstadoPartido";
-  cont.className = "acciones";
-
-  cont.innerHTML = `
-    <button type="button" class="btn" id="btnIniciarPartido">
-      ▶ Iniciar partido
-    </button>
-
-    <button type="button" class="btn-secundario" id="btnFinalizarPartido">
-      ■ Finalizar partido
-    </button>
-
-    <button type="button" class="btn-secundario" id="btnSuspenderPartido">
-      Ⅱ Suspender
-    </button>
-
-    <button type="button" class="btn-secundario" id="btnProgramarPartido">
-      ↻ Volver a programado
-    </button>`;
-
-  zona.insertAdjacentElement("afterend", cont);
-
-  $("btnIniciarPartido").addEventListener("click", () =>
-    ejecutar(() => cambiarEstado("EN_VIVO"))
-  );
-
-  $("btnFinalizarPartido").addEventListener("click", () => {
-    if (confirm("¿Confirma que el partido ha finalizado?")) {
-      ejecutar(() => cambiarEstado("FINALIZADO"));
-    }
-  });
-
-  $("btnSuspenderPartido").addEventListener("click", () =>
-    ejecutar(() => cambiarEstado("SUSPENDIDO"))
-  );
-
-  $("btnProgramarPartido").addEventListener("click", () =>
-    ejecutar(() => cambiarEstado("PROGRAMADO"))
-  );
-}
-
-function detenerRealtime() {
-  if (canalRealtime) {
-    supabase.removeChannel(canalRealtime);
-    canalRealtime = null;
-  }
-}
-
-function activarRealtime() {
-  detenerRealtime();
-
-  if (!partidoActual) return;
-
-  const id = Number(partidoActual.id);
-
-  canalRealtime = supabase
-    .channel(`partido-futbol-${id}`)
-    .on(
-      "postgres_changes",
-      {
-        event: "*",
-        schema: "public",
-        table: "partido",
-        filter: `id=eq.${id}`
-      },
-      async payload => {
-        if (
-          payload.new &&
-          Number(payload.new.id) === Number(partidoActual?.id)
-        ) {
-          Object.assign(partidoActual, payload.new);
-          actualizarPartidoEnLista();
-          pintarMarcadores();
-        }
-      }
-    )
-    .on(
-      "postgres_changes",
-      {
-        event: "*",
-        schema: "public",
-        table: "evento_partido",
-        filter: `partido_id=eq.${id}`
-      },
-      async () => {
-        try {
-          await cargarEventos();
-          actualizarResumen();
-        } catch (err) {
-          console.error("Realtime eventos:", err);
-        }
-      }
-    )
-    .on(
-      "postgres_changes",
-      {
-        event: "*",
-        schema: "public",
-        table: "nomina_partido",
-        filter: `partido_id=eq.${id}`
-      },
-      async () => {
-        try {
-          await cargarNomina();
-        } catch (err) {
-          console.error("Realtime nómina:", err);
-        }
-      }
-    )
-    .subscribe(status => {
-      if (status === "CHANNEL_ERROR") {
-        console.warn(
-          "No se pudo iniciar la suscripción Realtime para este partido."
-        );
-      }
-    });
-}
-
-async function ejecutar(accion) {
-  if (cargando) return;
-
-  cargando = true;
-  bloquearBotones(true);
+  const boton = $("btnGuardarMarcador");
+  if (boton) boton.disabled = true;
 
   try {
-    await accion();
-  } catch (err) {
-    console.error(err);
+    const { data, error } = await supabase
+      .from("partido")
+      .update({
+        goles_local: local,
+        goles_visitante: visitante
+      })
+      .eq("id", estado.partido.id)
+      .select()
+      .single();
 
+    if (error) throw error;
+
+    estado.partido = { ...estado.partido, ...data };
+
+    const indice = estado.partidos.findIndex(
+      (fila) => String(fila.id) === String(data.id)
+    );
+
+    if (indice !== -1) {
+      estado.partidos[indice] = {
+        ...estado.partidos[indice],
+        ...data
+      };
+    }
+
+    actualizarTextoResultado();
+    mostrarDatosPartido();
+    actualizarEstadisticas();
+    mostrarMensaje("✅ Marcador guardado correctamente.", "ok");
+  } catch (error) {
     mostrarMensaje(
-      err?.message || "Ocurrió un error inesperado.",
+      "No se pudo guardar el marcador: " +
+      obtenerError(error, "guardarMarcador"),
       "error"
     );
   } finally {
-    cargando = false;
-    bloquearBotones(false);
+    if (boton) boton.disabled = false;
   }
 }
 
-function configurarPestanas() {
-  document.querySelectorAll("[data-pestana]").forEach(btn => {
-    btn.addEventListener("click", () => {
-      const nombre = btn.dataset.pestana;
+/* =========================================================
+   EVENTOS: GOLES Y TARJETAS
+   ========================================================= */
 
-      document.querySelectorAll("[data-pestana]").forEach(b => {
-        const activo = b === btn;
+function jugadoresConvocadosPorLado(lado) {
+  const jugadores = lado === "local"
+    ? estado.jugadoresLocal
+    : estado.jugadoresVisitante;
 
-        b.classList.toggle("activa", activo);
-        b.setAttribute("aria-pressed", String(activo));
-      });
+  const nomina = lado === "local"
+    ? estado.nominaLocal
+    : estado.nominaVisitante;
 
-      ["nomina", "gestion", "resumen"].forEach(n => {
-        const panel = $(`panel-${n}`);
+  return jugadores.filter((fila) =>
+    nomina.get(String(fila.id))?.convocado
+  );
+}
 
-        if (panel) {
-          panel.classList.toggle("oculto", n !== nombre);
+function llenarSelectorJugadoresEvento() {
+  const selector = $("jugadorEvento");
+  if (!selector) return;
+
+  const lado = $("equipoEvento")?.value || "local";
+  const jugadores = jugadoresConvocadosPorLado(lado);
+
+  selector.innerHTML =
+    '<option value="">Seleccione un jugador...</option>' +
+    jugadores.map((fila) => {
+      const etiqueta = [
+        nombreDeJugador(fila.jugador),
+        fila.numero != null ? `N.º ${fila.numero}` : ""
+      ].filter(Boolean).join(" · ");
+
+      return `<option value="${escapar(fila.id)}">${escapar(etiqueta)}</option>`;
+    }).join("");
+}
+
+async function registrarEvento() {
+  if (!estado.partido) {
+    mostrarMensaje("Seleccione un partido.", "error");
+    return;
+  }
+
+  const jugadorId = $("jugadorEvento")?.value;
+  const tipo = $("tipoEvento")?.value;
+  const minutoTexto = $("minutoEvento")?.value;
+  const periodo = $("periodoEvento")?.value;
+  const observacion = $("observacionEvento")?.value?.trim() || null;
+
+  if (!jugadorId) {
+    mostrarMensaje("Seleccione un jugador convocado.", "error");
+    return;
+  }
+
+  if (!tipo) {
+    mostrarMensaje("Seleccione el tipo de evento.", "error");
+    return;
+  }
+
+  let minuto = null;
+
+  if (minutoTexto !== "") {
+    minuto = Number(minutoTexto);
+
+    if (!Number.isInteger(minuto) || minuto < 0 || minuto > 200) {
+      mostrarMensaje("El minuto debe ser un número entre 0 y 200.", "error");
+      return;
+    }
+  }
+
+  const boton = $("btnGuardarEvento");
+  if (boton) boton.disabled = true;
+
+  try {
+    const registro = {
+      partido_id: estado.partido.id,
+      inscripcion_jugador_id: jugadorId,
+      tipo,
+      minuto,
+      periodo,
+      observacion
+    };
+
+    const { error } = await supabase
+      .from("evento_partido")
+      .insert(registro);
+
+    if (error) throw error;
+
+    if (tipo === "GOL") {
+      const localActual = Number(estado.partido.goles_local || 0);
+      const visitanteActual = Number(estado.partido.goles_visitante || 0);
+
+      const lado = $("equipoEvento")?.value || "local";
+
+      const resultado = lado === "local"
+        ? { goles_local: localActual + 1 }
+        : { goles_visitante: visitanteActual + 1 };
+
+      const { data, error: errorMarcador } = await supabase
+        .from("partido")
+        .update(resultado)
+        .eq("id", estado.partido.id)
+        .select()
+        .single();
+
+      if (errorMarcador) {
+        mostrarMensaje(
+          "El evento se registró, pero no se pudo actualizar el marcador: " +
+          obtenerError(errorMarcador, "actualizar marcador tras gol"),
+          "error"
+        );
+      } else {
+        estado.partido = { ...estado.partido, ...data };
+
+        const indice = estado.partidos.findIndex(
+          (fila) => String(fila.id) === String(data.id)
+        );
+
+        if (indice !== -1) {
+          estado.partidos[indice] = {
+            ...estado.partidos[indice],
+            ...data
+          };
         }
+
+        await cargarMarcador();
+      }
+    }
+
+    if ($("minutoEvento")) $("minutoEvento").value = "";
+    if ($("observacionEvento")) $("observacionEvento").value = "";
+
+    await cargarEventos();
+    actualizarEstadisticas();
+
+    mostrarMensaje("✅ Evento registrado correctamente.", "ok");
+  } catch (error) {
+    mostrarMensaje(
+      "No se pudo registrar el evento. Compruebe las columnas de evento_partido: " +
+      obtenerError(error, "registrarEvento"),
+      "error"
+    );
+  } finally {
+    if (boton) boton.disabled = false;
+  }
+}
+
+async function cargarEventos() {
+  if (!estado.partido) {
+    estado.eventos = [];
+    pintarEventos();
+    return;
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from("evento_partido")
+      .select("*")
+      .eq("partido_id", estado.partido.id)
+      .order("minuto", { ascending: true });
+
+    if (error) throw error;
+
+    estado.eventos = data || [];
+    pintarEventos();
+  } catch (error) {
+    console.error("Error cargando eventos:", error);
+
+    estado.eventos = [];
+    pintarEventos(
+      "No se pudieron cargar los eventos. Revise la tabla evento_partido."
+    );
+  }
+}
+
+function buscarJugadorDeEvento(evento) {
+  const id = String(evento.inscripcion_jugador_id);
+
+  const jugadorLocal = estado.jugadoresLocal.find(
+    (fila) => String(fila.id) === id
+  );
+
+  const jugadorVisitante = estado.jugadoresVisitante.find(
+    (fila) => String(fila.id) === id
+  );
+
+  const fila = jugadorLocal || jugadorVisitante;
+  return fila ? nombreDeJugador(fila.jugador) : `Jugador ${id}`;
+}
+
+function nombreTipoEvento(tipo) {
+  const tipos = {
+    GOL: "⚽ Gol",
+    AMARILLA: "🟨 Tarjeta amarilla",
+    ROJA_DIRECTA: "🟥 Roja directa",
+    ROJA_DOBLE_AMARILLA: "🟥 Roja por doble amarilla"
+  };
+
+  return tipos[tipo] || tipo || "Evento";
+}
+
+function pintarEventos(mensajeAlternativo = "") {
+  const contenedor = $("listaEventos");
+  const resumen = $("resumenEventos");
+
+  if (!contenedor) return;
+
+  if (mensajeAlternativo) {
+    contenedor.innerHTML =
+      `<div class="vacio">${escapar(mensajeAlternativo)}</div>`;
+
+    if (resumen) resumen.innerHTML = contenedor.innerHTML;
+    return;
+  }
+
+  if (!estado.eventos.length) {
+    const vacio = '<div class="vacio">Todavía no hay goles ni tarjetas registrados.</div>';
+    contenedor.innerHTML = vacio;
+    if (resumen) resumen.innerHTML = vacio;
+    return;
+  }
+
+  const html = estado.eventos.map((evento) => `
+    <article class="evento">
+      <div>
+        <strong>${escapar(nombreTipoEvento(evento.tipo))}</strong>
+        <div style="margin-top:5px">
+          ${escapar(buscarJugadorDeEvento(evento))}
+        </div>
+        <div class="jugador-detalle">
+          ${escapar(evento.periodo || "")}
+          ${evento.minuto != null ? ` · Minuto ${escapar(evento.minuto)}` : ""}
+        </div>
+        ${evento.observacion
+          ? `<div class="jugador-detalle">${escapar(evento.observacion)}</div>`
+          : ""}
+      </div>
+      <span style="color:#718078;font-weight:800">
+        ${evento.minuto != null ? `${escapar(evento.minuto)}'` : ""}
+      </span>
+    </article>
+  `).join("");
+
+  contenedor.innerHTML = html;
+  if (resumen) resumen.innerHTML = html;
+}
+
+/* =========================================================
+   ESTADÍSTICAS
+   ========================================================= */
+
+function actualizarEstadisticas() {
+  const convocadosLocal = [...estado.nominaLocal.values()].filter(
+    (fila) => fila.convocado
+  ).length;
+
+  const convocadosVisitante = [...estado.nominaVisitante.values()].filter(
+    (fila) => fila.convocado
+  ).length;
+
+  const titularesLocal = [...estado.nominaLocal.values()].filter(
+    (fila) => fila.convocado && fila.titular
+  ).length;
+
+  const titularesVisitante = [...estado.nominaVisitante.values()].filter(
+    (fila) => fila.convocado && fila.titular
+  ).length;
+
+  const golesLocal = Number(estado.partido?.goles_local || 0);
+  const golesVisitante = Number(estado.partido?.goles_visitante || 0);
+  const totalGoles = golesLocal + golesVisitante;
+
+  const totalConvocados = convocadosLocal + convocadosVisitante;
+  const totalTitulares = titularesLocal + titularesVisitante;
+  const totalEventos = estado.eventos.length;
+
+  const valores = {
+    totalConvocados,
+    totalTitulares,
+    totalGoles,
+    totalEventos,
+    totalConvocadosResumen: totalConvocados,
+    totalTitularesResumen: totalTitulares,
+    totalGolesResumen: totalGoles,
+    totalEventosResumen: totalEventos
+  };
+
+  for (const [id, valor] of Object.entries(valores)) {
+    if ($(id)) $(id).textContent = String(valor);
+  }
+
+  llenarSelectorJugadoresEvento();
+}
+
+/* =========================================================
+   PESTAÑAS, FILTROS Y BOTONES
+   ========================================================= */
+
+function configurarPestanas() {
+  document.querySelectorAll("[data-pestana]").forEach((boton) => {
+    boton.addEventListener("click", () => {
+      const destino = boton.dataset.pestana;
+
+      document.querySelectorAll("[data-pestana]").forEach((item) => {
+        item.classList.toggle("activa", item === boton);
       });
+
+      for (const nombre of ["nomina", "gestion", "resumen"]) {
+        const panel = $(`panel-${nombre}`);
+        if (panel) {
+          panel.classList.toggle("oculto", nombre !== destino);
+        }
+      }
+
+      if (destino === "gestion") {
+        llenarSelectorJugadoresEvento();
+      }
+
+      if (destino === "resumen") {
+        actualizarEstadisticas();
+      }
     });
   });
 }
 
-function configurarEventosUI() {
-  el.btnRecargar?.addEventListener("click", () =>
-    ejecutar(async () => {
-      const seleccionado = el.filtroPartido?.value;
-
-      await cargarPartidos();
-
-      if (
-        seleccionado &&
-        partidos.some(p => String(p.id) === seleccionado)
-      ) {
-        el.filtroPartido.value = seleccionado;
-        await seleccionarPartido(Number(seleccionado));
-      }
-    })
-  );
-
-  el.filtroPartido?.addEventListener("change", () =>
-    ejecutar(async () => {
-      const id = Number(el.filtroPartido.value);
-
-      if (id) {
-        await seleccionarPartido(id);
-      } else {
-        limpiarPartido("Seleccione un partido.");
-      }
-    })
-  );
-
-  [
-    el.fechaDesde,
-    el.fechaHasta,
-    el.filtroGenero
-  ].forEach(campo => {
-    campo?.addEventListener("change", () =>
-      ejecutar(() => aplicarFiltrosPartidos(true))
-    );
+function configurarFiltros() {
+  ["fechaDesde", "fechaHasta", "filtroGenero"].forEach((id) => {
+    $(id)?.addEventListener("change", () => {
+      llenarSelectorPartidos();
+    });
   });
 
-  el.btnCargarJugadores?.addEventListener(
-    "click",
-    pintarJugadores
-  );
+  $("filtroPartido")?.addEventListener("change", (evento) => {
+    if (evento.target.value) {
+      seleccionarPartido(evento.target.value);
+    }
+  });
 
-  el.buscarJugador?.addEventListener(
-    "input",
-    pintarJugadores
-  );
+  $("buscarJugador")?.addEventListener("input", () => {
+    pintarJugadores("local");
+  });
 
-  el.filtroEquipoNomina?.addEventListener(
-    "change",
-    pintarJugadores
-  );
+  $("buscarJugadorVisitante")?.addEventListener("input", () => {
+    pintarJugadores("visitante");
+  });
 
-  el.equipoEvento?.addEventListener(
-    "change",
-    llenarSelectorJugadorEvento
-  );
+  $("filtroEquipoNomina")?.addEventListener("change", () => {
+    pintarJugadores("local");
+  });
 
-  el.golesLocal?.addEventListener(
-    "input",
-    actualizarTextoResultado
-  );
+  $("filtroEquipoVisitante")?.addEventListener("change", () => {
+    pintarJugadores("visitante");
+  });
 
-  el.golesVisitante?.addEventListener(
-    "input",
-    actualizarTextoResultado
-  );
+  $("golesLocal")?.addEventListener("input", actualizarTextoResultado);
+  $("golesVisitante")?.addEventListener("input", actualizarTextoResultado);
 
-  el.btnGuardarNomina?.addEventListener(
-    "click",
-    () => ejecutar(guardarNomina)
-  );
+  $("equipoEvento")?.addEventListener("change", llenarSelectorJugadoresEvento);
+}
 
-  el.btnGuardarMarcador?.addEventListener(
-    "click",
-    () => ejecutar(guardarMarcador)
-  );
+function configurarBotones() {
+  $("btnRecargar")?.addEventListener("click", async () => {
+    try {
+      const idActual = estado.partido?.id;
 
-  el.btnGuardarEvento?.addEventListener(
-    "click",
-    () => ejecutar(registrarEvento)
-  );
+      await cargarDatosBase();
 
-  el.btnActualizarResumen?.addEventListener("click", () =>
-    ejecutar(async () => {
-      if (!partidoActual) {
-        throw new Error("Seleccione un partido.");
+      if (idActual && estado.partidos.some(
+        (partido) => String(partido.id) === String(idActual)
+      )) {
+        const selector = $("filtroPartido");
+        if (selector) selector.value = String(idActual);
+        await seleccionarPartido(idActual);
       }
 
-      await cargarNomina();
-      await cargarEventos();
-      actualizarResumen();
+      mostrarMensaje("✅ Información actualizada.", "ok");
+    } catch (error) {
+      mostrarMensaje(
+        "Error al actualizar: " + obtenerError(error, "btnRecargar"),
+        "error"
+      );
+    }
+  });
 
-      mostrarMensaje("Resumen actualizado.", "ok");
-    })
-  );
+  $("btnGuardarNomina")?.addEventListener("click", () => {
+    guardarNominaLado("local");
+  });
+
+  $("btnGuardarNominaVisitante")?.addEventListener("click", () => {
+    guardarNominaLado("visitante");
+  });
+
+  $("btnGuardarMarcador")?.addEventListener("click", guardarMarcador);
+  $("btnGuardarEvento")?.addEventListener("click", registrarEvento);
+
+  $("btnActualizarResumen")?.addEventListener("click", async () => {
+    await cargarEventos();
+    actualizarEstadisticas();
+    mostrarMensaje("📊 Resumen actualizado.", "ok");
+  });
 }
+
+/* =========================================================
+   ACTUALIZACIÓN EN TIEMPO REAL
+   ========================================================= */
+
+function configurarRealtime() {
+  try {
+    if (estado.canal) {
+      supabase.removeChannel(estado.canal);
+      estado.canal = null;
+    }
+
+    estado.canal = supabase
+      .channel("nomina-partido-cambios")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "partido" },
+        async () => {
+          try {
+            const idActual = estado.partido?.id;
+            await cargarDatosBase();
+
+            if (idActual) {
+              await seleccionarPartido(idActual);
+            }
+          } catch (error) {
+            console.warn("No se pudo actualizar la lista en tiempo real:", error);
+          }
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "evento_partido" },
+        async (payload) => {
+          const partidoId =
+            payload.new?.partido_id || payload.old?.partido_id;
+
+          if (
+            estado.partido &&
+            String(partidoId) === String(estado.partido.id)
+          ) {
+            await cargarEventos();
+            actualizarEstadisticas();
+          }
+        }
+      )
+      .subscribe((status) => {
+        console.info("Realtime nóminas:", status);
+      });
+  } catch (error) {
+    console.warn("Realtime no disponible:", error);
+  }
+}
+
+/* =========================================================
+   INICIO
+   ========================================================= */
 
 async function iniciar() {
   configurarPestanas();
-  configurarEventosUI();
-  agregarControlesEstado();
+  configurarFiltros();
+  configurarBotones();
 
   try {
-    await cargarPartidos();
-  } catch (err) {
-    console.error("Error al cargar partidos:", err);
+    await cargarDatosBase();
+    configurarRealtime();
 
-    limpiarPartido("No se pudieron cargar los partidos.");
+    if (!estado.partidos.length) {
+      mostrarMensaje(
+        "No hay partidos registrados en la tabla partido.",
+        "info"
+      );
+      limpiarPaneles();
+      return;
+    }
 
+    mostrarMensaje("✅ Sistema de nóminas listo.", "ok");
+  } catch (error) {
     mostrarMensaje(
-      `Error al cargar partidos: ${err.message || err}. ` +
-      "Revise las relaciones de Supabase y las políticas RLS.",
+      "No se pudo iniciar la gestión de nóminas: " +
+      obtenerError(error, "iniciar"),
       "error"
     );
   }
