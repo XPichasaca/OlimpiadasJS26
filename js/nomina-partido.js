@@ -4,6 +4,7 @@ import { supabase } from "./supabase.js";
 /* =========================================================
    OLIMPIADAS JUAN SOLANO 2026
    Gestión de nóminas, marcador y eventos de fútbol
+   Acceso: ADMINISTRADOR y ARBITRO
    ========================================================= */
 
 const $ = (id) => document.getElementById(id);
@@ -49,7 +50,10 @@ function mostrarMensaje(texto, tipo = "info") {
   elemento.className = `mensaje ${tipo}`;
 
   if (texto) {
-    elemento.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    elemento.scrollIntoView({
+      behavior: "smooth",
+      block: "nearest"
+    });
   }
 }
 
@@ -114,6 +118,100 @@ function obtenerError(error, contexto) {
   return error?.message || error?.details || contexto;
 }
 
+/* =========================================================
+   VERIFICAR ACCESO
+   CONSULTA DIRECTA A usuario_rol
+   SOLO ADMINISTRADOR Y ARBITRO
+   ========================================================= */
+
+async function verificarAcceso() {
+  try {
+    const {
+      data: { user },
+      error: errorSesion
+    } = await supabase.auth.getUser();
+
+    if (errorSesion || !user) {
+      console.error("No existe sesión:", errorSesion);
+      window.location.replace("../login.html");
+      return false;
+    }
+
+    console.log("USUARIO AUTENTICADO:", user.email);
+    console.log("ID DEL USUARIO:", user.id);
+
+    const {
+      data: rolesUsuario,
+      error: errorRoles
+    } = await supabase
+      .from("usuario_rol")
+      .select(`
+        rol:rol_id (
+          nombre
+        )
+      `)
+      .eq("usuario_id", user.id);
+
+    if (errorRoles) {
+      console.error("Error consultando roles:", errorRoles);
+
+      mostrarMensaje(
+        "No se pudieron consultar los roles: " + errorRoles.message,
+        "error"
+      );
+
+      return false;
+    }
+
+    const nombresRoles = (rolesUsuario || [])
+      .map((item) => item.rol?.nombre)
+      .filter(Boolean)
+      .map((nombre) => String(nombre).trim().toUpperCase());
+
+    console.log("ROLES EN SUPABASE:", rolesUsuario);
+    console.log("ROLES DEL USUARIO:", nombresRoles);
+
+    const tieneAcceso =
+      nombresRoles.includes("ADMINISTRADOR") ||
+      nombresRoles.includes("ARBITRO");
+
+    if (!tieneAcceso) {
+      console.warn("ACCESO DENEGADO:", nombresRoles);
+
+      mostrarMensaje(
+        "Acceso denegado. Solo ADMINISTRADOR y ARBITRO pueden ingresar.",
+        "error"
+      );
+
+      return false;
+    }
+
+    window.usuarioActual = user;
+    window.rolesActuales = nombresRoles;
+
+    console.info("ACCESO AUTORIZADO:", {
+      usuario: user.email,
+      roles: nombresRoles
+    });
+
+    return true;
+
+  } catch (error) {
+    console.error("Error verificando acceso:", error);
+
+    mostrarMensaje(
+      "Error verificando permisos: " + (error.message || error),
+      "error"
+    );
+
+    return false;
+  }
+}
+
+/* =========================================================
+   CONSULTAS SUPABASE
+   ========================================================= */
+
 async function consultarTabla(tabla) {
   const { data, error } = await supabase
     .from(tabla)
@@ -140,6 +238,10 @@ async function consultarPorIds(tabla, columna, ids) {
   if (error) throw error;
   return data || [];
 }
+
+/* =========================================================
+   RELACIONES Y DATOS
+   ========================================================= */
 
 function obtenerFase(partido) {
   return estado.fases.get(String(partido?.fase_id)) || null;
@@ -177,11 +279,6 @@ function buscarInscripcionPorId(id) {
   ) || null;
 }
 
-/*
- * Los campos equipo_local_id y equipo_visitante_id pueden referirse
- * a equipo.id o, según cómo se generó el sorteo, a
- * inscripcion_equipo.id. Se contemplan ambas posibilidades.
- */
 function resolverEquipoYInscripcion(idPartido, partido) {
   const competencia = obtenerCompetencia(partido);
   const competenciaId = competencia?.id;
@@ -291,86 +388,101 @@ function obtenerTextoPartido(partido) {
    ========================================================= */
 
 async function cargarDatosBase() {
+  console.log("INICIANDO CARGA DE DATOS BASE...");
   mostrarMensaje("⏳ Cargando partidos y equipos...", "info");
 
-  const [partidos, fases, competencias, equipos, inscripciones] =
-    await Promise.all([
-      consultarTabla("partido"),
-      consultarTabla("fase"),
-      consultarTabla("competencia"),
-      consultarTabla("equipo"),
-      consultarTabla("inscripcion_equipo")
-    ]);
-
-  estado.fases = new Map(
-    fases.map((fila) => [String(fila.id), fila])
-  );
-
-  estado.competencias = new Map(
-    competencias.map((fila) => [String(fila.id), fila])
-  );
-
-  estado.equipos = new Map(
-    equipos.map((fila) => [String(fila.id), fila])
-  );
-
-  estado.inscripciones = inscripciones;
-
-  estado.partidos = partidos.map((partido) => ({
-    ...partido,
-    categoriaTexto: obtenerCategoriaConDatos(partido),
-    texto: obtenerTextoConDatos(partido)
-  }));
-
-  /*
-   * La tabla categoria se consulta por separado para evitar
-   * depender de una relación automática de Supabase.
-   */
   try {
-    const categorias = await consultarTabla("categoria");
+    const consultas = [
+      ["partido", "partido"],
+      ["fase", "fase"],
+      ["competencia", "competencia"],
+      ["equipo", "equipo"],
+      ["inscripcion_equipo", "inscripcion_equipo"]
+    ];
 
-    estado.categorias = new Map(
-      categorias.map((fila) => [String(fila.id), fila])
+    const resultados = await Promise.all(
+      consultas.map(async ([nombre, tabla]) => {
+        console.log("Consultando tabla:", tabla);
+
+        try {
+          const datos = await consultarTabla(tabla);
+          console.log(`Tabla ${tabla}: ${datos.length} registros`);
+          return datos;
+        } catch (error) {
+          console.error(`ERROR EN TABLA ${tabla}:`, error);
+          throw new Error(
+            `No se pudo consultar ${tabla}: ${error.message || error}`
+          );
+        }
+      })
     );
+
+    const [
+      partidos,
+      fases,
+      competencias,
+      equipos,
+      inscripciones
+    ] = resultados;
+
+    estado.fases = new Map(
+      fases.map((fila) => [String(fila.id), fila])
+    );
+
+    estado.competencias = new Map(
+      competencias.map((fila) => [String(fila.id), fila])
+    );
+
+    estado.equipos = new Map(
+      equipos.map((fila) => [String(fila.id), fila])
+    );
+
+    estado.inscripciones = inscripciones;
+
+    try {
+      const categorias = await consultarTabla("categoria");
+
+      estado.categorias = new Map(
+        categorias.map((fila) => [String(fila.id), fila])
+      );
+
+      console.log("Categorías cargadas:", categorias.length);
+
+    } catch (error) {
+      console.warn("No se pudo consultar categoria:", error);
+      estado.categorias = new Map();
+    }
+
+    estado.partidos = partidos.map((partido) => ({
+      ...partido,
+      categoriaTexto: obtenerCategoria(partido),
+      texto: obtenerTextoPartido(partido)
+    }));
+
+    console.log("RESUMEN DE CARGA:", {
+      partidos: estado.partidos.length,
+      fases: fases.length,
+      competencias: competencias.length,
+      equipos: equipos.length,
+      inscripciones: inscripciones.length
+    });
+
+    llenarFiltroCategorias();
+
+    await llenarSelectorPartidos();
+
+    console.log("CARGA BASE FINALIZADA.");
+
   } catch (error) {
-    console.warn(
-      "No se pudo consultar la tabla categoria. Se usarán los nombres de competencia.",
-      error
+    console.error("ERROR GENERAL EN cargarDatosBase:", error);
+
+    mostrarMensaje(
+      "Error cargando información: " + (error.message || error),
+      "error"
     );
-    estado.categorias = new Map();
+
+    throw error;
   }
-
-  estado.partidos = partidos.map((partido) => ({
-    ...partido,
-    categoriaTexto: obtenerCategoria(partido),
-    texto: obtenerTextoPartido(partido)
-  }));
-
-  llenarFiltroCategorias();
-  llenarSelectorPartidos();
-}
-
-function obtenerCategoriaConDatos(partido) {
-  const fase = estado.fases.get(String(partido.fase_id));
-  const competencia = estado.competencias.get(
-    String(fase?.competencia_id)
-  );
-
-  return competencia?.nombre || "Sin categoría";
-}
-
-function obtenerTextoConDatos(partido) {
-  const local = resolverEquipoYInscripcion(
-    partido.equipo_local_id,
-    partido
-  );
-
-  const visitante = resolverEquipoYInscripcion(
-    partido.equipo_visitante_id,
-    partido
-  );
-
-  return `${nombreDeEquipo(local.equipo)} vs ${nombreDeEquipo(visitante.equipo)}`;
 }
 
 function llenarFiltroCategorias() {
@@ -418,9 +530,13 @@ function partidoPasaFiltros(partido) {
   return true;
 }
 
-function llenarSelectorPartidos() {
+async function llenarSelectorPartidos() {
   const selector = $("filtroPartido");
-  if (!selector) return;
+
+  if (!selector) {
+    console.error("No existe el elemento filtroPartido en el HTML.");
+    return;
+  }
 
   const seleccionAnterior = selector.value;
 
@@ -439,11 +555,13 @@ function llenarSelectorPartidos() {
       '<option value="">No hay partidos con esos filtros</option>';
 
     estado.partido = null;
+    limpiarPaneles();
+
     mostrarMensaje(
       "No se encontraron partidos para las fechas y categoría seleccionadas.",
       "info"
     );
-    limpiarPaneles();
+
     return;
   }
 
@@ -481,7 +599,11 @@ function llenarSelectorPartidos() {
   );
 
   if (seleccionado) {
-    seleccionarPartido(seleccionado.id);
+    console.log("CARGANDO PARTIDO SELECCIONADO:", seleccionado.id);
+
+    await seleccionarPartido(seleccionado.id);
+
+    console.log("PARTIDO SELECCIONADO FINALIZADO.");
   }
 }
 
@@ -554,6 +676,8 @@ async function seleccionarPartido(id) {
       return;
     }
 
+    console.log("CARGANDO JUGADORES E INSCRIPCIONES...");
+
     const [jugadores, nominas] = await Promise.all([
       cargarJugadoresDeInscripciones([
         estado.inscripcionLocal.id,
@@ -621,9 +745,11 @@ async function seleccionarPartido(id) {
     } else {
       mostrarMensaje("✅ Partido y nóminas cargados correctamente.", "ok");
     }
+
   } catch (error) {
     mostrarMensaje(
-      "Error al cargar el partido: " + obtenerError(error, "seleccionarPartido"),
+      "Error al cargar el partido: " +
+      obtenerError(error, "seleccionarPartido"),
       "error"
     );
   }
@@ -741,6 +867,7 @@ function limpiarPaneles() {
 
 function pintarJugadores(lado) {
   const esLocal = lado === "local";
+
   const jugadores = esLocal
     ? estado.jugadoresLocal
     : estado.jugadoresVisitante;
@@ -808,6 +935,7 @@ function pintarJugadores(lado) {
 
   contenedor.innerHTML = filtrados.map((fila) => {
     const id = String(fila.id);
+
     const registro = nomina.get(id) || {
       convocado: false,
       titular: false
@@ -900,6 +1028,7 @@ function manejarCambioJugador(evento) {
       registro.convocado = false;
       registro.titular = false;
     }
+
   } else if (check.classList.contains("check-titular")) {
     if (check.checked) {
       if (!registro.convocado) {
@@ -943,6 +1072,7 @@ async function guardarNominaLado(lado) {
   }
 
   const esLocal = lado === "local";
+
   const jugadores = esLocal
     ? estado.jugadoresLocal
     : estado.jugadoresVisitante;
@@ -992,11 +1122,6 @@ async function guardarNominaLado(lado) {
   if (boton) boton.disabled = true;
 
   try {
-    /*
-     * Se eliminan únicamente los registros correspondientes a los
-     * jugadores de la inscripción del lado seleccionado. La nómina
-     * del otro equipo no se modifica.
-     */
     const idsJugadores = jugadores.map((fila) => String(fila.id));
 
     if (idsJugadores.length) {
@@ -1030,12 +1155,14 @@ async function guardarNominaLado(lado) {
 
     actualizarEstadisticas();
     await cargarEventos();
+
   } catch (error) {
     mostrarMensaje(
       "No se pudo guardar la nómina: " +
       obtenerError(error, "guardarNominaLado"),
       "error"
     );
+
   } finally {
     if (boton) boton.disabled = false;
   }
@@ -1130,13 +1257,16 @@ async function guardarMarcador() {
     actualizarTextoResultado();
     mostrarDatosPartido();
     actualizarEstadisticas();
+
     mostrarMensaje("✅ Marcador guardado correctamente.", "ok");
+
   } catch (error) {
     mostrarMensaje(
       "No se pudo guardar el marcador: " +
       obtenerError(error, "guardarMarcador"),
       "error"
     );
+
   } finally {
     if (boton) boton.disabled = false;
   }
@@ -1254,6 +1384,7 @@ async function registrarEvento() {
           obtenerError(errorMarcador, "actualizar marcador tras gol"),
           "error"
         );
+
       } else {
         estado.partido = { ...estado.partido, ...data };
 
@@ -1279,12 +1410,14 @@ async function registrarEvento() {
     actualizarEstadisticas();
 
     mostrarMensaje("✅ Evento registrado correctamente.", "ok");
+
   } catch (error) {
     mostrarMensaje(
       "No se pudo registrar el evento. Compruebe las columnas de evento_partido: " +
       obtenerError(error, "registrarEvento"),
       "error"
     );
+
   } finally {
     if (boton) boton.disabled = false;
   }
@@ -1308,10 +1441,12 @@ async function cargarEventos() {
 
     estado.eventos = data || [];
     pintarEventos();
+
   } catch (error) {
     console.error("Error cargando eventos:", error);
 
     estado.eventos = [];
+
     pintarEventos(
       "No se pudieron cargar los eventos. Revise la tabla evento_partido."
     );
@@ -1330,7 +1465,10 @@ function buscarJugadorDeEvento(evento) {
   );
 
   const fila = jugadorLocal || jugadorVisitante;
-  return fila ? nombreDeJugador(fila.jugador) : `Jugador ${id}`;
+
+  return fila
+    ? nombreDeJugador(fila.jugador)
+    : `Jugador ${id}`;
 }
 
 function nombreTipoEvento(tipo) {
@@ -1360,7 +1498,9 @@ function pintarEventos(mensajeAlternativo = "") {
 
   if (!estado.eventos.length) {
     const vacio = '<div class="vacio">Todavía no hay goles ni tarjetas registrados.</div>';
+
     contenedor.innerHTML = vacio;
+
     if (resumen) resumen.innerHTML = vacio;
     return;
   }
@@ -1369,17 +1509,21 @@ function pintarEventos(mensajeAlternativo = "") {
     <article class="evento">
       <div>
         <strong>${escapar(nombreTipoEvento(evento.tipo))}</strong>
+
         <div style="margin-top:5px">
           ${escapar(buscarJugadorDeEvento(evento))}
         </div>
+
         <div class="jugador-detalle">
           ${escapar(evento.periodo || "")}
           ${evento.minuto != null ? ` · Minuto ${escapar(evento.minuto)}` : ""}
         </div>
+
         ${evento.observacion
           ? `<div class="jugador-detalle">${escapar(evento.observacion)}</div>`
           : ""}
       </div>
+
       <span style="color:#718078;font-weight:800">
         ${evento.minuto != null ? `${escapar(evento.minuto)}'` : ""}
       </span>
@@ -1387,6 +1531,7 @@ function pintarEventos(mensajeAlternativo = "") {
   `).join("");
 
   contenedor.innerHTML = html;
+
   if (resumen) resumen.innerHTML = html;
 }
 
@@ -1413,6 +1558,7 @@ function actualizarEstadisticas() {
 
   const golesLocal = Number(estado.partido?.goles_local || 0);
   const golesVisitante = Number(estado.partido?.goles_visitante || 0);
+
   const totalGoles = golesLocal + golesVisitante;
 
   const totalConvocados = convocadosLocal + convocadosVisitante;
@@ -1431,14 +1577,16 @@ function actualizarEstadisticas() {
   };
 
   for (const [id, valor] of Object.entries(valores)) {
-    if ($(id)) $(id).textContent = String(valor);
+    if ($(id)) {
+      $(id).textContent = String(valor);
+    }
   }
 
   llenarSelectorJugadoresEvento();
 }
 
 /* =========================================================
-   PESTAÑAS, FILTROS Y BOTONES
+   PESTAÑAS
    ========================================================= */
 
 function configurarPestanas() {
@@ -1452,6 +1600,7 @@ function configurarPestanas() {
 
       for (const nombre of ["nomina", "gestion", "resumen"]) {
         const panel = $(`panel-${nombre}`);
+
         if (panel) {
           panel.classList.toggle("oculto", nombre !== destino);
         }
@@ -1468,16 +1617,20 @@ function configurarPestanas() {
   });
 }
 
+/* =========================================================
+   FILTROS
+   ========================================================= */
+
 function configurarFiltros() {
   ["fechaDesde", "fechaHasta", "filtroGenero"].forEach((id) => {
-    $(id)?.addEventListener("change", () => {
-      llenarSelectorPartidos();
+    $(id)?.addEventListener("change", async () => {
+      await llenarSelectorPartidos();
     });
   });
 
-  $("filtroPartido")?.addEventListener("change", (evento) => {
+  $("filtroPartido")?.addEventListener("change", async (evento) => {
     if (evento.target.value) {
-      seleccionarPartido(evento.target.value);
+      await seleccionarPartido(evento.target.value);
     }
   });
 
@@ -1503,8 +1656,16 @@ function configurarFiltros() {
   $("equipoEvento")?.addEventListener("change", llenarSelectorJugadoresEvento);
 }
 
+/* =========================================================
+   BOTONES
+   ========================================================= */
+
 function configurarBotones() {
   $("btnRecargar")?.addEventListener("click", async () => {
+    const boton = $("btnRecargar");
+
+    if (boton) boton.disabled = true;
+
     try {
       const idActual = estado.partido?.id;
 
@@ -1514,16 +1675,24 @@ function configurarBotones() {
         (partido) => String(partido.id) === String(idActual)
       )) {
         const selector = $("filtroPartido");
-        if (selector) selector.value = String(idActual);
+
+        if (selector) {
+          selector.value = String(idActual);
+        }
+
         await seleccionarPartido(idActual);
       }
 
       mostrarMensaje("✅ Información actualizada.", "ok");
+
     } catch (error) {
       mostrarMensaje(
         "Error al actualizar: " + obtenerError(error, "btnRecargar"),
         "error"
       );
+
+    } finally {
+      if (boton) boton.disabled = false;
     }
   });
 
@@ -1536,11 +1705,13 @@ function configurarBotones() {
   });
 
   $("btnGuardarMarcador")?.addEventListener("click", guardarMarcador);
+
   $("btnGuardarEvento")?.addEventListener("click", registrarEvento);
 
   $("btnActualizarResumen")?.addEventListener("click", async () => {
     await cargarEventos();
     actualizarEstadisticas();
+
     mostrarMensaje("📊 Resumen actualizado.", "ok");
   });
 }
@@ -1560,23 +1731,41 @@ function configurarRealtime() {
       .channel("nomina-partido-cambios")
       .on(
         "postgres_changes",
-        { event: "*", schema: "public", table: "partido" },
+        {
+          event: "*",
+          schema: "public",
+          table: "partido"
+        },
         async () => {
           try {
             const idActual = estado.partido?.id;
+
             await cargarDatosBase();
 
-            if (idActual) {
+            if (
+              idActual &&
+              estado.partidos.some(
+                (partido) => String(partido.id) === String(idActual)
+              )
+            ) {
               await seleccionarPartido(idActual);
             }
+
           } catch (error) {
-            console.warn("No se pudo actualizar la lista en tiempo real:", error);
+            console.warn(
+              "No se pudo actualizar la lista en tiempo real:",
+              error
+            );
           }
         }
       )
       .on(
         "postgres_changes",
-        { event: "*", schema: "public", table: "evento_partido" },
+        {
+          event: "*",
+          schema: "public",
+          table: "evento_partido"
+        },
         async (payload) => {
           const partidoId =
             payload.new?.partido_id || payload.old?.partido_id;
@@ -1593,22 +1782,43 @@ function configurarRealtime() {
       .subscribe((status) => {
         console.info("Realtime nóminas:", status);
       });
+
   } catch (error) {
     console.warn("Realtime no disponible:", error);
   }
 }
 
 /* =========================================================
-   INICIO
+   INICIO DEL MÓDULO
    ========================================================= */
 
 async function iniciar() {
-  configurarPestanas();
-  configurarFiltros();
-  configurarBotones();
+  if (estado.cargando) return;
+
+  estado.cargando = true;
 
   try {
+    console.log("INICIANDO MÓDULO DE NÓMINAS...");
+
+    mostrarMensaje("⏳ Verificando permisos de acceso...", "info");
+
+    const autorizado = await verificarAcceso();
+
+    if (!autorizado) {
+      console.warn("USUARIO SIN AUTORIZACIÓN.");
+      return;
+    }
+
+    console.log("CONFIGURANDO INTERFAZ...");
+
+    configurarPestanas();
+    configurarFiltros();
+    configurarBotones();
+
+    console.log("CARGANDO DATOS DE SUPABASE...");
+
     await cargarDatosBase();
+
     configurarRealtime();
 
     if (!estado.partidos.length) {
@@ -1616,17 +1826,26 @@ async function iniciar() {
         "No hay partidos registrados en la tabla partido.",
         "info"
       );
+
       limpiarPaneles();
       return;
     }
 
     mostrarMensaje("✅ Sistema de nóminas listo.", "ok");
+
+    console.log("MÓDULO DE NÓMINAS INICIADO CORRECTAMENTE.");
+
   } catch (error) {
+    console.error("ERROR AL INICIAR MÓDULO:", error);
+
     mostrarMensaje(
       "No se pudo iniciar la gestión de nóminas: " +
-      obtenerError(error, "iniciar"),
+      (error.message || error),
       "error"
     );
+
+  } finally {
+    estado.cargando = false;
   }
 }
 

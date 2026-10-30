@@ -1,59 +1,51 @@
+
 import { supabase } from './supabase.js';
 
-/* ROLES PERMITIDOS */
+/* =====================================================
+   OLIMPIADAS JUAN SOLANO 2026
+   CONTROL DE ACCESO POR ROLES
+   ===================================================== */
+
+// Acceso predeterminado al panel administrativo
 const ROLES_PERMITIDOS = [
     'ADMINISTRADOR',
-    'COMISION',
-    'CAPITAN',
-    'ARBITRO',
-    'DELEGADO_MESA'
+    'COMISION'
 ];
 
-/* OBTENER SESIÓN */
+/* =====================================================
+   OBTENER SESIÓN
+   ===================================================== */
+
 export async function obtenerSesion() {
 
-    const { data, error } =
-        await supabase.auth.getSession();
+    const { data, error } = await supabase.auth.getSession();
 
     if (error) {
-        console.error(
-            'ERROR OBTENIENDO SESIÓN:',
-            error
-        );
+        console.error('ERROR OBTENIENDO SESIÓN:', error);
         return null;
     }
-
-    console.log(
-        'SESIÓN ACTUAL:',
-        data.session
-    );
 
     return data.session;
 }
 
-/* OBTENER USUARIO ACTUAL */
+/* =====================================================
+   OBTENER USUARIO Y SUS ROLES
+   ===================================================== */
+
 export async function obtenerUsuarioActual() {
 
-    const session =
-        await obtenerSesion();
+    const session = await obtenerSesion();
 
     if (!session) {
-
-        console.error(
-            'NO EXISTE SESIÓN ACTIVA'
-        );
-
+        console.error('NO EXISTE SESIÓN ACTIVA');
         return null;
     }
 
-    const usuarioId =
-        session.user.id;
+    const usuarioId = session.user.id;
 
-    console.log(
-        'USUARIO ID:',
-        usuarioId
-    );
+    console.log('USUARIO ID:', usuarioId);
 
+    // Consultar perfil
     const {
         data: perfil,
         error: errorPerfil
@@ -69,260 +61,240 @@ export async function obtenerUsuarioActual() {
         .maybeSingle();
 
     if (errorPerfil) {
-
-        console.error(
-            'ERROR OBTENIENDO PERFIL:',
-            errorPerfil
-        );
-
-        return null;
+        console.error('ERROR OBTENIENDO PERFIL:', errorPerfil);
     }
 
-    /*
-     * Si no existe perfil, NO bloqueamos
-     * el acceso mientras terminamos de
-     * configurar los roles.
-     */
-    if (!perfil) {
+    if (perfil && perfil.activo === false) {
 
-        console.warn(
-            'NO EXISTE PERFIL PARA ESTE USUARIO'
-        );
-
-        return {
-            id: usuarioId,
-            email: session.user.email,
-            nombres: '',
-            apellidos: '',
-            activo: true,
-            roles: [],
-            session: session
-        };
-    }
-
-    if (perfil.activo === false) {
-
-        console.error(
-            'EL USUARIO ESTÁ DESACTIVADO'
-        );
+        console.error('USUARIO DESACTIVADO');
 
         await supabase.auth.signOut();
 
         return null;
     }
 
-    /*
-     * Intentamos obtener los roles.
-     * Si todavía no están configurados,
-     * no bloqueamos la sesión.
-     */
-
+    // Consultar roles
     const {
         data: rolesData,
         error: errorRoles
     } = await supabase
         .from('usuario_rol')
         .select(`
-            rol_id,
-            rol (
-                id,
+            rol:rol_id (
                 nombre
             )
         `)
         .eq('usuario_id', usuarioId);
 
     if (errorRoles) {
-
-        console.warn(
-            'ERROR OBTENIENDO ROLES:',
-            errorRoles
-        );
-
-        return {
-            id: usuarioId,
-            email: session.user.email,
-            nombres: perfil.nombres || '',
-            apellidos: perfil.apellidos || '',
-            activo: perfil.activo,
-            roles: [],
-            session: session
-        };
+        console.error('ERROR OBTENIENDO ROLES:', errorRoles);
     }
 
-    const roles =
-        (rolesData || [])
-            .map(item => item.rol?.nombre)
-            .filter(Boolean);
+    const roles = (rolesData || [])
+        .map(item => item.rol?.nombre)
+        .filter(Boolean)
+        .map(nombre => String(nombre).trim().toUpperCase());
 
-    console.log(
-        'ROLES DEL USUARIO:',
-        roles
-    );
-
-    return {
+    const usuario = {
 
         id: usuarioId,
 
         email: session.user.email,
 
-        nombres: perfil.nombres || '',
+        nombres: perfil?.nombres || '',
 
-        apellidos: perfil.apellidos || '',
+        apellidos: perfil?.apellidos || '',
 
-        activo: perfil.activo,
+        activo: perfil?.activo ?? true,
 
         roles: roles,
 
         session: session
     };
+
+    console.log('USUARIO ACTUAL:', usuario);
+    console.log('ROLES DEL USUARIO:', roles);
+
+    return usuario;
 }
 
-/* COMPROBAR ROL */
-export function tieneRol(
-    usuario,
-    rolesPermitidos = []
-) {
+/* =====================================================
+   COMPROBAR SI TIENE UN ROL AUTORIZADO
+   ===================================================== */
+
+export function tieneRol(usuario, rolesPermitidos = []) {
 
     if (!usuario) {
         return false;
     }
 
-    /*
-     * ADMINISTRADOR tiene acceso general.
-     */
-    if (
-        usuario.roles &&
-        usuario.roles.includes(
-            'ADMINISTRADOR'
-        )
-    ) {
+    const rolesUsuario = (usuario.roles || [])
+        .map(rol => String(rol).trim().toUpperCase());
+
+    const rolesAutorizados = rolesPermitidos
+        .map(rol => String(rol).trim().toUpperCase());
+
+    // El administrador tiene acceso general
+    if (rolesUsuario.includes('ADMINISTRADOR')) {
         return true;
     }
 
-    return usuario.roles?.some(
-        rol =>
-            rolesPermitidos.includes(rol)
-    ) || false;
+    return rolesUsuario.some(
+        rol => rolesAutorizados.includes(rol)
+    );
 }
 
-/* PROTEGER PANEL */
+/* =====================================================
+   DETERMINAR PÁGINA SEGÚN EL ROL
+   ===================================================== */
+
+function obtenerDestinoPorRol(usuario) {
+
+    const roles = usuario?.roles || [];
+
+    if (roles.includes('ARBITRO')) {
+        return '/admin/nomina-partido.html';
+    }
+
+    if (roles.includes('CAPITAN')) {
+        return '/admin/jugadores-capitan.html';
+    }
+
+    if (roles.includes('ADMINISTRADOR')) {
+        return '/admin/index.html';
+    }
+
+    if (roles.includes('COMISION')) {
+        return '/admin/index.html';
+    }
+
+    if (roles.includes('DELEGADO_MESA')) {
+        return '/admin/index.html';
+    }
+
+    return '/login.html';
+}
+
+/* =====================================================
+   PROTEGER PÁGINAS ADMINISTRATIVAS
+
+   Por defecto:
+   ADMINISTRADOR y COMISION.
+
+   El árbitro debe autorizarse expresamente
+   en su página de nóminas.
+   ===================================================== */
+
 export async function protegerAdmin(
     rolesPermitidos = ROLES_PERMITIDOS
 ) {
 
-    const usuario =
-        await obtenerUsuarioActual();
+    const usuario = await obtenerUsuarioActual();
 
+    // Sin sesión
     if (!usuario) {
 
-        alert(
-            'Debe iniciar sesión para acceder al panel administrativo.'
-        );
+        alert('Debe iniciar sesión para acceder a esta página.');
 
-        window.location.href =
-            '/login.html';
+        window.location.replace('/login.html');
 
         return null;
     }
 
-    /*
-     * TEMPORALMENTE:
-     * cualquier usuario con sesión puede
-     * entrar mientras terminamos la
-     * configuración de roles.
-     */
+    console.log('VERIFICANDO ACCESO...');
+    console.log('ROLES:', usuario.roles);
+    console.log('ROLES PERMITIDOS:', rolesPermitidos);
+
+    // Comprobar permisos
+    if (!tieneRol(usuario, rolesPermitidos)) {
+
+        console.warn('ACCESO DENEGADO');
+
+        const destino = obtenerDestinoPorRol(usuario);
+
+        alert(
+            'No tiene permisos para acceder a esta sección.\n' +
+            'Su rol es: ' + usuario.roles.join(', ')
+        );
+
+        // Evitar redireccionamiento repetido
+        if (window.location.pathname !== destino) {
+            window.location.replace(destino);
+        }
+
+        return null;
+    }
+
+    console.log('ACCESO AUTORIZADO');
+
     return usuario;
 }
 
-/* NOMBRE COMPLETO */
-export function nombreCompleto(
-    usuario
-) {
+/* =====================================================
+   NOMBRE COMPLETO
+   ===================================================== */
+
+export function nombreCompleto(usuario) {
 
     if (!usuario) return '';
 
-    const nombre =
-        usuario.nombres || '';
+    const nombre = usuario.nombres || '';
+    const apellido = usuario.apellidos || '';
 
-    const apellido =
-        usuario.apellidos || '';
+    const completo = `${nombre} ${apellido}`.trim();
 
-    const completo =
-        `${nombre} ${apellido}`.trim();
-
-    return (
-        completo ||
-        usuario.email ||
-        'Usuario'
-    );
+    return completo || usuario.email || 'Usuario';
 }
 
-/* MOSTRAR ROLES */
-export function rolesTexto(
-    usuario
-) {
+/* =====================================================
+   MOSTRAR ROLES
+   ===================================================== */
+
+export function rolesTexto(usuario) {
 
     if (!usuario) {
         return 'SIN USUARIO';
     }
 
-    if (
-        !usuario.roles ||
-        usuario.roles.length === 0
-    ) {
-        return 'ACCESO ADMINISTRATIVO';
+    if (!usuario.roles || usuario.roles.length === 0) {
+        return 'SIN ROLES ASIGNADOS';
     }
 
-    return usuario.roles.join(
-        ' / '
-    );
+    return usuario.roles.join(' / ');
 }
 
-/* CERRAR SESIÓN */
+/* =====================================================
+   CERRAR SESIÓN
+   ===================================================== */
+
 export async function cerrarSesion() {
 
-    const {
-        error
-    } = await supabase.auth.signOut();
+    const { error } = await supabase.auth.signOut();
 
     if (error) {
 
-        console.error(
-            'ERROR CERRANDO SESIÓN:',
-            error
-        );
+        console.error('ERROR CERRANDO SESIÓN:', error);
 
-        alert(
-            'No fue posible cerrar la sesión.'
-        );
+        alert('No fue posible cerrar la sesión.');
 
         return;
     }
 
-    window.location.href =
-        '/login.html';
+    window.location.replace('/login.html');
 }
 
-/* ESCUCHAR CAMBIOS DE SESIÓN */
-export function escucharSesion(
-    callback
-) {
+/* =====================================================
+   ESCUCHAR CAMBIOS DE SESIÓN
+   ===================================================== */
+
+export function escucharSesion(callback) {
 
     return supabase.auth.onAuthStateChange(
-        (
-            event,
-            session
-        ) => {
+        (event, session) => {
 
-            console.log(
-                'CAMBIO DE AUTENTICACIÓN:',
-                event
-            );
+            console.log('CAMBIO DE AUTENTICACIÓN:', event);
 
-            callback(
-                event,
-                session
-            );
+            callback(event, session);
         }
     );
 }

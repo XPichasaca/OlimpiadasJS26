@@ -68,7 +68,7 @@ form.addEventListener('submit', async (event) => {
         } else if (roles.includes('COMISION')) {
             destino = '/admin/index.html';
         } else if (roles.includes('ARBITRO')) {
-            destino = '/admin/index.html';
+            destino = '/admin/nomina-partido.html';
         } else if (roles.includes('DELEGADO_MESA')) {
             destino = '/admin/index.html';
         } else {

@@ -10,6 +10,7 @@ const paginas = [
   "partidos.html",
   "registro.html",
   "tabla.html",
+  "goleadores-tarjeta.html",
   "admin/index.html",
   "admin/competencias.html",
   "admin/equipos.html",

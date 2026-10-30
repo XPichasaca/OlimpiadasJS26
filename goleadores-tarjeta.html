@@ -1,4 +1,4 @@
-```html
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -9,265 +9,371 @@
 
   <style>
     :root {
-      --verde: #10291d;
-      --verde2: #1c4933;
-      --dorado: #d7ad45;
-      --fondo: #f3f5f3;
-      --blanco: #ffffff;
-      --texto: #243329;
-      --borde: #dce4dd;
-      --rojo: #c83b3b;
-      --amarillo: #e9bd36;
+      --verde:#10291d;
+      --verde-claro:#1d4933;
+      --dorado:#d5aa42;
+      --fondo:#f3f5f2;
+      --blanco:#fff;
+      --texto:#26332b;
+      --gris:#718078;
+      --borde:#dce4dd;
+      --sombra:0 5px 18px rgba(16,41,29,.08);
     }
 
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing:border-box; }
 
     body {
-      margin: 0;
-      font-family: Arial, Helvetica, sans-serif;
-      background: var(--fondo);
-      color: var(--texto);
+      margin:0;
+      background:var(--fondo);
+      color:var(--texto);
+      font-family:Arial,Helvetica,sans-serif;
     }
 
     header {
-      background: var(--verde);
-      color: white;
-      padding: 20px 15px;
-      border-bottom: 4px solid var(--dorado);
+      background:var(--verde);
+      color:white;
+      padding:22px 20px;
+      border-bottom:4px solid var(--dorado);
     }
 
     .encabezado {
-      max-width: 1150px;
-      margin: auto;
-      display: flex;
-      align-items: center;
-      gap: 14px;
+      max-width:1250px;
+      margin:auto;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:15px;
+      flex-wrap:wrap;
     }
 
-    .logo {
-      width: 65px;
-      height: 65px;
-      object-fit: contain;
-      background: white;
-      border-radius: 50%;
-      padding: 4px;
-    }
-
-    header h1 {
-      font-size: 24px;
-      margin: 0 0 7px;
-    }
-
-    header p {
-      margin: 0;
-      color: #e8dfc5;
-      font-size: 14px;
-    }
-
-    main {
-      max-width: 1150px;
-      margin: 25px auto;
-      padding: 0 15px;
-    }
+    .marca h1 { margin:0; font-size:25px; }
+    .marca p { margin:7px 0 0; color:#d9e6dc; font-size:13px; }
 
     .volver {
-      display: inline-block;
-      color: var(--verde2);
-      text-decoration: none;
-      font-weight: bold;
-      margin-bottom: 20px;
+      display:inline-block;
+      padding:10px 16px;
+      border:1px solid rgba(255,255,255,.5);
+      border-radius:7px;
+      color:white;
+      text-decoration:none;
+      font-size:14px;
     }
+
+    .volver:hover { background:rgba(255,255,255,.12); }
+
+    main {
+      max-width:1250px;
+      margin:25px auto;
+      padding:0 18px 35px;
+    }
+
+    .titulo-seccion { margin-bottom:20px; }
+    .titulo-seccion h2 { margin:0 0 6px; color:var(--verde); font-size:24px; }
+    .titulo-seccion p { margin:0; color:var(--gris); font-size:14px; }
+
+    .mensaje {
+      padding:13px 16px;
+      margin-bottom:18px;
+      border-radius:8px;
+      font-size:14px;
+    }
+
+    .mensaje.info { background:#e8f0eb; color:#244d34; border:1px solid #c9ddcf; }
+    .mensaje.exito { background:#e5f5e9; color:#176534; border:1px solid #b9dfc4; }
+    .mensaje.error { background:#fdeaea; color:#9e2929; border:1px solid #f1c4c4; }
+    .mensaje[hidden] { display:none; }
 
     .filtros {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 12px;
-      padding: 17px;
-      background: white;
-      border: 1px solid var(--borde);
-      border-radius: 12px;
-      margin-bottom: 22px;
+      display:grid;
+      grid-template-columns:repeat(4,minmax(150px,1fr));
+      gap:14px;
+      background:white;
+      padding:18px;
+      border-radius:12px;
+      box-shadow:var(--sombra);
+      margin-bottom:20px;
     }
 
-    .filtros label {
-      font-size: 13px;
-      font-weight: bold;
-      display: block;
-      margin-bottom: 7px;
+    .campo { display:flex; flex-direction:column; gap:7px; }
+    .campo label { font-size:13px; font-weight:bold; color:var(--verde); }
+
+    .campo input,.campo select {
+      width:100%;
+      height:42px;
+      padding:0 11px;
+      border:1px solid var(--borde);
+      border-radius:7px;
+      background:white;
+      color:var(--texto);
+      font-size:14px;
+      outline:none;
     }
 
-    select {
-      width: 100%;
-      padding: 11px;
-      border: 1px solid #cbd5cd;
-      border-radius: 7px;
-      background: white;
-      font-size: 14px;
+    .campo input:focus,.campo select:focus {
+      border-color:var(--verde-claro);
+      box-shadow:0 0 0 2px rgba(29,73,51,.1);
     }
 
-    .resumen {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 13px;
-      margin-bottom: 22px;
+    .btn {
+      border:none;
+      border-radius:7px;
+      padding:11px 17px;
+      font-weight:bold;
+      cursor:pointer;
+      font-size:14px;
     }
 
-    .indicador {
-      background: white;
-      border: 1px solid var(--borde);
-      border-radius: 12px;
-      padding: 18px;
-      text-align: center;
+    .btn-actualizar {
+      background:var(--verde);
+      color:white;
+      align-self:end;
+      height:42px;
     }
 
-    .indicador .numero {
-      display: block;
-      font-size: 30px;
-      font-weight: 800;
-      color: var(--verde2);
-      margin-bottom: 6px;
+    .btn-actualizar:hover { background:var(--verde-claro); }
+
+    .estadisticas {
+      display:grid;
+      grid-template-columns:repeat(4,minmax(130px,1fr));
+      gap:14px;
+      margin-bottom:22px;
     }
 
-    .indicador .nombre {
-      font-size: 13px;
-      color: #617067;
+    .estadistica {
+      background:white;
+      border-radius:11px;
+      padding:18px;
+      box-shadow:var(--sombra);
+      border-left:4px solid var(--dorado);
     }
 
-    .seccion {
-      background: white;
-      border: 1px solid var(--borde);
-      border-radius: 12px;
-      overflow: hidden;
-      margin-bottom: 22px;
+    .estadistica .etiqueta {
+      display:block;
+      color:var(--gris);
+      font-size:13px;
+      margin-bottom:9px;
     }
 
-    .seccion-titulo {
-      padding: 16px 18px;
-      background: var(--verde);
-      color: white;
-      border-bottom: 3px solid var(--dorado);
-      font-size: 18px;
-      font-weight: bold;
+    .estadistica strong {
+      display:block;
+      color:var(--verde);
+      font-size:29px;
     }
 
-    .tabla-contenedor {
-      width: 100%;
-      overflow-x: auto;
+    .pestanas {
+      display:flex;
+      gap:8px;
+      margin-bottom:16px;
+      border-bottom:1px solid var(--borde);
     }
 
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      min-width: 450px;
+    .pestana {
+      border:none;
+      background:transparent;
+      color:var(--gris);
+      padding:13px 20px;
+      cursor:pointer;
+      font-size:15px;
+      font-weight:bold;
+      border-bottom:3px solid transparent;
     }
 
-    th, td {
-      text-align: left;
-      padding: 12px 14px;
-      border-bottom: 1px solid #e8ede9;
-      font-size: 14px;
+    .pestana.activo {
+      color:var(--verde);
+      border-bottom-color:var(--dorado);
     }
+
+    .panel {
+      background:white;
+      border-radius:11px;
+      box-shadow:var(--sombra);
+      overflow:hidden;
+    }
+
+    .panel-cabecera {
+      padding:17px 20px;
+      border-bottom:1px solid var(--borde);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+
+    .panel-cabecera h3 { margin:0; color:var(--verde); font-size:18px; }
+    .panel-cabecera span { color:var(--gris); font-size:12px; }
+
+    .tabla-contenedor { width:100%; overflow-x:auto; }
+
+    table { width:100%; border-collapse:collapse; min-width:760px; }
+    thead { background:#eef3ef; }
 
     th {
-      background: #edf2ee;
-      color: var(--verde);
-      font-size: 12px;
-      text-transform: uppercase;
+      color:var(--verde);
+      font-size:12px;
+      text-transform:uppercase;
+      letter-spacing:.3px;
+      padding:14px 13px;
+      text-align:left;
+      white-space:nowrap;
     }
 
-    td.centro, th.centro {
-      text-align: center;
+    td {
+      padding:12px 13px;
+      border-bottom:1px solid #edf0ed;
+      font-size:14px;
+      vertical-align:middle;
     }
 
-    .puesto {
-      font-weight: bold;
-      color: #67776b;
-      text-align: center;
-      width: 55px;
+    tbody tr:hover { background:#f8faf8; }
+    tbody tr:last-child td { border-bottom:none; }
+
+    .tabla-vacia {
+      text-align:center;
+      padding:35px 15px;
+      color:var(--gris);
     }
 
-    .cantidad {
-      font-size: 18px;
-      font-weight: bold;
-      color: var(--verde2);
-      text-align: center;
+    .grupo-categoria td {
+      background:#e8f0eb;
+      color:var(--verde);
+      font-weight:bold;
+      padding:12px 15px;
+      border-top:2px solid #d4e1d7;
     }
 
-    .amarilla {
-      display: inline-block;
-      width: 15px;
-      height: 20px;
-      background: var(--amarillo);
-      border: 1px solid #c8a12b;
-      border-radius: 3px;
-      vertical-align: middle;
+    .jugador-celda,.equipo-celda {
+      display:flex;
+      align-items:center;
+      gap:10px;
+      min-width:160px;
     }
 
-    .roja {
-      display: inline-block;
-      width: 15px;
-      height: 20px;
-      background: var(--rojo);
-      border-radius: 3px;
-      vertical-align: middle;
+    .foto-jugador,.escudo-equipo,.imagen-fallback {
+      width:42px;
+      height:42px;
+      flex:0 0 42px;
+      border-radius:50%;
+      object-fit:cover;
+      background:#e8eee9;
+      border:1px solid var(--borde);
     }
 
-    .estado {
-      padding: 18px;
-      text-align: center;
-      color: #68766c;
-      font-size: 14px;
+    .escudo-equipo {
+      border-radius:9px;
+      object-fit:contain;
+      padding:2px;
+      background:white;
     }
 
-    .error {
-      color: #a32121;
-      background: #fff0f0;
-      padding: 14px;
-      border-radius: 8px;
-      margin-bottom: 18px;
-      overflow-wrap: anywhere;
+    .imagen-fallback {
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      color:var(--verde);
+      font-weight:bold;
+      font-size:13px;
     }
+
+    .nombre-principal { font-weight:bold; color:var(--texto); }
+    .nombre-secundario { display:block; color:var(--gris); font-size:11px; margin-top:3px; }
+
+    .numero-camiseta {
+      display:inline-block;
+      min-width:25px;
+      padding:4px 6px;
+      text-align:center;
+      border-radius:5px;
+      background:#eef3ef;
+      color:var(--verde);
+      font-weight:bold;
+      margin-right:5px;
+    }
+
+    .dato-goles {
+      color:var(--verde);
+      font-size:20px;
+      font-weight:bold;
+    }
+
+    .tarjeta-amarilla,.tarjeta-roja {
+      display:inline-flex;
+      justify-content:center;
+      align-items:center;
+      min-width:30px;
+      height:30px;
+      border-radius:6px;
+      font-weight:bold;
+    }
+
+    .tarjeta-amarilla { background:#fff0b8; color:#765300; }
+    .tarjeta-roja { background:#ffe0e0; color:#a51f1f; }
+
+    .btn-detalle {
+      border:1px solid #cbd8ce;
+      background:#f5f8f5;
+      color:var(--verde);
+      border-radius:6px;
+      padding:7px 10px;
+      cursor:pointer;
+      font-weight:bold;
+      white-space:nowrap;
+    }
+
+    .btn-detalle:hover { background:#e8f0eb; }
+
+    .fila-detalle td {
+      background:#f8faf8;
+      padding:15px;
+    }
+
+    .detalle-titulo {
+      color:var(--verde);
+      font-weight:bold;
+      margin-bottom:10px;
+    }
+
+    .detalle-evento {
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      flex-wrap:wrap;
+      padding:10px;
+      margin:7px 0;
+      background:white;
+      border:1px solid var(--borde);
+      border-radius:7px;
+    }
+
+    .detalle-partido { font-weight:bold; color:var(--texto); }
+    .detalle-meta { color:var(--gris); font-size:12px; margin-top:4px; }
+    .detalle-marcador { color:var(--verde); font-weight:bold; white-space:nowrap; }
+
+    .sin-detalles { color:var(--gris); padding:12px; text-align:center; }
 
     footer {
-      background: var(--verde);
-      color: white;
-      text-align: center;
-      padding: 20px 12px;
-      font-size: 12px;
-      margin-top: 35px;
+      background:var(--verde);
+      color:#dce7df;
+      text-align:center;
+      padding:18px;
+      font-size:12px;
     }
 
-    @media (max-width: 600px) {
-      header h1 {
-        font-size: 19px;
-      }
+    @media(max-width:850px) {
+      .filtros { grid-template-columns:repeat(2,minmax(130px,1fr)); }
+      .estadisticas { grid-template-columns:repeat(2,minmax(120px,1fr)); }
+    }
 
-      .logo {
-        width: 52px;
-        height: 52px;
-      }
-
-      .resumen {
-        gap: 7px;
-      }
-
-      .indicador {
-        padding: 13px 5px;
-      }
-
-      .indicador .numero {
-        font-size: 25px;
-      }
-
-      .indicador .nombre {
-        font-size: 11px;
-      }
-
-      .filtros {
-        grid-template-columns: 1fr;
-      }
+    @media(max-width:520px) {
+      header { padding:18px 14px; }
+      .marca h1 { font-size:20px; }
+      main { margin-top:18px; padding:0 12px 25px; }
+      .filtros { grid-template-columns:1fr; }
+      .estadisticas { gap:9px; }
+      .estadistica { padding:14px; }
+      .estadistica strong { font-size:25px; }
+      .pestana { flex:1; padding:12px 8px; font-size:13px; }
     }
   </style>
 </head>
@@ -275,109 +381,126 @@
 <body>
   <header>
     <div class="encabezado">
-      <img class="logo" src="img/Quilloac.jpg"
-           alt="Escudo de la comunidad"
-           onerror="this.style.display='none'">
-
-      <div>
-        <h1>Goleadores y Tarjetas</h1>
-        <p>Olimpiadas Juan Solano 2026</p>
+      <div class="marca">
+        <h1>Olimpiadas Juan Solano 2026</h1>
+        <p>Gestión deportiva · Goleadores y tarjetas</p>
       </div>
+      <a class="volver" href="../index.html">← Volver al inicio</a>
     </div>
   </header>
 
   <main>
-    <a class="volver" href="index.html">← Volver al inicio</a>
+    <section class="titulo-seccion">
+      <h2>Goleadores y tarjetas</h2>
+      <p>Estadísticas oficiales de los partidos de fútbol, organizadas por categoría.</p>
+    </section>
 
-    <div id="mensajeError" role="alert" hidden></div>
+    <div id="mensaje" class="mensaje info" role="status">
+      Preparando información...
+    </div>
 
     <section class="filtros">
-      <div>
-        <label for="filtroCompetencia">Competencia</label>
-        <select id="filtroCompetencia">
-          <option value="">Cargando competencias...</option>
+      <div class="campo">
+        <label for="filtroCategoria">Categoría</label>
+        <select id="filtroCategoria">
+          <option value="">Todas las categorías</option>
         </select>
       </div>
 
-      <div>
+      <div class="campo">
         <label for="filtroEquipo">Equipo</label>
         <select id="filtroEquipo">
           <option value="">Todos los equipos</option>
         </select>
       </div>
+
+      <div class="campo">
+        <label for="buscarJugador">Buscar jugador o equipo</label>
+        <input type="search" id="buscarJugador"
+               placeholder="Escriba un nombre..." autocomplete="off">
+      </div>
+
+      <button type="button" id="btnActualizar" class="btn btn-actualizar">
+        ↻ Actualizar datos
+      </button>
     </section>
 
-    <section class="resumen">
-      <div class="indicador">
-        <span class="numero" id="totalGoles">0</span>
-        <span class="nombre">Goles registrados</span>
-      </div>
-
-      <div class="indicador">
-        <span class="numero" id="totalAmarillas">0</span>
-        <span class="nombre">Tarjetas amarillas</span>
-      </div>
-
-      <div class="indicador">
-        <span class="numero" id="totalRojas">0</span>
-        <span class="nombre">Tarjetas rojas</span>
-      </div>
+    <section class="estadisticas">
+      <article class="estadistica">
+        <span class="etiqueta">Total de goles</span>
+        <strong id="totalGoles">0</strong>
+      </article>
+      <article class="estadistica">
+        <span class="etiqueta">Goleadores</span>
+        <strong id="totalGoleadores">0</strong>
+      </article>
+      <article class="estadistica">
+        <span class="etiqueta">Tarjetas amarillas</span>
+        <strong id="totalAmarillas">0</strong>
+      </article>
+      <article class="estadistica">
+        <span class="etiqueta">Tarjetas rojas</span>
+        <strong id="totalRojas">0</strong>
+      </article>
     </section>
 
-    <section class="seccion">
-      <div class="seccion-titulo">⚽ Tabla de goleadores</div>
+    <nav class="pestanas" role="tablist" aria-label="Estadísticas">
+      <button type="button" id="btnGoleadores"
+              class="pestana activo" data-pestana="goleadores"
+              role="tab" aria-selected="true">
+        ⚽ Goleadores
+      </button>
+      <button type="button" id="btnTarjetas"
+              class="pestana" data-pestana="tarjetas"
+              role="tab" aria-selected="false">
+        🟨 Tarjetas
+      </button>
+    </nav>
+
+    <section id="panelGoleadores" class="panel">
+      <div class="panel-cabecera">
+        <h3>Tabla de goleadores</h3>
+        <span>Clasificación independiente por categoría</span>
+      </div>
       <div class="tabla-contenedor">
         <table>
           <thead>
             <tr>
-              <th class="centro">Pos.</th>
+              <th>#</th>
               <th>Jugador</th>
               <th>Equipo</th>
-              <th class="centro">Goles</th>
+              <th>Categoría</th>
+              <th>Goles</th>
+              <th>Detalle</th>
             </tr>
           </thead>
           <tbody id="tablaGoleadores">
-            <tr><td colspan="4" class="estado">Cargando goleadores...</td></tr>
+            <tr><td colspan="6" class="tabla-vacia">Cargando goleadores...</td></tr>
           </tbody>
         </table>
       </div>
     </section>
 
-    <section class="seccion">
-      <div class="seccion-titulo">
-        <span class="amarilla"></span> Tarjetas amarillas
+    <section id="panelTarjetas" class="panel" hidden>
+      <div class="panel-cabecera">
+        <h3>Control de tarjetas</h3>
+        <span>Amarillas y expulsiones por categoría</span>
       </div>
       <div class="tabla-contenedor">
         <table>
           <thead>
             <tr>
+              <th>#</th>
               <th>Jugador</th>
               <th>Equipo</th>
-              <th class="centro">Tarjetas</th>
+              <th>Categoría</th>
+              <th>Amarillas</th>
+              <th>Rojas</th>
+              <th>Detalle</th>
             </tr>
           </thead>
-          <tbody id="tablaAmarillas">
-            <tr><td colspan="3" class="estado">Cargando tarjetas...</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </section>
-
-    <section class="seccion">
-      <div class="seccion-titulo">
-        <span class="roja"></span> Tarjetas rojas
-      </div>
-      <div class="tabla-contenedor">
-        <table>
-          <thead>
-            <tr>
-              <th>Jugador</th>
-              <th>Equipo</th>
-              <th class="centro">Tarjetas</th>
-            </tr>
-          </thead>
-          <tbody id="tablaRojas">
-            <tr><td colspan="3" class="estado">Cargando tarjetas...</td></tr>
+          <tbody id="tablaTarjetas">
+            <tr><td colspan="7" class="tabla-vacia">Cargando tarjetas...</td></tr>
           </tbody>
         </table>
       </div>
@@ -385,10 +508,10 @@
   </main>
 
   <footer>
-    Comuna Quilloac | Olimpiadas Juan Solano 2026
+    Comuna Quilloac | Olimpiadas Juan Solano 2026<br>
+    Desarrollado por Xavier Pichasaca
   </footer>
 
-  <script type="module" src="./js/goleadores-tarjeta.js"></script>
+  <script type="module" src="../js/goleadores-tarjeta.js"></script>
 </body>
 </html>
-```
