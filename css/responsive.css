@@ -1,0 +1,658 @@
+
+/* =========================================================
+   OLIMPIADAS JUAN SOLANO 2026
+   SISTEMA RESPONSIVE GENERAL
+   Adaptación: escritorio, tablet y celular
+   ========================================================= */
+
+/* VARIABLES GENERALES */
+:root {
+    --resp-verde: #123c26;
+    --resp-verde2: #23643c;
+    --resp-dorado: #e5b936;
+    --resp-fondo: #f4f7f4;
+    --resp-borde: #dce5dc;
+    --resp-texto: #17251b;
+}
+
+/* CONTROL GENERAL */
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+html {
+    width: 100%;
+    max-width: 100%;
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+}
+
+body {
+    width: 100%;
+    max-width: 100%;
+    min-width: 320px;
+    overflow-x: hidden;
+}
+
+img,
+video,
+iframe,
+svg {
+    max-width: 100%;
+}
+
+img {
+    height: auto;
+}
+
+input,
+select,
+textarea,
+button {
+    max-width: 100%;
+    font: inherit;
+}
+
+input,
+select,
+textarea {
+    min-width: 0;
+}
+
+button,
+a {
+    -webkit-tap-highlight-color: transparent;
+}
+
+a,
+button,
+input,
+select,
+textarea {
+    touch-action: manipulation;
+}
+
+/* CONTENEDORES */
+.contenedor,
+.container,
+.contenido,
+.contenido-principal,
+main,
+main.contenido {
+    min-width: 0;
+}
+
+.contenedor,
+.container {
+    max-width: 100%;
+}
+
+section,
+article,
+aside,
+header,
+footer,
+nav {
+    min-width: 0;
+}
+
+/* ENCABEZADOS */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    overflow-wrap: anywhere;
+}
+
+.titulo,
+.titulo-seccion,
+.encabezado-seccion {
+    max-width: 100%;
+}
+
+/* MENÚS Y NAVEGACIÓN */
+nav,
+.navbar,
+.navegacion,
+.barra-navegacion {
+    max-width: 100%;
+}
+
+nav a,
+.navbar a,
+.menu a,
+.navegacion a {
+    overflow-wrap: anywhere;
+}
+
+/* BOTONES */
+button,
+.btn,
+.boton,
+.boton-dorado,
+.boton-panel {
+    cursor: pointer;
+    min-height: 36px;
+}
+
+button img,
+.btn img,
+.boton img {
+    max-width: 24px;
+    vertical-align: middle;
+}
+
+/* FORMULARIOS */
+form {
+    max-width: 100%;
+    min-width: 0;
+}
+
+.formulario,
+.form-grid,
+.form-group,
+.form-grupo,
+.campo,
+.grupo-campo {
+    min-width: 0;
+    max-width: 100%;
+}
+
+input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+select,
+textarea {
+    width: 100%;
+    min-height: 40px;
+}
+
+textarea {
+    resize: vertical;
+    min-height: 90px;
+}
+
+input[type="file"] {
+    width: 100%;
+    min-width: 0;
+}
+
+input[type="checkbox"],
+input[type="radio"] {
+    width: auto;
+    min-height: auto;
+    flex-shrink: 0;
+}
+
+/* TABLAS: NO DEFORMAR EL CONTENIDO */
+.tabla-contenedor,
+.table-responsive,
+.contenedor-tabla,
+.tabla-responsive,
+.overflow-auto {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: visible;
+    -webkit-overflow-scrolling: touch;
+}
+
+table {
+    max-width: 100%;
+    border-collapse: collapse;
+}
+
+.tabla-contenedor table,
+.table-responsive table,
+.contenedor-tabla table,
+.tabla-responsive table {
+    min-width: 600px;
+}
+
+th,
+td {
+    overflow-wrap: anywhere;
+}
+
+/* TARJETAS */
+.card,
+.tarjeta,
+.panel,
+.panel-card,
+.tarjeta-equipo,
+.tarjeta-jugador {
+    min-width: 0;
+    max-width: 100%;
+}
+
+.card img,
+.tarjeta img,
+.panel img {
+    max-width: 100%;
+    object-fit: contain;
+}
+
+/* CUADRÍCULAS */
+.grid,
+.grilla,
+.grid-container,
+.rejilla {
+    min-width: 0;
+    max-width: 100%;
+}
+
+/* FILAS FLEXIBLES */
+.fila,
+.row,
+.flex-row {
+    min-width: 0;
+    max-width: 100%;
+}
+
+.fila > *,
+.row > *,
+.flex-row > * {
+    min-width: 0;
+}
+
+/* IMÁGENES Y LOGOS */
+.logo,
+.logo-principal,
+.logo-comunidad,
+.escudo-equipo,
+.escudo {
+    flex-shrink: 0;
+}
+
+/* VENTANAS Y MODALES */
+.modal,
+.modal-dialog,
+.dialogo,
+.popup {
+    max-width: calc(100% - 24px);
+}
+
+.modal-content,
+.modal-body,
+.modal-header,
+.modal-footer {
+    min-width: 0;
+    max-width: 100%;
+}
+
+dialog {
+    max-width: calc(100% - 24px);
+}
+
+/* MENSAJES */
+.alert,
+.alerta,
+.mensaje,
+.estado,
+.notificacion {
+    max-width: 100%;
+    overflow-wrap: anywhere;
+}
+
+/* FILTROS Y BUSCADORES */
+.filtros,
+.filtros-container,
+.buscador,
+.barra-filtros {
+    min-width: 0;
+    max-width: 100%;
+}
+
+/* =========================================================
+   TABLETS
+   ========================================================= */
+@media (max-width: 1024px) {
+
+    .contenedor,
+    .container {
+        padding-left: 18px;
+        padding-right: 18px;
+    }
+
+    .grid,
+    .grilla,
+    .grid-container,
+    .rejilla {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .form-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .contenido-principal {
+        padding: 20px;
+    }
+
+    .paneles-principales {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+/* =========================================================
+   CELULARES
+   ========================================================= */
+@media (max-width: 768px) {
+
+    body {
+        font-size: 14px;
+    }
+
+    .contenedor,
+    .container {
+        width: 100%;
+        padding-left: 13px;
+        padding-right: 13px;
+    }
+
+    /* ENCABEZADOS */
+    h1 {
+        font-size: clamp(22px, 6vw, 32px);
+    }
+
+    h2 {
+        font-size: clamp(19px, 5vw, 27px);
+    }
+
+    h3 {
+        font-size: clamp(16px, 4vw, 22px);
+    }
+
+    /* DISTRIBUCIONES */
+    .grid,
+    .grilla,
+    .grid-container,
+    .rejilla,
+    .paneles-principales,
+    .form-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .fila,
+    .row,
+    .flex-row {
+        flex-wrap: wrap;
+    }
+
+    /* ADMINISTRACIÓN */
+    .layout {
+        display: block !important;
+        width: 100%;
+        min-height: 100vh;
+    }
+
+    .sidebar {
+        position: relative !important;
+        top: auto !important;
+        left: auto !important;
+        bottom: auto !important;
+        width: 100% !important;
+        height: auto !important;
+        max-height: none !important;
+        overflow: visible !important;
+        z-index: 20;
+    }
+
+    .contenido {
+        width: 100% !important;
+        max-width: 100% !important;
+        margin-left: 0 !important;
+        padding: 12px !important;
+    }
+
+    .contenido-principal {
+        width: 100%;
+        max-width: 100%;
+        padding: 14px !important;
+    }
+
+    .topbar {
+        width: 100%;
+        flex-wrap: wrap;
+        gap: 10px;
+        padding: 12px !important;
+    }
+
+    /* MENÚ ADMINISTRATIVO */
+    .sidebar .menu,
+    .sidebar nav,
+    .menu-admin {
+        width: 100%;
+        max-width: 100%;
+    }
+
+    .sidebar .menu a,
+    .sidebar nav a,
+    .menu-admin a {
+        min-height: 42px;
+        padding: 11px;
+    }
+
+    /* FORMULARIOS */
+    .form-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        gap: 13px;
+    }
+
+    .form-group,
+    .form-grupo,
+    .campo,
+    .grupo-campo {
+        width: 100%;
+    }
+
+    input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+    select,
+    textarea {
+        font-size: 16px;
+    }
+
+    /* BOTONES */
+    .acciones,
+    .acciones-formulario,
+    .botones,
+    .grupo-botones {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        width: 100%;
+    }
+
+    .acciones button,
+    .acciones-formulario button,
+    .botones button,
+    .grupo-botones button {
+        max-width: 100%;
+    }
+
+    /* TARJETAS */
+    .card,
+    .tarjeta,
+    .panel,
+    .panel-card {
+        width: 100%;
+        margin-left: 0;
+        margin-right: 0;
+    }
+
+    /* TABLAS */
+    .tabla-contenedor,
+    .table-responsive,
+    .contenedor-tabla,
+    .tabla-responsive {
+        display: block;
+        width: 100%;
+        overflow-x: auto;
+    }
+
+    /* PESTAÑAS */
+    .pestanas,
+    .tabs,
+    .tab-list {
+        display: flex;
+        flex-wrap: nowrap;
+        width: 100%;
+        overflow-x: auto;
+        gap: 7px;
+        padding-bottom: 8px;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .pestana,
+    .tab,
+    .tab-button {
+        flex: 0 0 auto;
+        white-space: nowrap;
+    }
+
+    /* FILTROS */
+    .filtros,
+    .filtros-container,
+    .barra-filtros {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        gap: 10px;
+        width: 100%;
+    }
+
+    /* MODALES */
+    .modal,
+    .modal-dialog,
+    .dialogo,
+    .popup {
+        width: calc(100% - 20px) !important;
+        max-width: 500px;
+        margin: 10px auto;
+    }
+
+    /* PIE DE PÁGINA */
+    footer,
+    .footer,
+    .pie-pagina {
+        max-width: 100%;
+    }
+
+    /* IMÁGENES */
+    .banner,
+    .imagen-banner {
+        background-position: center;
+    }
+}
+
+/* =========================================================
+   CELULARES PEQUEÑOS
+   ========================================================= */
+@media (max-width: 480px) {
+
+    .contenedor,
+    .container {
+        padding-left: 10px;
+        padding-right: 10px;
+    }
+
+    .contenido,
+    .contenido-principal {
+        padding: 10px !important;
+    }
+
+    .topbar {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .topbar button,
+    .topbar .btn {
+        width: 100%;
+    }
+
+    .panel,
+    .card,
+    .tarjeta {
+        padding: 12px;
+    }
+
+    .acciones button,
+    .acciones-formulario button,
+    .botones button {
+        flex: 1 1 100%;
+        width: 100%;
+    }
+
+    .titulo-seccion {
+        flex-wrap: wrap;
+    }
+
+    .titulo-seccion h2 {
+        max-width: 100%;
+    }
+
+    .tabla-contenedor table,
+    .table-responsive table,
+    .contenedor-tabla table,
+    .tabla-responsive table {
+        min-width: 560px;
+    }
+
+    .modal,
+    .modal-dialog,
+    .dialogo,
+    .popup {
+        width: calc(100% - 14px) !important;
+        max-width: none;
+    }
+}
+
+/* =========================================================
+   CELULARES MUY PEQUEÑOS
+   ========================================================= */
+@media (max-width: 360px) {
+
+    body {
+        font-size: 13px;
+    }
+
+    .contenedor,
+    .container {
+        padding-left: 8px;
+        padding-right: 8px;
+    }
+
+    .contenido,
+    .contenido-principal {
+        padding: 8px !important;
+    }
+
+    .panel,
+    .card,
+    .tarjeta {
+        padding: 10px;
+    }
+
+    button,
+    .btn,
+    .boton {
+        font-size: 12px;
+    }
+}
+
+/* =========================================================
+   ACCESIBILIDAD Y MOVIMIENTO
+   ========================================================= */
+@media (prefers-reduced-motion: reduce) {
+
+    *,
+    *::before,
+    *::after {
+        scroll-behavior: auto !important;
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+    }
+}
