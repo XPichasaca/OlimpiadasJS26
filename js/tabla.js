@@ -1,5 +1,4 @@
 
-
 import { supabase } from './supabase.js';
 
 console.log('✅ tabla.js cargado');
@@ -9,6 +8,8 @@ const estadoTabla = document.getElementById('estadoTabla');
 const btnActualizar = document.getElementById('btnActualizarTabla');
 
 let cargando = false;
+let recargaPendiente = false;
+let canalRealtime = null;
 
 function normalizar(valor) {
     return String(valor ?? '')
@@ -34,6 +35,10 @@ function escaparHTML(valor) {
 
 function esFinalizado(estado) {
     return ['FINALIZADO', 'FINALIZADA'].includes(normalizar(estado));
+}
+
+function esEnVivo(estado) {
+    return normalizar(estado) === 'EN_VIVO';
 }
 
 function tieneMarcador(partido) {
@@ -129,6 +134,10 @@ function actualizarEstadisticas(local, visitante, golesLocal, golesVisitante) {
         visitante.pts++;
     }
 }
+
+// =====================================================
+// ESTILOS
+// =====================================================
 
 function insertarEstilos() {
     if (document.getElementById('estilosTablaPosiciones')) return;
@@ -233,8 +242,17 @@ function mostrarMensaje(mensaje, error = false) {
     `;
 }
 
+// =====================================================
+// CARGAR TABLA
+// =====================================================
+
 async function cargarTabla() {
-    if (cargando || !contenedor) return;
+    if (!contenedor) return;
+
+    if (cargando) {
+        recargaPendiente = true;
+        return;
+    }
 
     cargando = true;
 
@@ -312,7 +330,7 @@ async function cargarTabla() {
             competencias = data || [];
         }
 
-        // 4. Obtener todas las inscripciones de las competencias.
+        // 4. Obtener inscripciones.
         let inscripciones = [];
 
         if (idsCompetencias.length) {
@@ -353,8 +371,7 @@ async function cargarTabla() {
             ])
         );
 
-        // 5. Determinar grupos usando la observación de los partidos.
-        // Si hay contradicciones, no se asigna un grupo arbitrariamente.
+        // 5. Determinar grupos.
         const gruposPorInscripcion = new Map();
 
         for (const partido of partidos) {
@@ -371,7 +388,11 @@ async function cargarTabla() {
                 const inscripcion = mapaInscripciones.get(String(id));
                 if (!inscripcion) continue;
 
-                const llave = clave(inscripcion.id, inscripcion.competencia_id);
+                const llave = clave(
+                    inscripcion.id,
+                    inscripcion.competencia_id
+                );
+
                 const anterior = gruposPorInscripcion.get(llave);
 
                 if (!anterior) {
@@ -385,7 +406,7 @@ async function cargarTabla() {
             }
         }
 
-        // 6. Crear una fila para cada inscripción.
+        // 6. Crear filas.
         const tabla = new Map();
 
         for (const inscripcion of inscripciones) {
@@ -405,11 +426,18 @@ async function cargarTabla() {
             );
         }
 
-        // 7. Calcular estadísticas de partidos finalizados.
+        // 7. Procesar partidos EN_VIVO y FINALIZADOS.
         for (const partido of partidos) {
-            if (!esFinalizado(partido.estado) || !tieneMarcador(partido)) {
-                continue;
-            }
+            const estado = normalizar(partido.estado);
+
+            const finalizado = esFinalizado(estado);
+            const enVivo = esEnVivo(estado);
+
+            if (!finalizado && !enVivo) continue;
+
+            // Si está EN_VIVO y no tiene marcador, se interpreta 0-0.
+            // Si está FINALIZADO, exigimos un marcador registrado.
+            if (finalizado && !tieneMarcador(partido)) continue;
 
             const fase = mapaFases.get(String(partido.fase_id));
             if (!fase) continue;
@@ -443,8 +471,6 @@ async function cargarTabla() {
                 clave(visitante.id, visitante.competencia_id)
             ) || 'Grupo por verificar';
 
-            // Si el grupo se identifica en la observación, ambos equipos
-            // deben corresponder a ese mismo grupo para sumar el resultado.
             if (grupoPartido !== 'Grupo por verificar') {
                 if (
                     grupoLocal !== grupoPartido ||
@@ -468,12 +494,21 @@ async function cargarTabla() {
 
             if (!filaLocal || !filaVisitante) continue;
 
+            const golesLocal = Number(partido.goles_local ?? 0);
+            const golesVisitante = Number(partido.goles_visitante ?? 0);
+
             actualizarEstadisticas(
                 filaLocal,
                 filaVisitante,
-                Number(partido.goles_local),
-                Number(partido.goles_visitante)
+                golesLocal,
+                golesVisitante
             );
+
+            if (enVivo) {
+                console.log(
+                    `⚽ EN VIVO partido ${partido.id}: ${golesLocal}-${golesVisitante}`
+                );
+            }
         }
 
         mostrarTablas([...tabla.values()]);
@@ -482,7 +517,8 @@ async function cargarTabla() {
             estadoTabla.textContent =
                 `Actualizado: ${new Date().toLocaleTimeString('es-EC', {
                     hour: '2-digit',
-                    minute: '2-digit'
+                    minute: '2-digit',
+                    second: '2-digit'
                 })}`;
         }
 
@@ -500,6 +536,7 @@ async function cargarTabla() {
         if (estadoTabla) {
             estadoTabla.textContent = 'Error al consultar las posiciones.';
         }
+
     } finally {
         cargando = false;
 
@@ -507,8 +544,17 @@ async function cargarTabla() {
             btnActualizar.disabled = false;
             btnActualizar.textContent = '↻ Actualizar posiciones';
         }
+
+        if (recargaPendiente) {
+            recargaPendiente = false;
+            cargarTabla();
+        }
     }
 }
+
+// =====================================================
+// MOSTRAR TABLAS
+// =====================================================
 
 function mostrarTablas(filas) {
     if (!filas.length) {
@@ -518,7 +564,6 @@ function mostrarTablas(filas) {
         return;
     }
 
-    // Separar por disciplina, categoría, género y grupo.
     const agrupaciones = new Map();
 
     for (const fila of filas) {
@@ -612,9 +657,72 @@ function mostrarTablas(filas) {
     contenedor.innerHTML = contenido;
 }
 
+// =====================================================
+// REALTIME: CAMBIOS EN PARTIDOS Y MARCADOR
+// =====================================================
+
+function configurarRealtime() {
+    if (canalRealtime) {
+        supabase.removeChannel(canalRealtime);
+        canalRealtime = null;
+    }
+
+    canalRealtime = supabase
+        .channel('tabla-posiciones-realtime')
+
+        .on(
+            'postgres_changes',
+            {
+                event: '*',
+                schema: 'public',
+                table: 'partido'
+            },
+            payload => {
+                console.log('📡 Cambio en partido:', payload);
+
+                // Cada INSERT, UPDATE o DELETE vuelve a consultar
+                // los marcadores y recalcula todas las posiciones.
+                cargarTabla();
+            }
+        )
+
+        .subscribe((status, error) => {
+            console.log('📡 Estado Realtime tabla:', status);
+
+            if (status === 'SUBSCRIBED') {
+                console.log(
+                    '✅ Tabla de posiciones conectada en tiempo real.'
+                );
+
+                if (estadoTabla) {
+                    estadoTabla.textContent =
+                        'Actualización automática activada.';
+                }
+            }
+
+            if (status === 'CHANNEL_ERROR') {
+                console.error(
+                    '❌ Error de conexión Realtime:',
+                    error
+                );
+            }
+
+            if (status === 'TIMED_OUT') {
+                console.warn(
+                    '⏳ Tiempo de conexión Realtime agotado.'
+                );
+            }
+        });
+}
+
+// =====================================================
+// INICIAR
+// =====================================================
+
 insertarEstilos();
 
 btnActualizar?.addEventListener('click', cargarTabla);
 
-cargarTabla();
+configurarRealtime();
 
+cargarTabla();

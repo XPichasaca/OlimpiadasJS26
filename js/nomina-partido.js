@@ -3,7 +3,7 @@ import { supabase } from "./supabase.js";
 
 /* =========================================================
    OLIMPIADAS JUAN SOLANO 2026
-   Gestión de nóminas, marcador y eventos de fútbol
+   Gestión de nóminas, marcador, estado y eventos de fútbol
    Acceso: ADMINISTRADOR y ARBITRO
    ========================================================= */
 
@@ -120,8 +120,6 @@ function obtenerError(error, contexto) {
 
 /* =========================================================
    VERIFICAR ACCESO
-   CONSULTA DIRECTA A usuario_rol
-   SOLO ADMINISTRADOR Y ARBITRO
    ========================================================= */
 
 async function verificarAcceso() {
@@ -814,6 +812,11 @@ function mostrarDatosPartido() {
   const partido = estado.partido;
   if (!partido) return;
 
+  // NUEVO: sincronizar el selector con el estado del partido seleccionado.
+  if ($("estadoPartido")) {
+    $("estadoPartido").value = partido.estado || "PROGRAMADO";
+  }
+
   const local = resolverEquipoYInscripcion(
     partido.equipo_local_id,
     partido
@@ -857,6 +860,11 @@ function limpiarPaneles() {
   if ($("partidoNomina")) $("partidoNomina").textContent = "Seleccione un partido.";
   if ($("partidoGestion")) $("partidoGestion").textContent = "Seleccione un partido.";
   if ($("partidoResumen")) $("partidoResumen").textContent = "Seleccione un partido.";
+
+  // NUEVO: limpiar el selector cuando no hay partido seleccionado.
+  if ($("estadoPartido")) {
+    $("estadoPartido").value = "PROGRAMADO";
+  }
 
   actualizarEstadisticas();
 }
@@ -1160,6 +1168,89 @@ async function guardarNominaLado(lado) {
     mostrarMensaje(
       "No se pudo guardar la nómina: " +
       obtenerError(error, "guardarNominaLado"),
+      "error"
+    );
+
+  } finally {
+    if (boton) boton.disabled = false;
+  }
+}
+
+/* =========================================================
+   ESTADO DEL PARTIDO
+   NUEVO: ACTUALIZA LA COLUMNA estado DE partido
+   ========================================================= */
+
+async function guardarEstadoPartido() {
+  if (!estado.partido) {
+    mostrarMensaje("Seleccione un partido.", "error");
+    return;
+  }
+
+  const selector = $("estadoPartido");
+  const boton = $("btnGuardarEstado");
+
+  if (!selector) {
+    mostrarMensaje("No se encontró el selector de estado.", "error");
+    return;
+  }
+
+  const nuevoEstado = selector.value;
+
+  const estadosPermitidos = [
+    "PROGRAMADO",
+    "EN_VIVO",
+    "FINALIZADO",
+    "SUSPENDIDO",
+    "APLAZADO"
+  ];
+
+  if (!estadosPermitidos.includes(nuevoEstado)) {
+    mostrarMensaje("Seleccione un estado válido.", "error");
+    return;
+  }
+
+  if (boton) boton.disabled = true;
+
+  try {
+    const { data, error } = await supabase
+      .from("partido")
+      .update({
+        estado: nuevoEstado
+      })
+      .eq("id", estado.partido.id)
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    estado.partido = {
+      ...estado.partido,
+      ...data
+    };
+
+    const indice = estado.partidos.findIndex(
+      (fila) => String(fila.id) === String(data.id)
+    );
+
+    if (indice !== -1) {
+      estado.partidos[indice] = {
+        ...estado.partidos[indice],
+        ...data
+      };
+    }
+
+    mostrarDatosPartido();
+
+    mostrarMensaje(
+      `✅ Estado actualizado: ${nombreEstadoPartido(data.estado)}.`,
+      "ok"
+    );
+
+  } catch (error) {
+    mostrarMensaje(
+      "No se pudo actualizar el estado: " +
+      obtenerError(error, "guardarEstadoPartido"),
       "error"
     );
 
@@ -1705,6 +1796,12 @@ function configurarBotones() {
   });
 
   $("btnGuardarMarcador")?.addEventListener("click", guardarMarcador);
+
+  // NUEVO: guardar el estado del partido seleccionado.
+  $("btnGuardarEstado")?.addEventListener(
+    "click",
+    guardarEstadoPartido
+  );
 
   $("btnGuardarEvento")?.addEventListener("click", registrarEvento);
 
