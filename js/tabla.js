@@ -78,6 +78,10 @@ function clave(...valores) {
     return valores.map(valor => String(valor ?? '')).join('::');
 }
 
+// =====================================================
+// CREAR FILA DE EQUIPO
+// =====================================================
+
 function crearFila(inscripcion, competencia, grupo) {
     const equipo = obtenerRelacion(inscripcion.equipo);
     const disciplina = obtenerRelacion(competencia?.disciplina);
@@ -87,6 +91,10 @@ function crearFila(inscripcion, competencia, grupo) {
         inscripcionId: String(inscripcion.id),
         competenciaId: String(inscripcion.competencia_id),
         equipo: equipo?.nombre || 'Equipo por definir',
+
+        // LOGO DEL EQUIPO
+        logo: equipo?.logo || '',
+
         disciplina: disciplina?.nombre || 'Disciplina por verificar',
         categoria: categoria?.nombre || 'Categoría por verificar',
         genero: obtenerGenero(competencia),
@@ -101,6 +109,10 @@ function crearFila(inscripcion, competencia, grupo) {
     };
 }
 
+// =====================================================
+// ORDENAR EQUIPOS
+// =====================================================
+
 function compararEquipos(a, b) {
     return (b.pts - a.pts)
         || ((b.gf - b.gc) - (a.gf - a.gc))
@@ -108,6 +120,10 @@ function compararEquipos(a, b) {
         || (b.pg - a.pg)
         || a.equipo.localeCompare(b.equipo, 'es');
 }
+
+// =====================================================
+// CALCULAR ESTADÍSTICAS
+// =====================================================
 
 function actualizarEstadisticas(local, visitante, golesLocal, golesVisitante) {
     local.pj++;
@@ -216,6 +232,46 @@ function insertarEstilos() {
             font-weight: bold;
         }
 
+        /* LOGOS DE EQUIPOS */
+
+        .tp-equipo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 170px;
+        }
+
+        .tp-logo {
+            width: 38px;
+            height: 38px;
+            min-width: 38px;
+            object-fit: contain;
+            border-radius: 50%;
+            background: #ffffff;
+            border: 1px solid #d6bd65;
+            padding: 3px;
+            flex-shrink: 0;
+        }
+
+        .tp-logo-vacio {
+            width: 38px;
+            height: 38px;
+            min-width: 38px;
+            border-radius: 50%;
+            background: #303830;
+            border: 1px solid #596451;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            font-size: 19px;
+        }
+
+        .tp-nombre-equipo {
+            color: #ffffff;
+            font-weight: 700;
+        }
+
         .tp-mensaje {
             padding: 18px;
             background: #191f19;
@@ -229,10 +285,36 @@ function insertarEstilos() {
             white-space: pre-wrap;
             overflow-wrap: anywhere;
         }
+
+        @media (max-width: 600px) {
+            .tp-grupo {
+                padding: 10px;
+            }
+
+            .tp-tabla {
+                font-size: .82rem;
+            }
+
+            .tp-logo,
+            .tp-logo-vacio {
+                width: 32px;
+                height: 32px;
+                min-width: 32px;
+            }
+
+            .tp-equipo {
+                gap: 7px;
+                min-width: 145px;
+            }
+        }
     `;
 
     document.head.appendChild(estilo);
 }
+
+// =====================================================
+// MENSAJES
+// =====================================================
 
 function mostrarMensaje(mensaje, error = false) {
     contenedor.innerHTML = `
@@ -265,10 +347,11 @@ async function cargarTabla() {
         estadoTabla.textContent = 'Consultando Supabase...';
     }
 
-    mostrarMensaje('Cargando equipos y resultados...');
+    mostrarMensaje('Cargando equipos, logos y resultados...');
 
     try {
-        // 1. Obtener fases.
+        // 1. OBTENER FASES
+
         const { data: fases, error: errorFases } = await supabase
             .from('fase')
             .select('id, competencia_id, nombre, tipo, orden')
@@ -283,7 +366,8 @@ async function cargarTabla() {
 
         const idsFases = fases.map(fase => fase.id);
 
-        // 2. Obtener partidos.
+        // 2. OBTENER PARTIDOS
+
         const { data: partidosDB, error: errorPartidos } = await supabase
             .from('partido')
             .select(`
@@ -302,7 +386,8 @@ async function cargarTabla() {
 
         const partidos = partidosDB || [];
 
-        // 3. Obtener competencias.
+        // 3. OBTENER COMPETENCIAS
+
         const idsCompetencias = [
             ...new Set(
                 fases
@@ -330,7 +415,8 @@ async function cargarTabla() {
             competencias = data || [];
         }
 
-        // 4. Obtener inscripciones.
+        // 4. OBTENER INSCRIPCIONES Y LOGOS
+
         let inscripciones = [];
 
         if (idsCompetencias.length) {
@@ -371,7 +457,8 @@ async function cargarTabla() {
             ])
         );
 
-        // 5. Determinar grupos.
+        // 5. DETERMINAR GRUPOS
+
         const gruposPorInscripcion = new Map();
 
         for (const partido of partidos) {
@@ -406,7 +493,8 @@ async function cargarTabla() {
             }
         }
 
-        // 6. Crear filas.
+        // 6. CREAR FILAS
+
         const tabla = new Map();
 
         for (const inscripcion of inscripciones) {
@@ -426,7 +514,8 @@ async function cargarTabla() {
             );
         }
 
-        // 7. Procesar partidos EN_VIVO y FINALIZADOS.
+        // 7. PROCESAR PARTIDOS EN VIVO Y FINALIZADOS
+
         for (const partido of partidos) {
             const estado = normalizar(partido.estado);
 
@@ -435,8 +524,6 @@ async function cargarTabla() {
 
             if (!finalizado && !enVivo) continue;
 
-            // Si está EN_VIVO y no tiene marcador, se interpreta 0-0.
-            // Si está FINALIZADO, exigimos un marcador registrado.
             if (finalizado && !tieneMarcador(partido)) continue;
 
             const fase = mapaFases.get(String(partido.fase_id));
@@ -524,6 +611,10 @@ async function cargarTabla() {
 
         console.log('✅ Inscripciones procesadas:', inscripciones.length);
         console.log('✅ Partidos consultados:', partidos.length);
+        console.log('✅ Logos procesados:', inscripciones.filter(i => {
+            const equipo = obtenerRelacion(i.equipo);
+            return Boolean(equipo?.logo);
+        }).length);
 
     } catch (error) {
         console.error('❌ Error al cargar posiciones:', error);
@@ -597,20 +688,46 @@ function mostrarTablas(filas) {
         .map(grupo => {
             const equipos = [...grupo.equipos].sort(compararEquipos);
 
-            const filasHTML = equipos.map((equipo, indice) => `
-                <tr>
-                    <td class="tp-posicion">${indice + 1}</td>
-                    <td>${escaparHTML(equipo.equipo)}</td>
-                    <td>${equipo.pj}</td>
-                    <td>${equipo.pg}</td>
-                    <td>${equipo.pe}</td>
-                    <td>${equipo.pp}</td>
-                    <td>${equipo.gf}</td>
-                    <td>${equipo.gc}</td>
-                    <td>${equipo.gf - equipo.gc}</td>
-                    <td class="tp-puntos">${equipo.pts}</td>
-                </tr>
-            `).join('');
+            const filasHTML = equipos.map((equipo, indice) => {
+                const logoHTML = equipo.logo
+                    ? `
+                        <img
+                            class="tp-logo"
+                            src="${escaparHTML(equipo.logo)}"
+                            alt="Logo de ${escaparHTML(equipo.equipo)}"
+                            loading="lazy"
+                            onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+                        >
+                        <div class="tp-logo-vacio" style="display:none;">⚽</div>
+                    `
+                    : `
+                        <div class="tp-logo-vacio">⚽</div>
+                    `;
+
+                return `
+                    <tr>
+                        <td class="tp-posicion">${indice + 1}</td>
+
+                        <td>
+                            <div class="tp-equipo">
+                                ${logoHTML}
+                                <span class="tp-nombre-equipo">
+                                    ${escaparHTML(equipo.equipo)}
+                                </span>
+                            </div>
+                        </td>
+
+                        <td>${equipo.pj}</td>
+                        <td>${equipo.pg}</td>
+                        <td>${equipo.pe}</td>
+                        <td>${equipo.pp}</td>
+                        <td>${equipo.gf}</td>
+                        <td>${equipo.gc}</td>
+                        <td>${equipo.gf - equipo.gc}</td>
+                        <td class="tp-puntos">${equipo.pts}</td>
+                    </tr>
+                `;
+            }).join('');
 
             return `
                 <section class="tp-grupo">
@@ -647,7 +764,10 @@ function mostrarTablas(filas) {
                                     <th>Pts.</th>
                                 </tr>
                             </thead>
-                            <tbody>${filasHTML}</tbody>
+
+                            <tbody>
+                                ${filasHTML}
+                            </tbody>
                         </table>
                     </div>
                 </section>
@@ -658,7 +778,7 @@ function mostrarTablas(filas) {
 }
 
 // =====================================================
-// REALTIME: CAMBIOS EN PARTIDOS Y MARCADOR
+// REALTIME
 // =====================================================
 
 function configurarRealtime() {
@@ -679,9 +799,6 @@ function configurarRealtime() {
             },
             payload => {
                 console.log('📡 Cambio en partido:', payload);
-
-                // Cada INSERT, UPDATE o DELETE vuelve a consultar
-                // los marcadores y recalcula todas las posiciones.
                 cargarTabla();
             }
         )
